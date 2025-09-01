@@ -2,28 +2,33 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
-import { Toaster } from "@/components/ui/toaster"
-// SidebarProvider, SidebarInset e AppSidebar foram removidos daqui
-// para que a barra lateral só apareça em rotas protegidas.
+import { Header } from "@/components/header"
+import { Footer } from "@/components/footer"
+// Adicionar import do Providers
+import { Providers } from "@/components/providers"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Ocar - Consulta Veicular",
-  description: "Consulte informações de veículos de forma rápida e segura.",
-    generator: 'v0.dev'
+  title: "FinanceHub - Controle sua vida financeira com inteligência",
+  description: "Plataforma completa com calculadoras financeiras, notícias do mercado e educação financeira gratuita.",
+    generator: 'v0.app'
 }
 
-export default async function RootLayout({
+// Envolver o children com Providers
+export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode
-}>) {
+}) {
   return (
-    <html lang="pt-BR" className="dark">
+    <html lang="pt-BR">
       <body className={inter.className}>
-        {children} {/* O conteúdo da página será renderizado aqui */}
-        <Toaster />
+        <Providers>
+          <Header />
+          {children}
+          <Footer />
+        </Providers>
       </body>
     </html>
   )
