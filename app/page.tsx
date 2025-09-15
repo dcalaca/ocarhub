@@ -226,7 +226,7 @@ export default function HomePage() {
             <div>
               <Link href="/" className="flex items-center space-x-2 mb-4">
                 <div className="relative w-10 h-10">
-                  <Image src="/logo-ocar.jpeg" alt="Ocar Logo" fill className="object-contain rounded-full" />
+                  <img src="/logo-ocar.jpeg" alt="Ocar Logo" className="w-full h-full object-contain rounded-full" onError={(e) => { e.currentTarget.src = '/logo-ocar.png'; }} />
                 </div>
                 <span className="text-2xl font-bold text-white">Ocar</span>
               </Link>

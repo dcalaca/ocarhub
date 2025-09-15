@@ -81,7 +81,7 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center space-x-3">
             <div className="relative w-12 h-12">
-              <Image src="/logo-ocar.jpeg" alt="Ocar Logo" fill className="object-contain rounded-full" />
+              <img src="/logo-ocar.jpeg" alt="Ocar Logo" className="w-full h-full object-contain rounded-full" onError={(e) => { e.currentTarget.src = '/logo-ocar.png'; }} />
             </div>
             <span className="text-3xl font-bold text-white">Ocar</span>
           </Link>
