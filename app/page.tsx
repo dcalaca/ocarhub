@@ -226,7 +226,7 @@ export default function HomePage() {
             <div>
               <Link href="/" className="flex items-center space-x-2 mb-4">
                 <div className="relative w-10 h-10">
-                  <img src="/logo-ocar.jpeg" alt="Ocar Logo" className="w-full h-full object-contain" />
+                  <img src="/logo-ocar-v2.jpg" alt="Ocar Logo" className="w-full h-full object-contain" />
                 </div>
                 <span className="text-2xl font-bold text-white">Ocar</span>
               </Link>

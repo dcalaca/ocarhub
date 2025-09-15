@@ -81,7 +81,7 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center space-x-3">
             <div className="relative w-12 h-12">
-              <img src="/logo-ocar.jpeg" alt="Ocar Logo" className="w-full h-full object-contain" />
+              <img src="/logo-ocar-v2.jpg" alt="Ocar Logo" className="w-full h-full object-contain" />
             </div>
             <span className="text-3xl font-bold text-white">Ocar</span>
           </Link>

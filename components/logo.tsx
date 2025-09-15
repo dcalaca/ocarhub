@@ -15,7 +15,7 @@ export default function Logo({ size = 'md', className = '' }: LogoProps) {
   return (
     <div className={`${sizeClasses[size]} ${className} relative`}>
       <img 
-        src="/logo-ocar.jpeg" 
+        src="/logo-ocar-v2.jpg" 
         alt="Ocar Logo" 
         className="w-full h-full object-contain"
         style={{ display: 'block' }}
