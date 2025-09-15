@@ -14,7 +14,12 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   title: "Ocar - Plataforma de Anúncios de Veículos",
   description: "A plataforma mais moderna para comprar e vender veículos no Brasil",
-    generator: 'v0.app'
+  generator: 'v0.app',
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/logo-ocar-v2.jpg',
+  },
 }
 
 export default function RootLayout({
