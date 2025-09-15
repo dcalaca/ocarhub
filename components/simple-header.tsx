@@ -10,7 +10,7 @@ export function SimpleHeader() {
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 group flex-shrink-0">
           <div className="relative w-8 h-8 sm:w-10 sm:h-10 transition-transform duration-300 group-hover:scale-110">
-            <Image src="/logo-ocar.svg" alt="Ocar Logo" fill className="object-contain rounded-full" />
+            <Image src="/logo-ocar.jpeg" alt="Ocar Logo" fill className="object-contain rounded-full" />
           </div>
           <span className="font-poppins text-lg sm:text-xl font-bold text-white tracking-wider transition-all duration-300 group-hover:text-purple-400 group-hover:scale-105">
             Ocar
