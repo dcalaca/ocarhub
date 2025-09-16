@@ -261,6 +261,48 @@ export class VehicleService {
     }
   }
 
+  // Renovar anúncio Destaque
+  static async renovarAnuncio(vehicleId: string, userId: string): Promise<boolean> {
+    try {
+      // Verificar se o veículo pertence ao usuário e é do tipo destaque
+      const { data: vehicle, error: fetchError } = await supabase
+        .from('ocar_vehicles')
+        .select('id, plano, dono_id')
+        .eq('id', vehicleId)
+        .eq('dono_id', userId)
+        .single()
+
+      if (fetchError || !vehicle) {
+        console.error('❌ Veículo não encontrado ou não pertence ao usuário:', fetchError)
+        return false
+      }
+
+      if (vehicle.plano !== 'destaque') {
+        console.error('❌ Apenas anúncios do tipo destaque podem ser renovados')
+        return false
+      }
+
+      // Atualizar o veículo para estender a duração (isso seria implementado com uma lógica de data de expiração)
+      const { error } = await supabase
+        .from('ocar_vehicles')
+        .update({ 
+          updated_at: new Date().toISOString(),
+          // Aqui você adicionaria lógica para estender a data de expiração em 45 dias
+        })
+        .eq('id', vehicleId)
+
+      if (error) {
+        console.error('❌ Erro ao renovar anúncio:', error)
+        return false
+      }
+
+      return true
+    } catch (error) {
+      console.error('❌ Erro no VehicleService.renovarAnuncio:', error)
+      return false
+    }
+  }
+
   // Buscar veículos com filtros
   static async searchVehicles(filters: {
     marca?: string

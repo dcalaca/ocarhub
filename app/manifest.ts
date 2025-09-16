@@ -14,14 +14,14 @@ export default function manifest(): MetadataRoute.Manifest {
     icons: [
       {
         src: "/favicon.svg",
-        sizes: "any",
+        sizes: "32x32",
         type: "image/svg+xml",
         purpose: "any",
       },
       {
-        src: "/logo-ocar-v2.jpg",
+        src: "/favicon.svg",
         sizes: "192x192",
-        type: "image/jpeg",
+        type: "image/svg+xml",
         purpose: "maskable",
       },
     ],

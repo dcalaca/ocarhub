@@ -60,21 +60,14 @@ export function VehicleSelector({
           disabled={disabled}
         >
           <div className="flex items-center gap-3 truncate">
-            {selected && showImages && (
-              <div className="w-6 h-6 relative flex-shrink-0 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-sm">
-                <span className="text-white text-xs font-bold">
-                  {selected.label.charAt(0).toUpperCase()}
-                </span>
-              </div>
-            )}
-            <span className="truncate text-sm font-medium">
+            <span className="truncate text-sm font-sans">
               {selected ? selected.label : placeholder}
             </span>
           </div>
           <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50 transition-transform duration-200 group-data-[state=open]:rotate-180" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0" align="start">
+      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
         <Command>
           <CommandInput 
             placeholder={`Buscar ${placeholder.toLowerCase()}...`} 
@@ -86,9 +79,9 @@ export function VehicleSelector({
             </CommandEmpty>
             <CommandGroup>
               <ScrollArea className="h-[200px]">
-                {options.map((option) => (
+                {options.map((option, index) => (
                   <CommandItem
-                    key={option.value}
+                    key={`${option.value}-${index}`}
                     value={option.value}
                     onSelect={() => {
                       onChange(option.value)
@@ -96,14 +89,7 @@ export function VehicleSelector({
                     }}
                     className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors"
                   >
-                    {showImages && (
-                      <div className="w-6 h-6 relative flex-shrink-0 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-sm">
-                        <span className="text-white text-xs font-bold">
-                          {option.label.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                    )}
-                    <span className="text-sm font-medium">{option.label}</span>
+                    <span className="text-sm font-sans">{option.label}</span>
                     {option.value === value && (
                       <Check className="ml-auto h-4 w-4 flex-shrink-0 text-primary" />
                     )}

@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet"
 import { Car, Heart, MessageCircle, Plus, User, LogOut, Settings, Wallet, Menu, History } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useAuth } from "@/contexts/auth-context"
@@ -88,6 +88,7 @@ export function Header() {
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="right" className="w-[280px] bg-black text-white border-gray-800">
+                  <SheetTitle className="sr-only">Menu de navegação</SheetTitle>
                   <div className="flex flex-col space-y-4 mt-8">
                     {/* Saldo no mobile */}
                     <Link href="/conta" onClick={() => setMobileMenuOpen(false)}>

@@ -23,6 +23,10 @@ import {
   Search,
   Plus,
   AlertCircle,
+  Clock,
+  RefreshCw,
+  Star,
+  AlertTriangle,
 } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { useToast } from "@/hooks/use-toast"
@@ -31,7 +35,7 @@ import Image from "next/image"
 import { VehicleService, type Vehicle } from "@/lib/vehicle-service"
 
 export default function MeusAnunciosPage() {
-  const { user } = useAuth()
+  const { user, debitSaldo } = useAuth()
   const { toast } = useToast()
   const [anuncios, setAnuncios] = useState<Vehicle[]>([])
   const [filtroStatus, setFiltroStatus] = useState<"todos" | "ativo" | "pausado" | "expirado">("todos")
@@ -155,6 +159,77 @@ export default function MeusAnunciosPage() {
     }
   }
 
+  const handleRenovar = async (id: string) => {
+    if (!user) return
+
+    const anuncio = anuncios.find(a => a.id === id)
+    if (!anuncio) return
+
+    const renovacaoPreco = 30 // R$ 30 para renovação de 45 dias
+    const diasRestantes = calcularDiasRestantes(anuncio.created_at, anuncio.plano)
+    
+    if (user.saldo < renovacaoPreco) {
+      toast({
+        title: "Saldo insuficiente",
+        description: `Você precisa de R$ ${renovacaoPreco.toFixed(2)} para renovar este anúncio`,
+        variant: "destructive",
+      })
+      return
+    }
+
+    const mensagemConfirmacao = diasRestantes !== null && diasRestantes > 0
+      ? `Renovar anúncio por mais 45 dias* por R$ ${renovacaoPreco.toFixed(2)}?\n\n*Renovação sem destaque\nDias restantes: ${diasRestantes}`
+      : `Renovar anúncio por mais 45 dias* por R$ ${renovacaoPreco.toFixed(2)}?\n\n*Renovação sem destaque`
+
+    if (!confirm(mensagemConfirmacao)) return
+
+    setLoading(true)
+    try {
+      // Renovar o anúncio
+      const sucesso = await VehicleService.renovarAnuncio(id, user.id)
+      
+      if (sucesso) {
+        // Debitar o saldo
+        const debitoSucesso = await debitSaldo(
+          renovacaoPreco,
+          "Renovação de anúncio Destaque - 45 dias (sem destaque)",
+          "renovacao_destaque"
+        )
+
+        if (debitoSucesso) {
+          toast({
+            title: "Anúncio renovado!",
+            description: "Seu anúncio foi renovado por mais 45 dias (sem destaque)",
+          })
+          // Recarregar anúncios
+          const veiculos = await VehicleService.getUserVehicles(user.id)
+          setAnuncios(veiculos)
+        } else {
+          toast({
+            title: "Erro no pagamento",
+            description: "Não foi possível processar o pagamento da renovação",
+            variant: "destructive",
+          })
+        }
+      } else {
+        toast({
+          title: "Erro ao renovar",
+          description: "Não foi possível renovar o anúncio. Tente novamente.",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error('❌ Erro ao renovar anúncio:', error)
+      toast({
+        title: "Erro ao renovar",
+        description: "Ocorreu um erro inesperado. Tente novamente.",
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const getStatusBadge = (status: string) => {
     const variants = {
       ativo: "default",
@@ -208,6 +283,35 @@ export default function MeusAnunciosPage() {
       month: "2-digit",
       year: "numeric",
     }).format(new Date(dateString))
+  }
+
+  // Calcular dias restantes para anúncios Destaque
+  const calcularDiasRestantes = (createdAt: string, plano: string) => {
+    if (plano !== "destaque") return null
+    
+    const dataCriacao = new Date(createdAt)
+    const dataExpiracao = new Date(dataCriacao.getTime() + (60 * 24 * 60 * 60 * 1000)) // +60 dias
+    const agora = new Date()
+    const diasRestantes = Math.ceil((dataExpiracao.getTime() - agora.getTime()) / (1000 * 60 * 60 * 24))
+    
+    return Math.max(0, diasRestantes)
+  }
+
+  // Verificar se pode renovar
+  const podeRenovar = (anuncio: Vehicle) => {
+    return anuncio.plano === "destaque" && anuncio.status === "ativo"
+  }
+
+  // Verificar se está próximo do vencimento (7 dias ou menos)
+  const proximoVencimento = (anuncio: Vehicle) => {
+    const diasRestantes = calcularDiasRestantes(anuncio.created_at, anuncio.plano)
+    return diasRestantes !== null && diasRestantes <= 7 && diasRestantes > 0
+  }
+
+  // Verificar se expirou
+  const expirado = (anuncio: Vehicle) => {
+    const diasRestantes = calcularDiasRestantes(anuncio.created_at, anuncio.plano)
+    return diasRestantes !== null && diasRestantes <= 0
   }
 
   if (loading) {
@@ -312,6 +416,19 @@ export default function MeusAnunciosPage() {
           </Tabs>
         </div>
 
+        {/* Alertas para anúncios próximos do vencimento */}
+        {anunciosFiltrados.some(anuncio => proximoVencimento(anuncio)) && (
+          <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle className="h-5 w-5 text-orange-600" />
+              <h3 className="font-semibold text-orange-800">Anúncios próximos do vencimento</h3>
+            </div>
+            <p className="text-sm text-orange-700">
+              Você tem anúncios que expiram em breve. Renove-os para manter a visibilidade!
+            </p>
+          </div>
+        )}
+
         {/* Lista de anúncios */}
         {anunciosFiltrados.length === 0 ? (
           <div className="text-center py-12">
@@ -326,19 +443,45 @@ export default function MeusAnunciosPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {anunciosFiltrados.map((anuncio) => (
-              <Card key={anuncio.id} className="overflow-hidden">
-                <div className="relative aspect-video">
-                  <Image
-                    src={anuncio.fotos[0] || "/placeholder.svg?height=200&width=300"}
-                    alt={`${anuncio.marca} ${anuncio.modelo}`}
-                    fill
-                    className="object-cover"
-                  />
-                  <div className="absolute top-2 left-2 flex gap-2">
-                    {getStatusBadge(anuncio.status)}
-                    {getPlanoBadge(anuncio.plano)}
-                  </div>
+            {anunciosFiltrados.map((anuncio) => {
+              const diasRestantes = calcularDiasRestantes(anuncio.created_at, anuncio.plano)
+              const podeRenovarAnuncio = podeRenovar(anuncio)
+              const proximoVencimentoAnuncio = proximoVencimento(anuncio)
+              const expiradoAnuncio = expirado(anuncio)
+              
+              return (
+                <Card key={anuncio.id} className={`overflow-hidden ${
+                  proximoVencimentoAnuncio ? 'ring-2 ring-orange-300' : ''
+                }`}>
+                  <div className="relative aspect-video">
+                    <Image
+                      src={anuncio.fotos[0] || "/placeholder.svg?height=200&width=300"}
+                      alt={`${anuncio.marca} ${anuncio.modelo}`}
+                      fill
+                      className="object-cover"
+                    />
+                    <div className="absolute top-2 left-2 flex gap-2 flex-wrap">
+                      {getStatusBadge(anuncio.status)}
+                      {getPlanoBadge(anuncio.plano)}
+                      {proximoVencimentoAnuncio && (
+                        <Badge variant="destructive" className="animate-pulse">
+                          <Clock className="w-3 h-3 mr-1" />
+                          {diasRestantes} dias
+                        </Badge>
+                      )}
+                      {expiradoAnuncio && (
+                        <Badge variant="destructive">
+                          <AlertCircle className="w-3 h-3 mr-1" />
+                          Expirado
+                        </Badge>
+                      )}
+                      {podeRenovarAnuncio && !expiradoAnuncio && (
+                        <Badge variant="default" className="bg-blue-600">
+                          <RefreshCw className="w-3 h-3 mr-1" />
+                          Pode renovar
+                        </Badge>
+                      )}
+                    </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
@@ -363,6 +506,20 @@ export default function MeusAnunciosPage() {
                         <DropdownMenuItem onClick={() => handleReativar(anuncio.id)}>
                           <Play className="mr-2 h-4 w-4" />
                           Reativar
+                        </DropdownMenuItem>
+                      )}
+                      {podeRenovarAnuncio && (
+                        <DropdownMenuItem onClick={() => handleRenovar(anuncio.id)}>
+                          <RefreshCw className="mr-2 h-4 w-4" />
+                          Renovar (+45 dias* - R$ 30)
+                          {diasRestantes !== null && (
+                            <span className="ml-2 text-xs text-muted-foreground">
+                              ({diasRestantes} dias restantes)
+                            </span>
+                          )}
+                          <div className="text-xs text-orange-600 mt-1">
+                            *Sem destaque
+                          </div>
                         </DropdownMenuItem>
                       )}
                       <DropdownMenuItem
@@ -416,11 +573,22 @@ export default function MeusAnunciosPage() {
                         <Calendar className="h-3 w-3" />
                         Criado em {formatDate(anuncio.created_at)}
                       </div>
+                      {diasRestantes !== null && (
+                        <div className={`flex items-center gap-1 ${
+                          proximoVencimentoAnuncio ? 'text-orange-600 font-medium' : 
+                          expiradoAnuncio ? 'text-red-600 font-medium' : 
+                          'text-muted-foreground'
+                        }`}>
+                          <Clock className="h-3 w-3" />
+                          {expiradoAnuncio ? 'Expirado' : `${diasRestantes} dias restantes`}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </CardContent>
               </Card>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>

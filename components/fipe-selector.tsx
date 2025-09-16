@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Loader2, Search, Check, AlertCircle, Info } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { fipeService } from "@/lib/fipe-service"
 
 interface FipeSelectorProps {
   brandId: string
@@ -29,16 +30,18 @@ export function FipeSelector({ brandId, modelId, year, onSelect }: FipeSelectorP
     setError(null)
 
     try {
-      // Simulando uma chamada de API
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      // Buscar dados reais da FIPE
+      const result = await fipeService.quickSearch(brandId, modelId, year)
+      
+      if (!result) {
+        setError("Veículo não encontrado na tabela FIPE. Verifique os dados selecionados.")
+        return
+      }
 
-      // Dados simulados
-      const price = Math.floor(Math.random() * 50000) + 30000
-      const fipeCode = `${Math.floor(Math.random() * 900000) + 100000}`
-
-      setFipeData({ price, fipeCode })
-      onSelect({ price, fipeCode })
+      setFipeData({ price: result.price, fipeCode: result.fipeCode })
+      onSelect({ price: result.price, fipeCode: result.fipeCode })
     } catch (err) {
+      console.error('Erro ao consultar FIPE:', err)
       setError("Erro ao consultar tabela FIPE. Tente novamente.")
     } finally {
       setLoading(false)
