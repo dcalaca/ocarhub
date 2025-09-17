@@ -147,6 +147,8 @@ export class FipeIntelligence {
   private static extractVersionName(fullName: string, modelName: string): string {
     let versionName = fullName
     
+    console.log(`🔍 extractVersionName - Processing: "${fullName}" with model: "${modelName}"`)
+    
     // Remover o nome do modelo do início da string
     const lowerModelName = modelName.toLowerCase()
     const lowerFullName = fullName.toLowerCase()
@@ -157,6 +159,13 @@ export class FipeIntelligence {
       
       // Remover caracteres especiais do início se houver
       versionName = versionName.replace(/^[.\s\-_\/]+/, '').trim()
+      console.log(`🔍 extractVersionName - After removing model: "${versionName}"`)
+    } else if (lowerFullName.includes(lowerModelName)) {
+      // Se o modelo está no meio, remover apenas a primeira ocorrência
+      const modelIndex = lowerFullName.indexOf(lowerModelName)
+      versionName = fullName.substring(0, modelIndex) + fullName.substring(modelIndex + modelName.length)
+      versionName = versionName.trim()
+      console.log(`🔍 extractVersionName - After removing model from middle: "${versionName}"`)
     }
     
     // Limpar especificações técnicas desnecessárias
@@ -180,6 +189,9 @@ export class FipeIntelligence {
     // Se ficou vazio, usar o nome original
     if (!versionName || versionName.length < 2) {
       versionName = fullName
+      console.log(`🔍 extractVersionName - Using original name: "${versionName}"`)
+    } else {
+      console.log(`🔍 extractVersionName - Final version name: "${versionName}"`)
     }
 
     return versionName
@@ -374,6 +386,7 @@ export class FipeIntelligence {
     targetYear: number
   ): ProcessedVersion[] {
     console.log('🔍 getVersionsByYear - Input:', { yearsCount: years.length, selectedModel, targetYear })
+    console.log('🔍 getVersionsByYear - Sample years:', years.slice(0, 5))
     
     // Buscar todas as versões que contêm o nome do modelo e têm o ano específico
     const versionsForYear = years.filter(year => {
@@ -390,6 +403,46 @@ export class FipeIntelligence {
     })
     
     console.log('🔍 getVersionsByYear - Versions for year count:', versionsForYear.length)
+    console.log('🔍 getVersionsByYear - Versions found:', versionsForYear.map(v => v.name))
+    
+    // Se não encontrou versões com filtro de modelo, tentar sem filtro de modelo
+    if (versionsForYear.length === 0) {
+      console.log('🔍 getVersionsByYear - No versions found with model filter, trying without model filter')
+      const versionsWithoutModelFilter = years.filter(year => {
+        if (!year || !year.name) return false
+        const extractedYear = this.extractYear(year.name)
+        const isTargetYear = extractedYear === targetYear
+        
+        console.log(`🔍 getVersionsByYear (no model filter) - Year "${year.name}": year: ${extractedYear}, is target? ${isTargetYear}`)
+        
+        return isTargetYear
+      })
+      
+      console.log('🔍 getVersionsByYear - Versions without model filter count:', versionsWithoutModelFilter.length)
+      console.log('🔍 getVersionsByYear - Versions without model filter:', versionsWithoutModelFilter.map(v => v.name))
+      
+      // Usar as versões sem filtro de modelo se encontrou alguma
+      if (versionsWithoutModelFilter.length > 0) {
+        const processedVersions = versionsWithoutModelFilter.map(year => {
+          const cleanVersion = this.extractVersionName(year.name, selectedModel)
+          const fuelType = this.extractFuelType(year.name)
+          const yearValue = this.extractYear(year.name)
+          
+          console.log(`🔍 getVersionsByYear - Processing (no model filter): "${year.name}" -> version: "${cleanVersion}"`)
+          
+          return {
+            name: cleanVersion,
+            code: year.code,
+            fullName: year.name,
+            fuelType,
+            year: yearValue
+          }
+        })
+        
+        console.log('🔍 getVersionsByYear - Final processed versions (no model filter):', processedVersions)
+        return processedVersions
+      }
+    }
     
     // Processar as versões encontradas
     const processedVersions = versionsForYear.map(year => {
