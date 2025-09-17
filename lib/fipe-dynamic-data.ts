@@ -153,10 +153,12 @@ class FipeDynamicData {
   async getYearsByModel(brandCode: string, modelCode: string): Promise<FipeYear[]> {
     const cacheKey = `years_${brandCode}_${modelCode}`
     
+    console.log('🔍 fipe-dynamic-data.getYearsByModel - Iniciando busca de anos:', { brandCode, modelCode, cacheKey })
+    
     // Verificar cache primeiro
     const cached = fipeCache.get<FipeYear[]>(cacheKey)
     if (cached) {
-      console.log(`📦 Anos do modelo ${modelCode} carregados do cache`)
+      console.log(`📦 Anos do modelo ${modelCode} carregados do cache:`, cached.length)
       return cached
     }
 
@@ -175,6 +177,7 @@ class FipeDynamicData {
       // Remover duplicatas por nome
       const uniqueYears = this.removeDuplicates(processedYears, 'name')
       console.log(`🌐 Anos únicos após remoção de duplicatas:`, uniqueYears.length)
+      console.log(`🌐 Anos únicos:`, uniqueYears.slice(0, 5))
 
       // Salvar no cache com TTL de 1 dia
       fipeCache.set(cacheKey, uniqueYears, fipeCache.getTTL('years'))
@@ -397,8 +400,17 @@ class FipeDynamicData {
 
   // Obter versões de um ano específico
   async getVersionsByYear(brandCode: string, modelCode: string, selectedModel: string, targetYear: number): Promise<ProcessedVersion[]> {
+    console.log('🔍 fipe-dynamic-data.getVersionsByYear - Iniciando busca de versões:', { brandCode, modelCode, selectedModel, targetYear })
+    
     const years = await this.getYearsByModel(brandCode, modelCode)
-    return FipeIntelligence.getVersionsByYear(years, selectedModel, targetYear)
+    console.log('🔍 fipe-dynamic-data.getVersionsByYear - Anos obtidos:', years.length)
+    console.log('🔍 fipe-dynamic-data.getVersionsByYear - Amostra dos anos:', years.slice(0, 5))
+    
+    const versions = FipeIntelligence.getVersionsByYear(years, selectedModel, targetYear)
+    console.log('🔍 fipe-dynamic-data.getVersionsByYear - Versões processadas:', versions.length)
+    console.log('🔍 fipe-dynamic-data.getVersionsByYear - Versões encontradas:', versions)
+    
+    return versions
   }
 
   // Obter versões agrupadas por modelo
