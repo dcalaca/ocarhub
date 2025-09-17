@@ -25,6 +25,12 @@ export interface FipeYear {
 }
 
 class FipeDynamicData {
+  private fipeIntelligence: FipeIntelligence
+
+  constructor() {
+    this.fipeIntelligence = new FipeIntelligence()
+  }
+
   // Método utilitário para remover duplicatas
   private removeDuplicates<T>(array: T[], key: keyof T): T[] {
     const seen = new Set()
@@ -324,9 +330,12 @@ class FipeDynamicData {
     let years = await this.getYearsByModel(brandCode, modelCode)
     console.log('🔍 getUniqueYears - Anos do modelo específico:', years.length)
     
-    // Se não encontrou muitos anos, buscar de todos os modelos da marca que começam com o nome
-    if (years.length < 5) {
-      console.log('🔍 getUniqueYears - Poucos anos encontrados, buscando em todos os modelos da marca')
+    // Verificar se precisa de busca expandida
+    const needsExpandedSearch = years.length < 10 || 
+      (years.length > 0 && years.some(year => year.year && year.year < 2000))
+    
+    if (needsExpandedSearch) {
+      console.log('🔍 getUniqueYears - Buscando em todos os modelos da marca (poucos anos ou anos antigos)')
       
       try {
         // Buscar todos os modelos da marca
@@ -338,6 +347,7 @@ class FipeDynamicData {
           model.name.toLowerCase().startsWith(selectedModel.toLowerCase())
         )
         console.log('🔍 getUniqueYears - Modelos que começam com o nome:', matchingModels.length)
+        console.log('🔍 getUniqueYears - Modelos encontrados:', matchingModels.map(m => m.name))
         
         // Buscar anos de todos os modelos correspondentes
         const allYears: Array<{ code: string; name: string }> = []
@@ -354,14 +364,35 @@ class FipeDynamicData {
         // Usar todos os anos encontrados se for mais que o modelo específico
         if (allYears.length > years.length) {
           console.log('🔍 getUniqueYears - Usando anos de todos os modelos correspondentes:', allYears.length)
-          years = allYears
+          console.log('🔍 getUniqueYears - Amostra dos anos encontrados:', allYears.slice(0, 5).map(y => y.name))
+          
+          // Processar os anos com a inteligência FIPE
+          const processedYears = FipeIntelligence.getUniqueYears(
+            allYears, 
+            selectedModel
+          )
+          
+          console.log('🔍 getUniqueYears - Anos processados pela inteligência:', processedYears.length)
+          console.log('🔍 getUniqueYears - Amostra dos anos processados:', processedYears.slice(0, 5))
+          
+          // Converter números de volta para objetos para compatibilidade
+          years = processedYears.map(year => ({
+            code: year.toString(),
+            name: year.toString()
+          }))
         }
       } catch (error) {
         console.warn('🔍 getUniqueYears - Erro ao buscar anos de todos os modelos:', error)
       }
     }
     
-    return FipeIntelligence.getUniqueYears(years, selectedModel)
+    // Converter anos para o formato esperado pela função getUniqueYears
+    const yearsForProcessing = years.map(year => ({
+      code: year.code || year.toString(),
+      name: year.name || year.toString()
+    }))
+    
+    return FipeIntelligence.getUniqueYears(yearsForProcessing, selectedModel)
   }
 
   // Obter versões de um ano específico

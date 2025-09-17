@@ -11,7 +11,7 @@ import { useAuth } from "@/contexts/auth-context"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
 import { useRouter } from "next/navigation"
-import React from "react"
+import React, { useCallback, useMemo, useState, useEffect } from "react"
 
 interface VehicleCardProps {
   vehicle: Vehicle
@@ -20,209 +20,136 @@ interface VehicleCardProps {
   onFavoriteUpdate?: () => void
 }
 
-export function VehicleCard({ vehicle, className, showRemoveFromFavorites, onFavoriteUpdate }: VehicleCardProps) {
+const VehicleCard = React.memo(function VehicleCard({ vehicle, className, showRemoveFromFavorites, onFavoriteUpdate }: VehicleCardProps) {
   const { user, toggleFavorito, isFavorito, toggleCurtida, isCurtido } = useAuth()
   const { toast } = useToast()
   const router = useRouter()
 
-  const [isCurrentlyFavorited, setIsCurrentlyFavorited] = React.useState(false)
-  const [isCurrentlyLiked, setIsCurrentlyLiked] = React.useState(false)
-  const [localLikes, setLocalLikes] = React.useState(vehicle.likes || 0)
+  // Estados locais otimizados
+  const [isCurrentlyFavorited, setIsCurrentlyFavorited] = useState(false)
+  const [isCurrentlyLiked, setIsCurrentlyLiked] = useState(false)
+  const [localLikes, setLocalLikes] = useState(vehicle.likes || 0)
 
-  React.useEffect(() => {
-    if (user) {
-      setIsCurrentlyFavorited(isFavorito(vehicle.id))
-      const likedByAuth = isCurtido(vehicle.id)
-      setIsCurrentlyLiked(likedByAuth)
+  // Memoizar valores computados para evitar recálculos desnecessários
+  const isFavorited = useMemo(() => user ? isFavorito(vehicle.id) : false, [user, vehicle.id, isFavorito])
+  const isLiked = useMemo(() => user ? isCurtido(vehicle.id) : false, [user, vehicle.id, isCurtido])
+  const formattedPrice = useMemo(() => 
+    new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(vehicle.preco), 
+    [vehicle.preco]
+  )
 
-      // Ajusta localLikes com base no estado do AuthContext e no valor inicial do veículo
-      // Se o mockUser (ID "user123") curtiu este veículo (ID "2" por exemplo)
-      // E o vehicle.likes original era X, o localLikes deve ser X+1
-      // Se o mockUser não curtiu, localLikes deve ser vehicle.likes
-      // Esta lógica precisa ser robusta para quando o AuthContext realmente buscar do Firebase
-      if (likedByAuth && !vehicle.favoritos.includes(user.id)) {
-        // Exemplo, se curtida não está em favoritos
-        // Esta lógica de likes precisa ser melhorada se likes e favoritos são coisas diferentes
-      }
-      setLocalLikes(vehicle.likes || 0) // Simplificando por agora, o toggle cuidará do incremento/decremento
-      if (likedByAuth) {
-        // Se o usuário curtiu E o localLikes ainda não reflete isso (ou seja, é igual ao base)
-        // Isso pode acontecer se o vehicle.likes do mock não foi atualizado para refletir a curtida do usuário
-        // Para simplificar, vamos assumir que o toggleCurtida no AuthContext é a fonte da verdade
-        // e o localLikes é para feedback imediato.
-        // A sincronização inicial de localLikes com base em isCurtido é mais complexa
-        // se vehicle.likes não for a contagem total *sem* a curtida do usuário atual.
-      }
-    } else {
-      setIsCurrentlyFavorited(false)
-      setIsCurrentlyLiked(false)
-      setLocalLikes(vehicle.likes || 0)
-    }
-    // Re-sincroniza localLikes com vehicle.likes e depois ajusta se o usuário atual curtiu
-    const initialLikes = vehicle.likes || 0
-    if (user && isCurtido(vehicle.id)) {
-      // Se o usuário curtiu, e o vehicle.likes não inclui essa curtida ainda,
-      // ou se vehicle.likes *já* inclui, precisamos ter cuidado para não contar duas vezes.
-      // A forma mais segura é ter vehicle.likes como a contagem total do backend.
-      // E localLikes reflete isso + ação do usuário.
-      // Para o mock, vamos assumir que vehicle.likes é a base.
-      // E o estado isCurtido determina se adicionamos 1 para o usuário atual.
-      // Esta parte é complexa com dados mockados e estado local vs. AuthContext.
-    }
-    setLocalLikes(vehicle.likes || 0) // Reset para o valor base
-    if (user && isCurtido(vehicle.id)) {
-      // Se o usuário curtiu, e o localLikes é igual ao vehicle.likes (ou seja, não foi incrementado ainda)
-      // Isso é complicado. O ideal é que `vehicle.likes` seja a contagem total.
-      // E `isCurtido` apenas mude o visual do botão.
-      // O `localLikes` deve ser `vehicle.likes`. O `toggleCurtida` que o altera.
-    }
-  }, [user, vehicle.id, vehicle.likes, isFavorito, isCurtido]) // Adicionado vehicle.likes
+  // Consolidar todos os useEffects em um único efeito otimizado
+  useEffect(() => {
+    setIsCurrentlyFavorited(isFavorited)
+    setIsCurrentlyLiked(isLiked)
+    setLocalLikes(vehicle.likes || 0)
+  }, [isFavorited, isLiked, vehicle.likes])
 
-  React.useEffect(() => {
-    // Efeito dedicado para atualizar localLikes quando vehicle.likes muda OU quando o estado de curtida do usuário muda
-    const currentVehicleLikes = vehicle.likes || 0
-    if (user && isCurtido(vehicle.id)) {
-      // Se o usuário curtiu, e assumindo que vehicle.likes *não* inclui a curtida deste usuário ainda
-      // (o que seria o caso se vehicle.likes viesse de um DB e a curtida fosse uma tabela separada)
-      // Para o mock, se isCurtido(vehicle.id) é true, localLikes deve ser vehicle.likes + 1
-      // Mas se vehicle.likes já foi incrementado no mock, isso daria +2.
-      // A lógica mais simples para o mock:
-      // localLikes = vehicle.likes. Se isCurtido, o botão fica ativo.
-      // Ao clicar, localLikes é atualizado para feedback, e isCurtido é invertido.
-      setLocalLikes(currentVehicleLikes) // Começa com o valor base
-    } else {
-      setLocalLikes(currentVehicleLikes)
-    }
-  }, [user, vehicle.id, vehicle.likes, isCurtido])
-
-  const handleToggleFavorite = async (e: React.MouseEvent) => {
+  // Memoizar callbacks para evitar re-criações desnecessárias
+  const handleToggleFavorite = useCallback(async (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
+    
     if (!user) {
-      toast({ title: "Login Necessário", description: "Faça login para favoritar veículos.", variant: "destructive" })
-      router.push("/login")
-      return
-    }
-    const newFavoriteState = !isCurrentlyFavorited
-    await toggleFavorito(vehicle.id)
-    setIsCurrentlyFavorited(newFavoriteState)
-    toast({
-      title: newFavoriteState ? "Adicionado aos Favoritos" : "Removido dos Favoritos",
-      description: `${vehicle.marca} ${vehicle.modelo} foi ${
-        newFavoriteState ? "adicionado à sua lista" : "removido da sua lista"
-      }.`,
-    })
-    if (onFavoriteUpdate) {
-      onFavoriteUpdate()
-    }
-  }
-
-  const handleToggleLike = async (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    if (!user) {
-      toast({ title: "Login Necessário", description: "Faça login para curtir veículos.", variant: "destructive" })
+      toast({ 
+        title: "Login Necessário", 
+        description: "Faça login para favoritar veículos.", 
+        variant: "destructive" 
+      })
       router.push("/login")
       return
     }
 
-    const newLikedState = !isCurrentlyLiked
-    // Atualiza o estado no AuthContext PRIMEIRO
-    await toggleCurtida(vehicle.id)
+    try {
+      const newFavoriteState = !isCurrentlyFavorited
+      await toggleFavorito(vehicle.id)
+      setIsCurrentlyFavorited(newFavoriteState)
+      
+      toast({
+        title: newFavoriteState ? "Adicionado aos Favoritos" : "Removido dos Favoritos",
+        description: `${vehicle.marca} ${vehicle.modelo} foi ${
+          newFavoriteState ? "adicionado à sua lista" : "removido da sua lista"
+        }.`,
+      })
+      
+      onFavoriteUpdate?.()
+    } catch (error) {
+      console.error('Erro ao favoritar:', error)
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar os favoritos.",
+        variant: "destructive"
+      })
+    }
+  }, [user, isCurrentlyFavorited, vehicle.id, vehicle.marca, vehicle.modelo, toggleFavorito, toast, router, onFavoriteUpdate])
 
-    // Depois atualiza o estado local para feedback visual
-    setIsCurrentlyLiked(newLikedState)
-    setLocalLikes((prevLikes) => {
-      if (newLikedState) {
-        // Se acabou de curtir
-        return (vehicle.likes || 0) + 1 // Baseado no valor original + 1
-      } else {
-        // Se acabou de descurtir
-        return vehicle.likes || 0 // Volta para o valor original
-      }
-      // Esta lógica assume que vehicle.likes é a contagem *sem* a curtida do usuário atual.
-      // Se vehicle.likes já inclui a curtida do usuário, a lógica seria diferente.
-      // Para mock:
-      // Se curtiu: localLikes = (vehicle.likes original) + 1
-      // Se descurtiu: localLikes = (vehicle.likes original)
-      // O problema é "vehicle.likes original".
-      // Melhor:
-      // localLikes é o que é exibido.
-      // Ao curtir: localLikes++.
-      // Ao descurtir: localLikes--.
-      // O useEffect sincroniza localLikes com vehicle.likes e isCurtido.
-    })
-
-    // Re-calculando o localLikes de forma mais robusta para o clique
-    setLocalLikes((currentTotalLikes) => {
-      if (newLikedState) {
-        // Se vai curtir
-        return currentTotalLikes + 1
-      } else {
-        // Se vai descurtir
-        return Math.max(0, currentTotalLikes - 1)
-      }
-    })
-
-    toast({
-      title: newLikedState ? "Veículo Curtido!" : "Curtida Removida",
-      description: `Você ${newLikedState ? "curtiu" : "removeu a curtida de"} ${vehicle.marca} ${vehicle.modelo}.`,
-    })
-  }
-
-  const handleShare = async (e: React.MouseEvent) => {
+  const handleToggleLike = useCallback(async (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
+    
+    if (!user) {
+      toast({ 
+        title: "Login Necessário", 
+        description: "Faça login para curtir veículos.", 
+        variant: "destructive" 
+      })
+      router.push("/login")
+      return
+    }
+
+    try {
+      const newLikedState = !isCurrentlyLiked
+      await toggleCurtida(vehicle.id)
+      
+      setIsCurrentlyLiked(newLikedState)
+      setLocalLikes(prev => newLikedState ? prev + 1 : Math.max(0, prev - 1))
+
+      toast({
+        title: newLikedState ? "Veículo Curtido!" : "Curtida Removida",
+        description: `Você ${newLikedState ? "curtiu" : "removeu a curtida de"} ${vehicle.marca} ${vehicle.modelo}.`,
+      })
+    } catch (error) {
+      console.error('Erro ao curtir:', error)
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar a curtida.",
+        variant: "destructive"
+      })
+    }
+  }, [user, isCurrentlyLiked, vehicle.id, vehicle.marca, vehicle.modelo, toggleCurtida, toast, router])
+
+  const handleShare = useCallback(async (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
     const shareUrl = `${window.location.origin}/veiculo/${vehicle.id}`
-    const shareText = `Confira este ${vehicle.marca} ${vehicle.modelo} por ${formatPrice(vehicle.preco)} na Ocar! ${shareUrl}`
+    const shareText = `Confira este ${vehicle.marca} ${vehicle.modelo} por ${formattedPrice} na Ocar! ${shareUrl}`
 
-    if (navigator.share) {
-      try {
+    try {
+      if (navigator.share) {
         await navigator.share({
           title: `${vehicle.marca} ${vehicle.modelo} na Ocar`,
           text: `Confira este ${vehicle.marca} ${vehicle.modelo} que encontrei na Ocar!`,
           url: shareUrl,
         })
-      } catch (error) {
-        if ((error as Error).name !== "AbortError") {
-          toast({
-            title: "Erro ao compartilhar",
-            description: "Não foi possível compartilhar o veículo.",
-            variant: "destructive",
-          })
-        }
-      }
-    } else {
-      try {
+      } else {
         await navigator.clipboard.writeText(shareText)
         toast({
           title: "Link Copiado!",
           description: "Link e informações do veículo copiados para a área de transferência.",
         })
-      } catch (error) {
-        toast({ title: "Erro ao copiar link", description: "Não foi possível copiar o link.", variant: "destructive" })
+      }
+    } catch (error) {
+      if ((error as Error).name !== "AbortError") {
+        console.error('Erro ao compartilhar:', error)
+        toast({
+          title: "Erro ao compartilhar",
+          description: "Não foi possível compartilhar o veículo.",
+          variant: "destructive",
+        })
       }
     }
-  }
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(price)
-  }
-
-  // Sincroniza o estado local com o AuthContext e vehicle.likes
-  // Este useEffect é crucial para garantir que o estado visual reflita a realidade
-  // tanto do AuthContext (se o *usuário atual* curtiu/favoritou)
-  // quanto do vehicle.likes (contagem *total* de curtidas de todos os usuários).
-  React.useEffect(() => {
-    if (user) {
-      setIsCurrentlyFavorited(isFavorito(vehicle.id))
-      setIsCurrentlyLiked(isCurtido(vehicle.id))
-    } else {
-      setIsCurrentlyFavorited(false)
-      setIsCurrentlyLiked(false)
-    }
-    setLocalLikes(vehicle.likes || 0) // Define a contagem de likes base
-  }, [user, vehicle.id, vehicle.likes, isFavorito, isCurtido])
+  }, [vehicle.id, vehicle.marca, vehicle.modelo, formattedPrice, toast])
 
   return (
     <Card
@@ -244,7 +171,10 @@ export function VehicleCard({ vehicle, className, showRemoveFromFavorites, onFav
                 width={400}
                 height={250}
                 className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
-                priority={false}
+                loading="lazy"
+                placeholder="blur"
+                blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               />
             </div>
             {vehicle.plano === "destaque" && (
@@ -266,7 +196,7 @@ export function VehicleCard({ vehicle, className, showRemoveFromFavorites, onFav
             <p className="text-xs md:text-sm text-muted-foreground mb-2 truncate h-4">
               {vehicle.versao || "Versão não informada"}
             </p>
-            <p className="text-xl md:text-2xl font-bold text-purple-700 mb-2 md:mb-3">{formatPrice(vehicle.preco)}</p>
+            <p className="text-xl md:text-2xl font-bold text-purple-700 mb-2 md:mb-3">{formattedPrice}</p>
 
             <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs md:text-sm text-muted-foreground mb-2 md:mb-3">
               <div className="flex items-center">
@@ -352,4 +282,6 @@ export function VehicleCard({ vehicle, className, showRemoveFromFavorites, onFav
       </CardFooter>
     </Card>
   )
-}
+})
+
+export { VehicleCard }

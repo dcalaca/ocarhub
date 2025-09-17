@@ -210,6 +210,28 @@ export class FipeDatabaseService {
     }
   }
 
+  // Buscar anos do banco por marca
+  static async getYearsByBrand(brandCode: string): Promise<FipeYearDB[]> {
+    try {
+      const { data, error } = await supabase
+        .from('ocar_fipe_years')
+        .select('*')
+        .eq('brand_code', brandCode)
+        .eq('active', true)
+        .order('year', { ascending: false })
+
+      if (error) {
+        console.error('Erro ao buscar anos por marca:', error)
+        throw error
+      }
+
+      return data || []
+    } catch (error) {
+      console.error('Erro no FipeDatabaseService.getYearsByBrand:', error)
+      throw error
+    }
+  }
+
   // ===== PREÇOS =====
   
   // Salvar preço FIPE no banco

@@ -134,7 +134,13 @@ export class FipeIntelligence {
     const lowerVersionName = versionName.toLowerCase()
     
     // Verificar se a versão começa com o nome do modelo
-    return lowerVersionName.startsWith(lowerModelName)
+    const startsWithModel = lowerVersionName.startsWith(lowerModelName)
+    
+    // Para anos, ser mais flexível - aceitar se contém o modelo em qualquer lugar
+    // Isso garante que versões como "Civic 2022" sejam incluídas
+    const containsModel = lowerVersionName.includes(lowerModelName)
+    
+    return startsWithModel || containsModel
   }
 
   // Extrair nome da versão sem o modelo
@@ -194,17 +200,55 @@ export class FipeIntelligence {
 
   // Extrair ano
   private static extractYear(name: string): number {
+    if (!name || typeof name !== 'string') {
+      console.warn('🔍 extractYear - Invalid name provided:', name)
+      return new Date().getFullYear()
+    }
+    
+    console.log(`🔍 extractYear - Processing name: "${name}"`)
+    
+    // Tentar extrair ano de 4 dígitos (1900-2099)
     const yearMatch = name.match(/\b(19|20)\d{2}\b/)
     if (yearMatch) {
-      return parseInt(yearMatch[0])
+      const year = parseInt(yearMatch[0])
+      console.log(`🔍 extractYear - Found year in name: ${year}`)
+      return year
     }
     
-    // Se não encontrar ano no nome, tentar extrair do código (ex: "2022-3")
-    const codeYearMatch = name.match(/(\d{4})/)
+    // Tentar extrair qualquer sequência de 4 dígitos
+    const anyYearMatch = name.match(/(\d{4})/)
+    if (anyYearMatch) {
+      const year = parseInt(anyYearMatch[1])
+      // Validar se está em um range razoável
+      if (year >= 1990 && year <= 2030) {
+        console.log(`🔍 extractYear - Found valid year in name: ${year}`)
+        return year
+      }
+    }
+    
+    // Tentar extrair ano de 2 dígitos (assumindo 20xx)
+    const twoDigitMatch = name.match(/\b(\d{2})\b/)
+    if (twoDigitMatch) {
+      const year = parseInt(twoDigitMatch[1])
+      // Se for menor que 30, assumir 20xx, senão 19xx
+      const fullYear = year < 30 ? 2000 + year : 1900 + year
+      if (fullYear >= 1990 && fullYear <= 2030) {
+        console.log(`🔍 extractYear - Found 2-digit year in name: ${fullYear}`)
+        return fullYear
+      }
+    }
+    
+    // Tentar extrair do código (ex: "2022-3", "2022/3")
+    const codeYearMatch = name.match(/(\d{4})[-/]/)
     if (codeYearMatch) {
-      return parseInt(codeYearMatch[1])
+      const year = parseInt(codeYearMatch[1])
+      if (year >= 1990 && year <= 2030) {
+        console.log(`🔍 extractYear - Found year in code: ${year}`)
+        return year
+      }
     }
     
+    console.warn(`🔍 extractYear - No valid year found in: "${name}"`)
     // Fallback: usar ano atual se não encontrar
     return new Date().getFullYear()
   }
@@ -267,49 +311,52 @@ export class FipeIntelligence {
     console.log('🔍 getUniqueYears - Sample years:', years.slice(0, 3))
     
     // Se não há anos, retornar array vazio
-    if (years.length === 0) {
+    if (!years || years.length === 0) {
       console.log('🔍 getUniqueYears - Nenhum ano encontrado, retornando array vazio')
       return []
     }
     
-    // Buscar todos os anos que têm carros que começam com o nome do modelo
-    const yearsWithModel = years.filter(year => {
-      const yearName = year.name.toLowerCase()
-      const modelName = selectedModel.toLowerCase()
-      const startsWithModel = yearName.startsWith(modelName)
-      console.log(`🔍 getUniqueYears - Year "${year.name}" starts with "${selectedModel}"? ${startsWithModel}`)
-      return startsWithModel
+    // Para anos, ser mais inclusivo - incluir todos os anos que contenham o modelo
+    console.log('🔍 getUniqueYears - Processando todos os anos disponíveis')
+    const finalYears = years.filter(year => {
+      if (!year || !year.name) return false
+      
+      // Incluir se o nome contém o modelo ou se é um ano válido
+      const containsModel = year.name.toLowerCase().includes(selectedModel.toLowerCase())
+      const hasValidYear = this.extractYear(year.name) >= 1990 && this.extractYear(year.name) <= 2030
+      
+      return containsModel || hasValidYear
     })
     
-    console.log('🔍 getUniqueYears - Years with model count:', yearsWithModel.length)
-    
-    // Se não encontrou nenhum ano com o modelo, tentar uma busca mais flexível
-    let finalYears = yearsWithModel
-    if (yearsWithModel.length === 0) {
-      console.log('🔍 getUniqueYears - Nenhum ano encontrado com filtro restritivo, tentando busca flexível')
-      
-      // Busca flexível: procurar por qualquer parte do nome do modelo
-      finalYears = years.filter(year => {
-        const yearName = year.name.toLowerCase()
-        const modelName = selectedModel.toLowerCase()
-        const containsModel = yearName.includes(modelName)
-        console.log(`🔍 getUniqueYears - Year "${year.name}" contains "${selectedModel}"? ${containsModel}`)
-        return containsModel
-      })
-      
-      console.log('🔍 getUniqueYears - Years with flexible search count:', finalYears.length)
-    }
-    
-    // Se ainda não encontrou nada, usar todos os anos disponíveis
-    if (finalYears.length === 0) {
-      console.log('🔍 getUniqueYears - Nenhum ano encontrado com busca flexível, usando todos os anos disponíveis')
-      finalYears = years
-    }
+    console.log('🔍 getUniqueYears - Anos filtrados:', finalYears.length)
     
     // Extrair anos únicos
     const uniqueYears = new Set<number>()
-    finalYears.forEach(year => {
+    finalYears.forEach((year, index) => {
+      // Validação mais robusta do objeto de ano
+      if (!year) {
+        console.warn(`🔍 getUniqueYears - Skipping null/undefined year at index ${index}:`, year)
+        return
+      }
+      
+      if (typeof year !== 'object') {
+        console.warn(`🔍 getUniqueYears - Skipping non-object year at index ${index}:`, year)
+        return
+      }
+      
+      if (!year.name || typeof year.name !== 'string') {
+        console.warn(`🔍 getUniqueYears - Skipping year with invalid name at index ${index}:`, year)
+        return
+      }
+      
       const extractedYear = this.extractYear(year.name)
+      
+      // Verificar se o ano extraído é válido
+      if (isNaN(extractedYear) || extractedYear < 1990 || extractedYear > 2030) {
+        console.log(`🔍 getUniqueYears - Filtered out invalid year from "${year.name}": ${extractedYear}`)
+        return
+      }
+      
       uniqueYears.add(extractedYear)
       console.log(`🔍 getUniqueYears - Extracted year from "${year.name}": ${extractedYear}`)
     })
@@ -328,17 +375,18 @@ export class FipeIntelligence {
   ): ProcessedVersion[] {
     console.log('🔍 getVersionsByYear - Input:', { yearsCount: years.length, selectedModel, targetYear })
     
-    // Buscar todas as versões que começam com o nome do modelo e têm o ano específico
+    // Buscar todas as versões que contêm o nome do modelo e têm o ano específico
     const versionsForYear = years.filter(year => {
+      if (!year || !year.name) return false
       const yearName = year.name.toLowerCase()
       const modelName = selectedModel.toLowerCase()
-      const startsWithModel = yearName.startsWith(modelName)
+      const containsModel = yearName.includes(modelName)
       const extractedYear = this.extractYear(year.name)
       const isTargetYear = extractedYear === targetYear
       
-      console.log(`🔍 getVersionsByYear - Year "${year.name}": starts with "${selectedModel}"? ${startsWithModel}, year: ${extractedYear}, is target? ${isTargetYear}`)
+      console.log(`🔍 getVersionsByYear - Year "${year.name}": contains "${selectedModel}"? ${containsModel}, year: ${extractedYear}, is target? ${isTargetYear}`)
       
-      return startsWithModel && isTargetYear
+      return containsModel && isTargetYear
     })
     
     console.log('🔍 getVersionsByYear - Versions for year count:', versionsForYear.length)
