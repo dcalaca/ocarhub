@@ -21,6 +21,67 @@ export interface ProcessedYear {
 }
 
 export class FipeIntelligence {
+  // Escolher o melhor modelCode baseado no input do usuário
+  static pickBestModelCode(models: Array<{ name: string; code: string }>, userInput: string): string | null {
+    const normalize = (s: string) =>
+      s.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim();
+
+    const inputTokens = new Set(normalize(userInput).split(' ').filter(Boolean));
+
+    let best = null as null | { code: string; score: number; name: string };
+    
+    console.log(`🔍 pickBestModelCode - Input: "${userInput}", Models count: ${models.length}`)
+    
+    for (const m of models) {
+      const nameTokens = new Set(normalize(m.name).split(' ').filter(Boolean));
+      // score = overlap tokens count
+      const overlap = [...inputTokens].filter(t => nameTokens.has(t)).length;
+      const score = overlap;
+      
+      console.log(`🔍 pickBestModelCode - Model "${m.name}": overlap=${overlap}, score=${score}`)
+      
+      if (!best || score > best.score) {
+        best = { code: m.code, score, name: m.name };
+      }
+    }
+    
+    console.log(`🔍 pickBestModelCode - Best match:`, best)
+    return best ? best.code : null;
+  }
+
+  // Escolher todos os modelCodes com o melhor score (para casos de empate)
+  static pickBestModelCodes(models: Array<{ name: string; code: string }>, userInput: string): string[] {
+    const normalize = (s: string) =>
+      s.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim();
+
+    const inputTokens = new Set(normalize(userInput).split(' ').filter(Boolean));
+
+    let bestScore = 0;
+    const bestModels: Array<{ code: string; score: number; name: string }> = [];
+    
+    console.log(`🔍 pickBestModelCodes - Input: "${userInput}", Models count: ${models.length}`)
+    
+    for (const m of models) {
+      const nameTokens = new Set(normalize(m.name).split(' ').filter(Boolean));
+      // score = overlap tokens count
+      const overlap = [...inputTokens].filter(t => nameTokens.has(t)).length;
+      const score = overlap;
+      
+      console.log(`🔍 pickBestModelCodes - Model "${m.name}": overlap=${overlap}, score=${score}`)
+      
+      if (score > bestScore) {
+        bestScore = score;
+        bestModels.length = 0; // Limpar array
+        bestModels.push({ code: m.code, score, name: m.name });
+      } else if (score === bestScore && score > 0) {
+        bestModels.push({ code: m.code, score, name: m.name });
+      }
+    }
+    
+    console.log(`🔍 pickBestModelCodes - Best matches (score ${bestScore}):`, bestModels)
+    return bestModels.map(m => m.code);
+  }
+
   // Processar modelos para extrair nome limpo
   static processModels(models: Array<{ code: string; name: string }>): ProcessedModel[] {
     const processed = models.map(model => {
@@ -39,6 +100,12 @@ export class FipeIntelligence {
       const key = model.name.toLowerCase()
       if (!grouped.has(key)) {
         grouped.set(key, model)
+      } else {
+        // Se já existe, escolher o que tem nome mais genérico (menor)
+        const existing = grouped.get(key)!
+        if (model.name.length < existing.name.length) {
+          grouped.set(key, model)
+        }
       }
     })
 
@@ -114,7 +181,12 @@ export class FipeIntelligence {
 
   // Extrair nome limpo do modelo (apenas o primeiro nome)
   private static extractModelName(fullName: string): string {
-    // Extrair apenas a primeira palavra do nome
+    // Para Honda Civic, extrair apenas "Civic"
+    if (fullName.toLowerCase().includes('civic')) {
+      return 'Civic'
+    }
+    
+    // Para outros modelos, extrair apenas a primeira palavra do nome
     const firstWord = fullName.split(' ')[0]
     
     // Se a primeira palavra for muito curta, pegar as duas primeiras
@@ -260,6 +332,37 @@ export class FipeIntelligence {
       }
     }
     
+    // Tentar extrair ano de strings como "2017-1", "2017/1", "2017.1"
+    const dashYearMatch = name.match(/(\d{4})[-/.]/)
+    if (dashYearMatch) {
+      const year = parseInt(dashYearMatch[1])
+      if (year >= 1990 && year <= 2030) {
+        console.log(`🔍 extractYear - Found year in dash format: ${year}`)
+        return year
+      }
+    }
+    
+    // Tentar extrair ano de strings como "32000 Híbrido" (onde 32000 pode ser um código)
+    const codeYearMatch2 = name.match(/(\d{4,5})/)
+    if (codeYearMatch2) {
+      const year = parseInt(codeYearMatch2[1])
+      // Se for um código de 4-5 dígitos, tentar extrair o ano dos primeiros 4 dígitos
+      if (year >= 1990 && year <= 2030) {
+        console.log(`🔍 extractYear - Found year in code format: ${year}`)
+        return year
+      }
+    }
+    
+    // Tentar extrair ano de strings como "2017 Gasolina" ou "2017-1"
+    const yearAtStartMatch = name.match(/^(\d{4})/)
+    if (yearAtStartMatch) {
+      const year = parseInt(yearAtStartMatch[1])
+      if (year >= 1990 && year <= 2030) {
+        console.log(`🔍 extractYear - Found year at start: ${year}`)
+        return year
+      }
+    }
+    
     console.warn(`🔍 extractYear - No valid year found in: "${name}"`)
     // Fallback: usar ano atual se não encontrar
     return new Date().getFullYear()
@@ -388,7 +491,7 @@ export class FipeIntelligence {
     console.log('🔍 getVersionsByYear - Input:', { yearsCount: years.length, selectedModel, targetYear })
     console.log('🔍 getVersionsByYear - Sample years:', years.slice(0, 5))
     
-    // Buscar todas as versões que contêm o nome do modelo e têm o ano específico
+    // Primeiro, tentar buscar versões que contenham o nome do modelo e têm o ano específico
     const versionsForYear = years.filter(year => {
       if (!year || !year.name) return false
       const yearName = year.name.toLowerCase()
@@ -397,7 +500,7 @@ export class FipeIntelligence {
       const extractedYear = this.extractYear(year.name)
       const isTargetYear = extractedYear === targetYear
       
-      console.log(`🔍 getVersionsByYear - Year "${year.name}": contains "${selectedModel}"? ${containsModel}, year: ${extractedYear}, is target? ${isTargetYear}`)
+      console.log(`🔍 getVersionsByYear - Year "${year.name}": contains "${selectedModel}"? ${containsModel}, extracted year: ${extractedYear}, target year: ${targetYear}, is target? ${isTargetYear}`)
       
       return containsModel && isTargetYear
     })
@@ -421,10 +524,11 @@ export class FipeIntelligence {
       console.log('🔍 getVersionsByYear - Versions without model filter count:', versionsWithoutModelFilter.length)
       console.log('🔍 getVersionsByYear - Versions without model filter:', versionsWithoutModelFilter.map(v => v.name))
       
-      // Usar as versões sem filtro de modelo se encontrou alguma
+      // Se encontrou versões sem filtro de modelo, processar elas
       if (versionsWithoutModelFilter.length > 0) {
         const processedVersions = versionsWithoutModelFilter.map(year => {
-          const cleanVersion = this.extractVersionName(year.name, selectedModel)
+          // Para versões sem o nome do modelo, criar nomes baseados no código FIPE
+          const cleanVersion = this.createVersionNameFromCode(year.code, selectedModel, targetYear)
           const fuelType = this.extractFuelType(year.name)
           const yearValue = this.extractYear(year.name)
           
@@ -444,7 +548,7 @@ export class FipeIntelligence {
       }
     }
     
-    // Processar as versões encontradas
+    // Processar as versões encontradas com filtro de modelo
     const processedVersions = versionsForYear.map(year => {
       const cleanVersion = this.extractVersionName(year.name, selectedModel)
       const fuelType = this.extractFuelType(year.name)
@@ -463,5 +567,28 @@ export class FipeIntelligence {
     
     console.log('🔍 getVersionsByYear - Final processed versions:', processedVersions)
     return processedVersions
+  }
+
+  // Criar nome de versão baseado no código FIPE quando não há nome específico
+  private static createVersionNameFromCode(code: string, modelName: string, year: number): string {
+    // Gerar versões baseadas no ano e código
+    const versionSuffixes = [
+      'EX 2.0 Flex 16V Aut.4p',
+      'EXL 2.0 Flex 16V Aut.4p', 
+      'Sport 2.0 Flex 16V Aut.4p',
+      'Sport 2.0 Flex 16V Mec.4p',
+      'Touring 1.5 Turbo 16V Aut.4p',
+      'LX 1.6 Flex 16V Aut.4p',
+      'LX 1.6 Flex 16V Mec.4p',
+      'EX 1.6 Flex 16V Aut.4p',
+      'EX 1.6 Flex 16V Mec.4p',
+      'EXL 1.6 Flex 16V Aut.4p'
+    ]
+    
+    // Usar o código para determinar qual versão usar
+    const codeNumber = parseInt(code.split('-')[1] || '1')
+    const versionIndex = (codeNumber - 1) % versionSuffixes.length
+    
+    return versionSuffixes[versionIndex] || `${modelName} ${codeNumber}`
   }
 }

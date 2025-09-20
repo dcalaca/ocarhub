@@ -345,11 +345,16 @@ class FipeDynamicData {
         const allModels = await this.getModelsByBrand(brandCode)
         console.log('🔍 getUniqueYears - Total de modelos da marca:', allModels.length)
         
-        // Filtrar modelos que começam com o nome selecionado
-        const matchingModels = allModels.filter(model => 
-          model.name.toLowerCase().startsWith(selectedModel.toLowerCase())
-        )
-        console.log('🔍 getUniqueYears - Modelos que começam com o nome:', matchingModels.length)
+        // Usar pickBestModelCodes para escolher todos os modelos com o melhor score
+        const bestModelCodes = FipeIntelligence.pickBestModelCodes(allModels, selectedModel)
+        console.log('🔍 getUniqueYears - Melhores modelCodes encontrados:', bestModelCodes)
+        
+        const matchingModels = bestModelCodes.length > 0 ? 
+          allModels.filter(model => bestModelCodes.includes(model.code)) : 
+          allModels.filter(model => 
+            model.name.toLowerCase().startsWith(selectedModel.toLowerCase())
+          )
+        console.log('🔍 getUniqueYears - Modelos que correspondem:', matchingModels.length)
         console.log('🔍 getUniqueYears - Modelos encontrados:', matchingModels.map(m => m.name))
         
         // Buscar anos de todos os modelos correspondentes

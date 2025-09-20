@@ -99,6 +99,7 @@ function SearchPageContent() {
     const filters: Partial<SearchFiltersType> = {}
 
     // Parse dos parâmetros da URL
+    const term = searchParams.get("term")
     const brand = searchParams.get("brand")
     const model = searchParams.get("model")
     const year = searchParams.get("year")
@@ -107,6 +108,10 @@ function SearchPageContent() {
     const city = searchParams.get("cidade")
     const plan = searchParams.get("plano")
 
+    // Busca por termo geral (marca, modelo, versão)
+    if (term) {
+      filters.termo = term
+    }
     if (brand) filters.marca = brand
     if (model) filters.modelo = model
     if (year) filters.anoMin = Number.parseInt(year)
@@ -119,6 +124,17 @@ function SearchPageContent() {
 
   const applyFilters = () => {
     let filtered = [...vehicles]
+
+    // Busca por termo geral (marca, modelo, versão)
+    if (currentFilters.termo) {
+      const termo = currentFilters.termo.toLowerCase()
+      filtered = filtered.filter((v) => 
+        v.marca.toLowerCase().includes(termo) ||
+        v.modelo.toLowerCase().includes(termo) ||
+        v.versao?.toLowerCase().includes(termo) ||
+        `${v.marca} ${v.modelo}`.toLowerCase().includes(termo)
+      )
+    }
 
     // Aplicar filtros
     if (currentFilters.marca) {
@@ -310,32 +326,34 @@ function SearchPageContent() {
         <div className="absolute inset-0 bg-black/20" />
         <div className="relative container mx-auto px-4">
           <div className="text-center mb-6">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white via-purple-100 to-white">
-              Buscar Veículos
-            </h1>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white via-purple-100 to-white">
+          Buscar Veículos
+        </h1>
             <div className="flex items-center justify-center gap-2 text-purple-100">
-              <Sparkles className="w-5 h-5" />
-              <span className="text-lg">
+              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="text-base sm:text-lg">
                 {searchStats.total > 0
                   ? `${searchStats.total} veículo${searchStats.total > 1 ? "s" : ""} encontrado${searchStats.total > 1 ? "s" : ""}`
                   : "Nenhum veículo encontrado"}
               </span>
-              <Sparkles className="w-5 h-5" />
+              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
           </div>
 
-          {/* Barra de controles - movida para dentro da seção hero */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between w-full gap-4">
-              <div className="flex items-center gap-4">
+          {/* Barra de controles - responsiva */}
+          <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-4">
+            {/* Primeira linha - Filtros e contador */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                 <Button
                   variant="secondary"
                   size="sm"
                   onClick={() => setShowFilters(!showFilters)}
-                  className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white border-white/20"
+                  className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white border-white/20 w-fit"
                 >
                   <SlidersHorizontal className="w-4 h-4" />
-                  {showFilters ? "Ocultar" : "Mostrar"} Filtros
+                  <span className="hidden sm:inline">{showFilters ? "Ocultar" : "Mostrar"} Filtros</span>
+                  <span className="sm:hidden">Filtros</span>
                   {getActiveFiltersCount() > 0 && (
                     <Badge variant="secondary" className="ml-1 bg-purple-500 text-white">
                       {getActiveFiltersCount()}
@@ -348,13 +366,14 @@ function SearchPageContent() {
                 </span>
               </div>
 
-              <div className="flex items-center gap-4">
+              {/* Controles de visualização */}
+              <div className="flex items-center gap-2">
                 <div className="flex items-center border border-white/20 rounded-lg bg-white/10">
                   <Button
                     variant={viewMode === "grid" ? "default" : "ghost"}
                     size="sm"
                     onClick={() => setViewMode("grid")}
-                    className="rounded-r-none bg-transparent hover:bg-white/20 text-white"
+                    className="rounded-r-none bg-transparent hover:bg-white/20 text-white px-2"
                   >
                     <Grid3X3 className="w-4 h-4" />
                   </Button>
@@ -362,19 +381,22 @@ function SearchPageContent() {
                     variant={viewMode === "list" ? "default" : "ghost"}
                     size="sm"
                     onClick={() => setViewMode("list")}
-                    className="rounded-l-none bg-transparent hover:bg-white/20 text-white"
+                    className="rounded-l-none bg-transparent hover:bg-white/20 text-white px-2"
                   >
                     <List className="w-4 h-4" />
                   </Button>
                 </div>
               </div>
+            </div>
 
-              <div className="flex items-center gap-4">
+            {/* Segunda linha - Ordenação e itens por página */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
                 <Select
                   value={currentFilters.ordenacao}
                   onValueChange={(value: any) => handleSearch({ ...currentFilters, ordenacao: value })}
                 >
-                  <SelectTrigger className="w-full sm:w-48 bg-white/10 border-white/20 text-white">
+                  <SelectTrigger className="w-full bg-white/10 border-white/20 text-white">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -385,12 +407,14 @@ function SearchPageContent() {
                     <SelectItem value="km-asc">Menor quilometragem</SelectItem>
                   </SelectContent>
                 </Select>
+      </div>
 
+              <div className="sm:w-32">
                 <Select
                   value={itemsPerPage.toString()}
                   onValueChange={(value) => setItemsPerPage(Number.parseInt(value))}
                 >
-                  <SelectTrigger className="w-full sm:w-32 bg-white/10 border-white/20 text-white">
+                  <SelectTrigger className="w-full bg-white/10 border-white/20 text-white">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -405,66 +429,80 @@ function SearchPageContent() {
 
           {/* Filtros ativos */}
           {getActiveFiltersCount() > 0 && (
-            <div className="flex items-center gap-2 flex-wrap mt-4">
-              <span className="text-sm text-purple-100">Filtros ativos:</span>
-              {currentFilters.marca && (
-                <Badge variant="secondary" className="flex items-center gap-1 bg-white/20 text-white">
-                  Marca: {currentFilters.marca}
-                  <X
-                    className="w-3 h-3 cursor-pointer"
-                    onClick={() => handleSearch({ ...currentFilters, marca: undefined })}
-                  />
-                </Badge>
-              )}
-              {currentFilters.modelo && (
-                <Badge variant="secondary" className="flex items-center gap-1 bg-white/20 text-white">
-                  Modelo: {currentFilters.modelo}
-                  <X
-                    className="w-3 h-3 cursor-pointer"
-                    onClick={() => handleSearch({ ...currentFilters, modelo: undefined })}
-                  />
-                </Badge>
-              )}
-              {currentFilters.cidade && (
-                <Badge variant="secondary" className="flex items-center gap-1 bg-white/20 text-white">
-                  <MapPin className="w-3 h-3" />
-                  {currentFilters.cidade}
-                  <X
-                    className="w-3 h-3 cursor-pointer"
-                    onClick={() => handleSearch({ ...currentFilters, cidade: undefined })}
-                  />
-                </Badge>
-              )}
-              {(currentFilters.precoMin || currentFilters.precoMax) && (
-                <Badge variant="secondary" className="flex items-center gap-1 bg-white/20 text-white">
-                  Preço: {currentFilters.precoMin ? formatPrice(currentFilters.precoMin) : "Min"} -{" "}
-                  {currentFilters.precoMax ? formatPrice(currentFilters.precoMax) : "Max"}
-                  <X
-                    className="w-3 h-3 cursor-pointer"
-                    onClick={() => handleSearch({ ...currentFilters, precoMin: undefined, precoMax: undefined })}
-                  />
-                </Badge>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearFilters}
-                className="text-xs text-purple-100 hover:text-white"
-              >
-                Limpar todos
-              </Button>
+            <div className="mt-4">
+              <div className="flex items-center gap-2 flex-wrap mb-2">
+                <span className="text-sm text-purple-100">Filtros ativos:</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearFilters}
+                  className="text-xs text-purple-100 hover:text-white"
+                >
+                  Limpar todos
+                </Button>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                {currentFilters.termo && (
+                  <Badge variant="secondary" className="flex items-center gap-1 bg-white/20 text-white">
+                    <span className="hidden sm:inline">Termo: </span>{currentFilters.termo}
+                    <X
+                      className="w-3 h-3 cursor-pointer"
+                      onClick={() => handleSearch({ ...currentFilters, termo: undefined })}
+                    />
+                  </Badge>
+                )}
+                {currentFilters.marca && (
+                  <Badge variant="secondary" className="flex items-center gap-1 bg-white/20 text-white">
+                    <span className="hidden sm:inline">Marca: </span>{currentFilters.marca}
+                    <X
+                      className="w-3 h-3 cursor-pointer"
+                      onClick={() => handleSearch({ ...currentFilters, marca: undefined })}
+                    />
+                  </Badge>
+                )}
+                {currentFilters.modelo && (
+                  <Badge variant="secondary" className="flex items-center gap-1 bg-white/20 text-white">
+                    <span className="hidden sm:inline">Modelo: </span>{currentFilters.modelo}
+                    <X
+                      className="w-3 h-3 cursor-pointer"
+                      onClick={() => handleSearch({ ...currentFilters, modelo: undefined })}
+                    />
+                  </Badge>
+                )}
+                {currentFilters.cidade && (
+                  <Badge variant="secondary" className="flex items-center gap-1 bg-white/20 text-white">
+                    <MapPin className="w-3 h-3" />
+                    {currentFilters.cidade}
+                    <X
+                      className="w-3 h-3 cursor-pointer"
+                      onClick={() => handleSearch({ ...currentFilters, cidade: undefined })}
+                    />
+                  </Badge>
+                )}
+                {(currentFilters.precoMin || currentFilters.precoMax) && (
+                  <Badge variant="secondary" className="flex items-center gap-1 bg-white/20 text-white">
+                    <span className="hidden sm:inline">Preço: </span>
+                    {currentFilters.precoMin ? formatPrice(currentFilters.precoMin) : "Min"} -{" "}
+                    {currentFilters.precoMax ? formatPrice(currentFilters.precoMax) : "Max"}
+                    <X
+                      className="w-3 h-3 cursor-pointer"
+                      onClick={() => handleSearch({ ...currentFilters, precoMin: undefined, precoMax: undefined })}
+                    />
+                  </Badge>
+                )}
+              </div>
             </div>
           )}
         </div>
       </div>
-
+      
       {/* Conteúdo principal */}
       <div className="container mx-auto px-4 py-6">
-        <div className="flex flex-col lg:flex-row gap-6">
+        <div className="flex flex-col xl:flex-row gap-6">
           {/* Sidebar de filtros */}
           {showFilters && (
-            <div className="w-full lg:w-80 lg:flex-shrink-0">
-              <div className="lg:sticky lg:top-8">
+            <div className="w-full xl:w-80 xl:flex-shrink-0">
+              <div className="xl:sticky xl:top-8">
                 <AdvancedSearchFilters onSearch={handleSearch} initialFilters={currentFilters} />
               </div>
             </div>
@@ -477,7 +515,9 @@ function SearchPageContent() {
               <>
                 <div
                   className={`grid gap-4 sm:gap-6 ${
-                    viewMode === "grid" ? "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3" : "grid-cols-1"
+                    viewMode === "grid" 
+                      ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4" 
+                      : "grid-cols-1"
                   }`}
                 >
                   {filteredVehicles.map((vehicle) => (
@@ -487,63 +527,72 @@ function SearchPageContent() {
 
                 {/* Paginação */}
                 {searchStats.pages > 1 && (
-                  <div className="flex items-center justify-center gap-2 mt-8 bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      disabled={currentPage === 1}
-                      className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                      Anterior
-                    </Button>
-
-                    <div className="flex items-center gap-1">
-                      {Array.from({ length: Math.min(5, searchStats.pages) }, (_, i) => {
-                        const page = i + 1
-                        return (
-                          <Button
-                            key={page}
-                            variant={page === currentPage ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => handlePageChange(page)}
-                            className={`w-10 ${
-                              page === currentPage
-                                ? "bg-purple-600 text-white"
-                                : "bg-white/10 border-white/20 text-white hover:bg-white/20"
-                            }`}
-                          >
-                            {page}
-                          </Button>
-                        )
-                      })}
-
-                      {searchStats.pages > 5 && (
-                        <>
-                          <span className="px-2 text-purple-100">...</span>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handlePageChange(searchStats.pages)}
-                            className="w-10 bg-white/10 border-white/20 text-white hover:bg-white/20"
-                          >
-                            {searchStats.pages}
-                          </Button>
-                        </>
-                      )}
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8 bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                    {/* Informações da página */}
+                    <div className="text-sm text-purple-100 order-2 sm:order-1">
+                      Página {currentPage} de {searchStats.pages}
                     </div>
 
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={currentPage === searchStats.pages}
-                      className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-                    >
-                      Próxima
-                      <ChevronRight className="w-4 h-4" />
-                    </Button>
+                    {/* Controles de paginação */}
+                    <div className="flex items-center gap-2 order-1 sm:order-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                        <span className="hidden sm:inline ml-1">Anterior</span>
+                      </Button>
+
+                      <div className="flex items-center gap-1">
+                        {/* Mostrar apenas 3 páginas no mobile, 5 no desktop */}
+                        {Array.from({ length: Math.min(5, searchStats.pages) }, (_, i) => {
+                          const page = i + 1
+                          return (
+                            <Button
+                              key={page}
+                              variant={page === currentPage ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => handlePageChange(page)}
+                              className={`w-8 sm:w-10 ${
+                                page === currentPage
+                                  ? "bg-purple-600 text-white"
+                                  : "bg-white/10 border-white/20 text-white hover:bg-white/20"
+                              }`}
+                            >
+                              {page}
+                            </Button>
+                          )
+                        })}
+
+                        {searchStats.pages > 5 && (
+                          <>
+                            <span className="px-2 text-purple-100">...</span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handlePageChange(searchStats.pages)}
+                              className="w-8 sm:w-10 bg-white/10 border-white/20 text-white hover:bg-white/20"
+                            >
+                              {searchStats.pages}
+                            </Button>
+                          </>
+                        )}
+                      </div>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === searchStats.pages}
+                        className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                      >
+                        <span className="hidden sm:inline mr-1">Próxima</span>
+                        <ChevronRight className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 )}
               </>

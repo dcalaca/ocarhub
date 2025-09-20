@@ -10,6 +10,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Checkbox } from "@/components/ui/checkbox"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Search, Filter, X, ChevronDown, ChevronUp } from "lucide-react"
+import { SmartFilterInput } from "@/components/smart-filter-input"
+import { ExpandableFilterGroup } from "@/components/expandable-filter-group"
 import { getAllBrands, getModelsByBrand, getVersionsByModel, getYearsByVersion } from "@/lib/data/vehicles-database"
 import {
   cores,
@@ -25,6 +27,7 @@ import {
 } from "@/lib/data/filters"
 
 export interface AdvancedSearchFilters {
+  termo?: string
   estado?: string
   cidade?: string
   condicao?: string
@@ -62,86 +65,238 @@ export function AdvancedSearchFilters({ onSearch, initialFilters = {} }: Advance
   const [filters, setFilters] = useState<AdvancedSearchFilters>({
     ordenacao: initialFilters.ordenacao || "relevancia",
     combustivel: [],
+    finalPlaca: "",
     tipoVendedor: [],
+    caracteristicas: [],
+    blindagem: "",
+    leilao: "",
     cores: [],
     carroceria: [],
     opcionais: [],
-    caracteristicas: [],
     ...initialFilters,
   })
 
-  const [expandedSections, setExpandedSections] = useState({
-    localizacao: true,
-    tipoVendedor: false,
-    caracteristicasVeiculo: false,
-    filtrosAvancados: false,
-  })
+
+  // Opções para os filtros expansíveis
+  const combustivelOptions = [
+    { value: "flex", label: "Flex (Gasolina/Álcool)", count: 125956 },
+    { value: "gasolina", label: "Gasolina", count: 32586 },
+    { value: "alcool", label: "Álcool/Etanol", count: 433 },
+    { value: "diesel", label: "Diesel", count: 13429 },
+    { value: "diesel-s10", label: "Diesel S-10", count: 0 },
+    { value: "eletrico", label: "Elétrico", count: 2321 },
+    { value: "hibrido", label: "Híbrido", count: 7544 },
+    { value: "hibrido-flex", label: "Híbrido Flex", count: 0 },
+    { value: "gnv", label: "GNV", count: 178 },
+    { value: "gnv-gasolina", label: "GNV/Gasolina", count: 0 },
+    { value: "gasolina-gnv", label: "Gasolina/GNV", count: 0 },
+    { value: "plug-in-hybrid", label: "Plug-in Hybrid", count: 0 },
+  ]
+
+  const finalPlacaOptions = [
+    { value: "0", label: "0", count: 0 },
+    { value: "1", label: "1", count: 0 },
+    { value: "2", label: "2", count: 0 },
+    { value: "3", label: "3", count: 0 },
+    { value: "4", label: "4", count: 0 },
+    { value: "5", label: "5", count: 0 },
+    { value: "6", label: "6", count: 0 },
+    { value: "7", label: "7", count: 0 },
+    { value: "8", label: "8", count: 0 },
+    { value: "9", label: "9", count: 0 },
+  ]
+
+  const tipoVendedorOptions = [
+    { value: "concessionaria", label: "Concessionária", count: 0 },
+    { value: "loja", label: "Loja", count: 0 },
+    { value: "particular", label: "Particular", count: 0 },
+    { value: "revenda", label: "Revenda", count: 0 },
+  ]
+
+  const caracteristicasVeiculoOptions = [
+    { value: "aceita-troca", label: "Aceita Troca", count: 0 },
+    { value: "alienado", label: "Alienado", count: 0 },
+    { value: "garantia-fabrica", label: "Garantia de Fábrica", count: 0 },
+    { value: "ipva-pago", label: "IPVA Pago", count: 0 },
+    { value: "licenciado", label: "Licenciado", count: 0 },
+    { value: "revisoes-concessionaria", label: "Revisões na Concessionária", count: 0 },
+    { value: "unico-dono", label: "Único Dono", count: 0 },
+  ]
+
+  const blindagemOptions = [
+    { value: "sim", label: "Sim", count: 0 },
+    { value: "nao", label: "Não", count: 0 },
+  ]
+
+  const leilaoOptions = [
+    { value: "sim", label: "Sim", count: 0 },
+    { value: "nao", label: "Não", count: 0 },
+  ]
+
+  // Converter arrays existentes para o formato do ExpandableFilterGroup
+  const coresOptions = cores.map(cor => ({ value: cor, label: cor, count: 0 }))
+  const carroceriaOptions = carrocerias.map(carroceria => ({ value: carroceria, label: carroceria, count: 0 }))
+  const opcionaisOptions = opcionais.map(opcional => ({ value: opcional, label: opcional, count: 0 }))
+
+  // Estados para filtros inteligentes
+  const [marcas, setMarcas] = useState<Array<{id: string, name: string}>>([])
+  const [veiculos, setVeiculos] = useState<Array<{id: string, name: string}>>([])
+  const [modelos, setModelos] = useState<Array<{id: string, name: string}>>([])
+  const [anos, setAnos] = useState<Array<{id: number, name: string}>>([])
+  const [estados, setEstados] = useState<Array<{id: string, name: string}>>([])
+  const [cidades, setCidades] = useState<Array<{id: string, name: string}>>([])
+
+
+  // Função para converter nome do estado para sigla
+  const getSiglaEstado = (nomeEstado: string) => {
+    const mapeamentoEstados: { [key: string]: string } = {
+      'Acre': 'AC',
+      'Alagoas': 'AL',
+      'Amapá': 'AP',
+      'Amazonas': 'AM',
+      'Bahia': 'BA',
+      'Ceará': 'CE',
+      'Distrito Federal': 'DF',
+      'Espírito Santo': 'ES',
+      'Goiás': 'GO',
+      'Maranhão': 'MA',
+      'Mato Grosso': 'MT',
+      'Mato Grosso do Sul': 'MS',
+      'Minas Gerais': 'MG',
+      'Pará': 'PA',
+      'Paraíba': 'PB',
+      'Paraná': 'PR',
+      'Pernambuco': 'PE',
+      'Piauí': 'PI',
+      'Rio de Janeiro': 'RJ',
+      'Rio Grande do Norte': 'RN',
+      'Rio Grande do Sul': 'RS',
+      'Rondônia': 'RO',
+      'Roraima': 'RR',
+      'Santa Catarina': 'SC',
+      'São Paulo': 'SP',
+      'Sergipe': 'SE',
+      'Tocantins': 'TO'
+    }
+    return mapeamentoEstados[nomeEstado] || nomeEstado
+  }
 
   // Estados para filtros dependentes
   const [availableModels, setAvailableModels] = useState<string[]>([])
   const [availableVersions, setAvailableVersions] = useState<string[]>([])
   const [availableYears, setAvailableYears] = useState<number[]>([])
 
-  // Atualizar modelos quando marca muda
+  // Carregar dados para filtros inteligentes
+  useEffect(() => {
+    const carregarMarcas = async () => {
+      try {
+        const response = await fetch('/api/fipe/marcas')
+        const data = await response.json()
+        setMarcas(data.map((marca: any) => ({ id: marca.id.toString(), name: marca.name })))
+      } catch (error) {
+        console.error('Erro ao carregar marcas:', error)
+      }
+    }
+    carregarMarcas()
+  }, [])
+
+  // Carregar estados
+  useEffect(() => {
+    const carregarEstados = async () => {
+      try {
+        const response = await fetch('/api/estados')
+        const data = await response.json()
+        const estadosMapeados = data.map((estado: any) => ({ id: estado.nome, name: estado.nome }))
+        setEstados(estadosMapeados)
+      } catch (error) {
+        console.error('Erro ao carregar estados:', error)
+      }
+    }
+    carregarEstados()
+  }, [])
+
+  // Carregar cidades baseado no estado selecionado
+  useEffect(() => {
+    if (filters.estado) {
+      const siglaEstado = getSiglaEstado(filters.estado)
+      const carregarCidades = async () => {
+        try {
+          const response = await fetch(`/api/estados/${siglaEstado}/municipios`)
+          const data = await response.json()
+          const cidadesMapeadas = data.map((municipio: any) => ({ id: municipio.id.toString(), name: municipio.nome }))
+          setCidades(cidadesMapeadas)
+        } catch (error) {
+          console.error('Erro ao carregar cidades:', error)
+          setCidades([])
+        }
+      }
+      carregarCidades()
+    } else {
+      setCidades([])
+    }
+  }, [filters.estado])
+
+  // Carregar veículos quando marca for selecionada
   useEffect(() => {
     if (filters.marca) {
-      const models = getModelsByBrand(filters.marca)
-      setAvailableModels(models)
-
-      // Limpar modelo, versão e ano se não estão mais disponíveis
-      if (filters.modelo && !models.includes(filters.modelo)) {
-        setFilters((prev) => ({ ...prev, modelo: undefined, versao: undefined, anoMin: undefined, anoMax: undefined }))
+      const carregarVeiculos = async () => {
+        try {
+          const response = await fetch(`/api/fipe/modelos?marca=${filters.marca}`)
+          const data = await response.json()
+          setVeiculos(data.map((veiculo: any) => ({ id: veiculo.id.toString(), name: veiculo.name })))
+        } catch (error) {
+          console.error('Erro ao carregar veículos:', error)
+        }
       }
+      carregarVeiculos()
     } else {
-      setAvailableModels([])
-      setFilters((prev) => ({ ...prev, modelo: undefined, versao: undefined, anoMin: undefined, anoMax: undefined }))
+      setVeiculos([])
     }
   }, [filters.marca])
 
-  // Atualizar versões quando modelo muda
+  // Carregar anos quando veículo for selecionado
   useEffect(() => {
-    if (filters.marca && filters.modelo) {
-      const versions = getVersionsByModel(filters.marca, filters.modelo)
-      setAvailableVersions(versions)
-
-      // Limpar versão se não está mais disponível
-      if (filters.versao && !versions.includes(filters.versao)) {
-        setFilters((prev) => ({ ...prev, versao: undefined, anoMin: undefined, anoMax: undefined }))
+    if (filters.marca && filters.veiculo) {
+      const carregarAnos = async () => {
+        try {
+          const response = await fetch(`/api/fipe/anos-por-veiculo?marca=${filters.marca}&veiculo=${filters.veiculo}`)
+          const data = await response.json()
+          setAnos(data.map((item: any) => ({ id: item.ano, name: item.ano.toString() })))
+        } catch (error) {
+          console.error('Erro ao carregar anos:', error)
+        }
       }
+      carregarAnos()
     } else {
-      setAvailableVersions([])
-      setFilters((prev) => ({ ...prev, versao: undefined, anoMin: undefined, anoMax: undefined }))
+      setAnos([])
     }
-  }, [filters.marca, filters.modelo])
+  }, [filters.marca, filters.veiculo])
 
-  // Atualizar anos quando versão muda
+  // Carregar modelos quando ano for selecionado
   useEffect(() => {
-    if (filters.marca && filters.modelo && filters.versao) {
-      const years = getYearsByVersion(filters.marca, filters.modelo, filters.versao)
-      setAvailableYears(years)
+    if (filters.marca && filters.veiculo && filters.anoMin) {
+      const carregarModelos = async () => {
+        try {
+          const response = await fetch(`/api/fipe/modelos-por-ano?marca=${filters.marca}&veiculo=${filters.veiculo}&ano=${filters.anoMin}`)
+          const data = await response.json()
+          setModelos(data.map((modelo: any) => ({ id: modelo.id.toString(), name: modelo.name })))
+        } catch (error) {
+          console.error('Erro ao carregar modelos:', error)
+        }
+      }
+      carregarModelos()
     } else {
-      setAvailableYears([])
+      setModelos([])
     }
-  }, [filters.marca, filters.modelo, filters.versao])
+  }, [filters.marca, filters.veiculo, filters.anoMin])
+
+
+
 
   const handleFilterChange = (key: keyof AdvancedSearchFilters, value: any) => {
     setFilters((prev) => ({ ...prev, [key]: value }))
   }
 
-  const handleArrayFilterToggle = (key: keyof AdvancedSearchFilters, value: string) => {
-    setFilters((prev) => {
-      const currentArray = (prev[key] as string[]) || []
-      if (currentArray.includes(value)) {
-        return { ...prev, [key]: currentArray.filter((item) => item !== value) }
-      } else {
-        return { ...prev, [key]: [...currentArray, value] }
-      }
-    })
-  }
-
-  const toggleSection = (section: keyof typeof expandedSections) => {
-    setExpandedSections((prev) => ({ ...prev, [section]: !prev[section] }))
-  }
 
   const handleSearch = () => {
     onSearch(filters)
@@ -188,60 +343,56 @@ export function AdvancedSearchFilters({ onSearch, initialFilters = {} }: Advance
         )}
       </div>
 
-      {/* Localização */}
-      <Collapsible open={expandedSections.localizacao} onOpenChange={() => toggleSection("localizacao")}>
-        <CollapsibleTrigger className="flex items-center justify-between w-full py-2 text-left">
-          <span className="font-medium">Localização</span>
-          {expandedSections.localizacao ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-        </CollapsibleTrigger>
-        <CollapsibleContent className="space-y-4 mt-2">
-          <div>
-            <Label htmlFor="estado" className="text-sm text-gray-300">
-              Estado
-            </Label>
-            <Select
-              value={filters.estado || ""}
-              onValueChange={(value) => {
-                handleFilterChange("estado", value === "" ? undefined : value)
-                handleFilterChange("cidade", undefined)
-              }}
-            >
-              <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
-                <SelectValue placeholder="Selecione o estado" />
-              </SelectTrigger>
-              <SelectContent className="bg-gray-800 border-gray-700">
-                {estados.map((estado) => (
-                  <SelectItem key={estado.sigla} value={estado.sigla} className="text-white">
-                    {estado.nome} ({estado.sigla})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+      {/* Busca por termo */}
+      <div>
+        <Label htmlFor="termo" className="text-sm text-gray-300">
+          Buscar por termo
+        </Label>
+        <Input
+          id="termo"
+          type="text"
+          placeholder="Digite marca, modelo ou versão..."
+          value={filters.termo || ""}
+          onChange={(e) => handleFilterChange("termo", e.target.value === "" ? undefined : e.target.value)}
+          className="bg-gray-800 border-gray-700 text-white placeholder-gray-400"
+        />
+      </div>
 
-          <div>
-            <Label htmlFor="cidade" className="text-sm text-gray-300">
-              Cidade
-            </Label>
-            <Select
-              value={filters.cidade || ""}
-              onValueChange={(value) => handleFilterChange("cidade", value === "" ? undefined : value)}
-              disabled={!filters.estado}
-            >
-              <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
-                <SelectValue placeholder="Selecione a cidade" />
-              </SelectTrigger>
-              <SelectContent className="bg-gray-800 border-gray-700">
-                {getCidadesDisponiveis().map((cidade) => (
-                  <SelectItem key={cidade} value={cidade} className="text-white">
-                    {cidade}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </CollapsibleContent>
-      </Collapsible>
+      {/* Localização */}
+      <div className="space-y-4">
+        <div>
+          <Label htmlFor="estado" className="text-sm text-gray-300">
+            Estado
+          </Label>
+          <SmartFilterInput
+            options={estados}
+            value={filters.estado || ""}
+            onChange={(value) => {
+              handleFilterChange("estado", value === "" ? undefined : value)
+              handleFilterChange("cidade", undefined)
+            }}
+            placeholder="Digite ou selecione o estado"
+            className="bg-gray-800 border-gray-700 text-white"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="cidade" className="text-sm text-gray-300">
+            Cidade
+          </Label>
+          <SmartFilterInput
+            options={cidades}
+            value={filters.cidade || ""}
+            onChange={(value) => handleFilterChange("cidade", value === "" ? undefined : value)}
+            placeholder={filters.estado ? "Digite ou selecione a cidade" : "Primeiro selecione o estado"}
+            disabled={!filters.estado}
+            className="bg-gray-800 border-gray-700 text-white"
+          />
+          {cidades.length === 0 && filters.estado && (
+            <p className="text-sm text-gray-400 mt-1">Nenhuma opção encontrada</p>
+          )}
+        </div>
+      </div>
 
       {/* Condição */}
       <div>
@@ -271,21 +422,75 @@ export function AdvancedSearchFilters({ onSearch, initialFilters = {} }: Advance
         <Label htmlFor="marca" className="text-sm text-gray-300">
           Marca
         </Label>
-        <Select
+        <SmartFilterInput
+          options={marcas}
           value={filters.marca || ""}
-          onValueChange={(value) => handleFilterChange("marca", value === "" ? undefined : value)}
-        >
-          <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
-            <SelectValue placeholder="Selecione a marca" />
-          </SelectTrigger>
-          <SelectContent className="bg-gray-800 border-gray-700">
-            {allBrands.map((marca) => (
-              <SelectItem key={marca} value={marca} className="text-white">
-                {marca}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          onChange={(value) => {
+            handleFilterChange("marca", value === "" ? undefined : value)
+            handleFilterChange("veiculo", undefined)
+            handleFilterChange("anoMin", undefined)
+            handleFilterChange("anoMax", undefined)
+            handleFilterChange("modelo", undefined)
+          }}
+          placeholder="Digite ou selecione a marca"
+          className="bg-gray-800 border-gray-700 text-white"
+        />
+      </div>
+
+      {/* Veículo */}
+      <div>
+        <Label htmlFor="veiculo" className="text-sm text-gray-300">
+          Veículo
+        </Label>
+        <SmartFilterInput
+          options={veiculos}
+          value={filters.veiculo || ""}
+          onChange={(value) => {
+            handleFilterChange("veiculo", value === "" ? undefined : value)
+            handleFilterChange("anoMin", undefined)
+            handleFilterChange("anoMax", undefined)
+            handleFilterChange("modelo", undefined)
+          }}
+          placeholder={filters.marca ? "Digite ou selecione o veículo" : "Primeiro selecione a marca"}
+          disabled={!filters.marca}
+          className="bg-gray-800 border-gray-700 text-white"
+        />
+      </div>
+
+      {/* Ano */}
+      <div>
+        <Label className="text-sm text-gray-300">Ano</Label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div>
+            <Label htmlFor="anoMin" className="text-xs text-gray-400">
+              Ano mín.
+            </Label>
+            <SmartFilterInput
+              options={anos}
+              value={filters.anoMin?.toString() || ""}
+              onChange={(value) => {
+                handleFilterChange("anoMin", value ? Number(value) : undefined)
+                handleFilterChange("modelo", undefined)
+              }}
+              placeholder={filters.veiculo ? "Ano mín." : "Primeiro selecione o veículo"}
+              disabled={!filters.veiculo}
+              className="bg-gray-800 border-gray-700 text-white"
+            />
+          </div>
+          <div>
+            <Label htmlFor="anoMax" className="text-xs text-gray-400">
+              Ano máx.
+            </Label>
+            <SmartFilterInput
+              options={anos}
+              value={filters.anoMax?.toString() || ""}
+              onChange={(value) => handleFilterChange("anoMax", value ? Number(value) : undefined)}
+              placeholder={filters.veiculo ? "Ano máx." : "Primeiro selecione o veículo"}
+              disabled={!filters.veiculo}
+              className="bg-gray-800 border-gray-700 text-white"
+            />
+          </div>
+        </div>
       </div>
 
       {/* Modelo */}
@@ -293,88 +498,14 @@ export function AdvancedSearchFilters({ onSearch, initialFilters = {} }: Advance
         <Label htmlFor="modelo" className="text-sm text-gray-300">
           Modelo
         </Label>
-        <Select
+        <SmartFilterInput
+          options={modelos}
           value={filters.modelo || ""}
-          onValueChange={(value) => handleFilterChange("modelo", value === "" ? undefined : value)}
-          disabled={!filters.marca}
-        >
-          <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
-            <SelectValue placeholder={filters.marca ? "Selecione o modelo" : "Primeiro selecione a marca"} />
-          </SelectTrigger>
-          <SelectContent className="bg-gray-800 border-gray-700">
-            {availableModels.map((modelo) => (
-              <SelectItem key={modelo} value={modelo} className="text-white">
-                {modelo}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Versão */}
-      <div>
-        <Label htmlFor="versao" className="text-sm text-gray-300">
-          Versão
-        </Label>
-        <Select
-          value={filters.versao || ""}
-          onValueChange={(value) => handleFilterChange("versao", value === "" ? undefined : value)}
-          disabled={!filters.modelo}
-        >
-          <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
-            <SelectValue placeholder={filters.modelo ? "Selecione a versão" : "Primeiro selecione o modelo"} />
-          </SelectTrigger>
-          <SelectContent className="bg-gray-800 border-gray-700">
-            {availableVersions.map((versao) => (
-              <SelectItem key={versao} value={versao} className="text-white">
-                {versao}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Ano */}
-      <div>
-        <Label className="text-sm text-gray-300">Ano</Label>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <Select
-            value={filters.anoMin?.toString() || ""}
-            onValueChange={(value) => handleFilterChange("anoMin", value ? Number(value) : undefined)}
-            disabled={!filters.versao}
-          >
-            <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
-              <SelectValue placeholder="Ano mín." />
-            </SelectTrigger>
-            <SelectContent className="bg-gray-800 border-gray-700">
-              {(availableYears.length > 0 ? availableYears : Array.from({ length: 30 }, (_, i) => 2024 - i)).map(
-                (ano) => (
-                  <SelectItem key={ano} value={ano.toString()} className="text-white">
-                    {ano}
-                  </SelectItem>
-                ),
-              )}
-            </SelectContent>
-          </Select>
-          <Select
-            value={filters.anoMax?.toString() || ""}
-            onValueChange={(value) => handleFilterChange("anoMax", value ? Number(value) : undefined)}
-            disabled={!filters.versao}
-          >
-            <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
-              <SelectValue placeholder="Ano máx." />
-            </SelectTrigger>
-            <SelectContent className="bg-gray-800 border-gray-700">
-              {(availableYears.length > 0 ? availableYears : Array.from({ length: 30 }, (_, i) => 2024 - i)).map(
-                (ano) => (
-                  <SelectItem key={ano} value={ano.toString()} className="text-white">
-                    {ano}
-                  </SelectItem>
-                ),
-              )}
-            </SelectContent>
-          </Select>
-        </div>
+          onChange={(value) => handleFilterChange("modelo", value === "" ? undefined : value)}
+          placeholder={filters.veiculo && filters.anoMin ? "Digite ou selecione o modelo" : "Primeiro selecione veículo e ano"}
+          disabled={!filters.veiculo || !filters.anoMin}
+          className="bg-gray-800 border-gray-700 text-white"
+        />
       </div>
 
       {/* Preço */}
@@ -382,19 +513,95 @@ export function AdvancedSearchFilters({ onSearch, initialFilters = {} }: Advance
         <Label className="text-sm text-gray-300">Preço (R$)</Label>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <Input
-            placeholder="Min"
-            type="number"
-            value={filters.precoMin || ""}
-            onChange={(e) => handleFilterChange("precoMin", e.target.value ? Number(e.target.value) : undefined)}
+            type="text"
+            placeholder="Preço mínimo"
+            value={filters.precoMin ? filters.precoMin.toLocaleString('pt-BR') : ""}
+            onChange={(e) => {
+              const value = e.target.value.replace(/\./g, '').replace(',', '.')
+              const numericValue = value ? Number(value) : undefined
+              handleFilterChange("precoMin", numericValue)
+            }}
             className="bg-gray-800 border-gray-700 text-white placeholder-gray-400"
           />
           <Input
-            placeholder="Max"
-            type="number"
-            value={filters.precoMax || ""}
-            onChange={(e) => handleFilterChange("precoMax", e.target.value ? Number(e.target.value) : undefined)}
+            type="text"
+            placeholder="Preço máximo"
+            value={filters.precoMax ? filters.precoMax.toLocaleString('pt-BR') : ""}
+            onChange={(e) => {
+              const value = e.target.value.replace(/\./g, '').replace(',', '.')
+              const numericValue = value ? Number(value) : undefined
+              handleFilterChange("precoMax", numericValue)
+            }}
             className="bg-gray-800 border-gray-700 text-white placeholder-gray-400"
           />
+        </div>
+
+        {/* Pré-seleções inteligentes */}
+        <div className="mt-3">
+          <Label className="text-xs text-gray-400 mb-2 block">Pré-seleções rápidas</Label>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                handleFilterChange("precoMin", undefined)
+                handleFilterChange("precoMax", undefined)
+              }}
+              className="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors"
+            >
+              Qualquer preço
+            </button>
+            <button
+              type="button"
+              onClick={() => handleFilterChange("precoMax", 50000)}
+              className="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors"
+            >
+              Até 50 mil
+            </button>
+            <button
+              type="button"
+              onClick={() => handleFilterChange("precoMax", 70000)}
+              className="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors"
+            >
+              Até 70 mil
+            </button>
+            <button
+              type="button"
+              onClick={() => handleFilterChange("precoMax", 80000)}
+              className="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors"
+            >
+              Até 80 mil
+            </button>
+            <button
+              type="button"
+              onClick={() => handleFilterChange("precoMax", 100000)}
+              className="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors"
+            >
+              Até 100 mil
+            </button>
+            <button
+              type="button"
+              onClick={() => handleFilterChange("precoMax", 150000)}
+              className="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors"
+            >
+              Até 150 mil
+            </button>
+          </div>
+          <div className="grid grid-cols-2 gap-2 mt-1">
+            <button
+              type="button"
+              onClick={() => handleFilterChange("precoMax", 200000)}
+              className="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors"
+            >
+              Até 200 mil
+            </button>
+            <button
+              type="button"
+              onClick={() => handleFilterChange("precoMax", 999999)}
+              className="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors"
+            >
+              + 200 mil
+            </button>
+          </div>
         </div>
       </div>
 
@@ -449,14 +656,14 @@ export function AdvancedSearchFilters({ onSearch, initialFilters = {} }: Advance
               type="number"
               value={filters.kmMin || ""}
               onChange={(e) => handleFilterChange("kmMin", e.target.value ? Number(e.target.value) : undefined)}
-              className="bg-gray-800 border-gray-700 text-white placeholder-gray-400"
+              className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
             <Input
               placeholder="KM máx."
               type="number"
               value={filters.kmMax || ""}
               onChange={(e) => handleFilterChange("kmMax", e.target.value ? Number(e.target.value) : undefined)}
-              className="bg-gray-800 border-gray-700 text-white placeholder-gray-400"
+              className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
           </div>
         )}
@@ -483,216 +690,76 @@ export function AdvancedSearchFilters({ onSearch, initialFilters = {} }: Advance
       </div>
 
       {/* Combustível */}
-      <div>
-        <Label className="text-sm text-gray-300">Combustível</Label>
-        <div className="space-y-2">
-          {combustiveis.map((combustivel) => (
-            <div key={combustivel} className="flex items-center space-x-2">
-              <Checkbox
-                id={`combustivel-${combustivel}`}
-                checked={filters.combustivel?.includes(combustivel) || false}
-                onCheckedChange={() => handleArrayFilterToggle("combustivel", combustivel)}
-                className="border-gray-600 data-[state=checked]:bg-purple-600"
-              />
-              <Label htmlFor={`combustivel-${combustivel}`} className="text-sm text-gray-300 cursor-pointer">
-                {combustivel}
-              </Label>
-            </div>
-          ))}
-        </div>
-      </div>
+      <ExpandableFilterGroup
+        title="Combustível"
+        options={combustivelOptions}
+        selectedValues={filters.combustivel || []}
+        onSelectionChange={(values) => handleFilterChange("combustivel", values)}
+      />
 
       {/* Final da Placa */}
-      <div>
-        <Label className="text-sm text-gray-300">Final da Placa</Label>
-        <Select
-          value={filters.finalPlaca || ""}
-          onValueChange={(value) => handleFilterChange("finalPlaca", value === "" ? undefined : value)}
-        >
-          <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
-            <SelectValue placeholder="Selecione o final" />
-          </SelectTrigger>
-          <SelectContent className="bg-gray-800 border-gray-700">
-            {finaisPlaca.map((final) => (
-              <SelectItem key={final.value} value={final.value} className="text-white">
-                {final.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <ExpandableFilterGroup
+        title="Final da Placa"
+        options={finalPlacaOptions}
+        selectedValues={filters.finalPlaca ? [filters.finalPlaca] : []}
+        onSelectionChange={(values) => handleFilterChange("finalPlaca", values[0] || "")}
+      />
 
       {/* Tipo de Vendedor */}
-      <Collapsible open={expandedSections.tipoVendedor} onOpenChange={() => toggleSection("tipoVendedor")}>
-        <CollapsibleTrigger className="flex items-center justify-between w-full py-2 text-left">
-          <span className="font-medium">Tipo de Vendedor</span>
-          {expandedSections.tipoVendedor ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-        </CollapsibleTrigger>
-        <CollapsibleContent className="space-y-2 mt-2">
-          {tiposVendedor.map((tipo) => (
-            <div key={tipo} className="flex items-center space-x-2">
-              <Checkbox
-                id={`vendedor-${tipo}`}
-                checked={filters.tipoVendedor?.includes(tipo) || false}
-                onCheckedChange={() => handleArrayFilterToggle("tipoVendedor", tipo)}
-                className="border-gray-600 data-[state=checked]:bg-purple-600"
-              />
-              <Label htmlFor={`vendedor-${tipo}`} className="text-sm text-gray-300 cursor-pointer">
-                {tipo}
-              </Label>
-            </div>
-          ))}
-        </CollapsibleContent>
-      </Collapsible>
+      <ExpandableFilterGroup
+        title="Tipo de Vendedor"
+        options={tipoVendedorOptions}
+        selectedValues={filters.tipoVendedor || []}
+        onSelectionChange={(values) => handleFilterChange("tipoVendedor", values)}
+      />
 
       {/* Características do Veículo */}
-      <Collapsible
-        open={expandedSections.caracteristicasVeiculo}
-        onOpenChange={() => toggleSection("caracteristicasVeiculo")}
-      >
-        <CollapsibleTrigger className="flex items-center justify-between w-full py-2 text-left">
-          <span className="font-medium">Características do Veículo</span>
-          {expandedSections.caracteristicasVeiculo ? (
-            <ChevronUp className="h-4 w-4" />
-          ) : (
-            <ChevronDown className="h-4 w-4" />
-          )}
-        </CollapsibleTrigger>
-        <CollapsibleContent className="space-y-4 mt-2">
-          {/* Cores */}
-          <div>
-            <Label className="text-sm text-gray-300 mb-2 block">Cores</Label>
-            <div className="space-y-2 max-h-32 overflow-y-auto pr-2">
-              {cores.map((cor) => (
-                <div key={cor} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`cor-${cor}`}
-                    checked={filters.cores?.includes(cor) || false}
-                    onCheckedChange={() => handleArrayFilterToggle("cores", cor)}
-                    className="border-gray-600 data-[state=checked]:bg-purple-600"
-                  />
-                  <Label htmlFor={`cor-${cor}`} className="text-sm text-gray-300 cursor-pointer">
-                    {cor}
-                  </Label>
-                </div>
-              ))}
-            </div>
-          </div>
+      <ExpandableFilterGroup
+        title="Características do Veículo"
+        options={caracteristicasVeiculoOptions}
+        selectedValues={filters.caracteristicas || []}
+        onSelectionChange={(values) => handleFilterChange("caracteristicas", values)}
+      />
 
-          {/* Carroceria */}
-          <div>
-            <Label className="text-sm text-gray-300 mb-2 block">Carroceria</Label>
-            <div className="space-y-2">
-              {carrocerias.map((carroceria) => (
-                <div key={carroceria} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`carroceria-${carroceria}`}
-                    checked={filters.carroceria?.includes(carroceria) || false}
-                    onCheckedChange={() => handleArrayFilterToggle("carroceria", carroceria)}
-                    className="border-gray-600 data-[state=checked]:bg-purple-600"
-                  />
-                  <Label htmlFor={`carroceria-${carroceria}`} className="text-sm text-gray-300 cursor-pointer">
-                    {carroceria}
-                  </Label>
-                </div>
-              ))}
-            </div>
-          </div>
+      {/* Blindagem */}
+      <ExpandableFilterGroup
+        title="Blindagem"
+        options={blindagemOptions}
+        selectedValues={filters.blindagem ? [filters.blindagem] : []}
+        onSelectionChange={(values) => handleFilterChange("blindagem", values[0] || "")}
+      />
 
-          {/* Opcionais */}
-          <div>
-            <Label className="text-sm text-gray-300 mb-2 block">Opcionais</Label>
-            <ScrollArea className="h-32">
-              <div className="space-y-2 pr-4">
-                {opcionais.map((opcional) => (
-                  <div key={opcional} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`opcional-${opcional}`}
-                      checked={filters.opcionais?.includes(opcional) || false}
-                      onCheckedChange={() => handleArrayFilterToggle("opcionais", opcional)}
-                      className="border-gray-600 data-[state=checked]:bg-purple-600"
-                    />
-                    <Label htmlFor={`opcional-${opcional}`} className="text-sm text-gray-300 cursor-pointer">
-                      {opcional}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-          </div>
-        </CollapsibleContent>
-      </Collapsible>
+      {/* Leilão */}
+      <ExpandableFilterGroup
+        title="Leilão"
+        options={leilaoOptions}
+        selectedValues={filters.leilao ? [filters.leilao] : []}
+        onSelectionChange={(values) => handleFilterChange("leilao", values[0] || "")}
+      />
 
-      {/* Filtros Avançados */}
-      <Collapsible open={expandedSections.filtrosAvancados} onOpenChange={() => toggleSection("filtrosAvancados")}>
-        <CollapsibleTrigger className="flex items-center justify-between w-full py-2 text-left">
-          <span className="font-medium">Filtros Avançados</span>
-          {expandedSections.filtrosAvancados ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-        </CollapsibleTrigger>
-        <CollapsibleContent className="space-y-4 mt-2">
-          {/* Blindagem */}
-          <div>
-            <Label className="text-sm text-gray-300">Blindagem</Label>
-            <Select
-              value={filters.blindagem || ""}
-              onValueChange={(value) => handleFilterChange("blindagem", value === "" ? undefined : value)}
-            >
-              <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
-                <SelectValue placeholder="Selecione" />
-              </SelectTrigger>
-              <SelectContent className="bg-gray-800 border-gray-700">
-                <SelectItem value="sim" className="text-white">
-                  Sim
-                </SelectItem>
-                <SelectItem value="nao" className="text-white">
-                  Não
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+      {/* Cor */}
+      <ExpandableFilterGroup
+        title="Cor"
+        options={coresOptions}
+        selectedValues={filters.cores || []}
+        onSelectionChange={(values) => handleFilterChange("cores", values)}
+      />
 
-          {/* Leilão */}
-          <div>
-            <Label className="text-sm text-gray-300">Leilão</Label>
-            <Select
-              value={filters.leilao || ""}
-              onValueChange={(value) => handleFilterChange("leilao", value === "" ? undefined : value)}
-            >
-              <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
-                <SelectValue placeholder="Selecione" />
-              </SelectTrigger>
-              <SelectContent className="bg-gray-800 border-gray-700">
-                <SelectItem value="sim" className="text-white">
-                  Sim
-                </SelectItem>
-                <SelectItem value="nao" className="text-white">
-                  Não
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+      {/* Carroceria */}
+      <ExpandableFilterGroup
+        title="Carroceria"
+        options={carroceriaOptions}
+        selectedValues={filters.carroceria || []}
+        onSelectionChange={(values) => handleFilterChange("carroceria", values)}
+      />
 
-          {/* Características */}
-          <div>
-            <Label className="text-sm text-gray-300 mb-2 block">Características</Label>
-            <div className="space-y-2">
-              {caracteristicas.map((caracteristica) => (
-                <div key={caracteristica} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`caracteristica-${caracteristica}`}
-                    checked={filters.caracteristicas?.includes(caracteristica) || false}
-                    onCheckedChange={() => handleArrayFilterToggle("caracteristicas", caracteristica)}
-                    className="border-gray-600 data-[state=checked]:bg-purple-600"
-                  />
-                  <Label htmlFor={`caracteristica-${caracteristica}`} className="text-sm text-gray-300 cursor-pointer">
-                    {caracteristica}
-                  </Label>
-                </div>
-              ))}
-            </div>
-          </div>
-        </CollapsibleContent>
-      </Collapsible>
+      {/* Opcionais */}
+      <ExpandableFilterGroup
+        title="Opcionais"
+        options={opcionaisOptions}
+        selectedValues={filters.opcionais || []}
+        onSelectionChange={(values) => handleFilterChange("opcionais", values)}
+      />
 
       {/* Ordenar por */}
       <div>

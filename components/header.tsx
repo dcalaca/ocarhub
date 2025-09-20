@@ -4,7 +4,7 @@ import { useState } from "react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet"
-import { Car, Heart, MessageCircle, Plus, User, LogOut, Settings, Wallet, Menu, History } from "lucide-react"
+import { Car, Heart, MessageCircle, Plus, User, LogOut, Settings, Wallet, Menu, History, Calculator } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useAuth } from "@/contexts/auth-context"
 import Link from "next/link"
@@ -51,6 +51,7 @@ export function Header() {
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-8 text-sm font-poppins [&>a]:font-medium [&>a]:text-gray-300 [&>a]:hover:text-white [&>a]:transition-colors">
           <Link href="/buscar">Buscar</Link>
+          <Link href="/consulta-fipe">Consulta FIPE</Link>
           <Link href="/favoritos">Favoritos</Link>
           <Link href="/mensagens">Mensagens</Link>
           <Link href="/historico-veicular">Histórico Veicular</Link>
@@ -108,6 +109,14 @@ export function Header() {
                     >
                       <Car className="w-5 h-5" />
                       Buscar
+                    </Link>
+                    <Link
+                      href="/consulta-fipe"
+                      className="flex items-center gap-3 py-2 text-gray-300 hover:text-white"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <Calculator className="w-5 h-5" />
+                      Consulta FIPE
                     </Link>
                     <Link
                       href="/favoritos"

@@ -64,9 +64,18 @@ export function useNavigation() {
     [router],
   )
 
+  const navigateToPath = useCallback(
+    (path: string) => {
+      console.log("🔄 Navegando para:", path)
+      router.push(path)
+    },
+    [router],
+  )
+
   return {
     navigateToHome,
     navigateToSearch,
+    navigateToPath,
     currentPath: pathname,
   }
 }

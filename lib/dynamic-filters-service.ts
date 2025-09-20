@@ -94,7 +94,11 @@ export class DynamicFiltersService {
           const processedModels = await fipeDynamicData.getProcessedModels(selectedBrand.code)
           console.log('🔍 DynamicFiltersService - Modelos processados:', processedModels)
           
-          const selectedModelData = processedModels.find(m => m.name === currentState.model)
+          // Usar pickBestModelCode para escolher o melhor modelo
+          const bestModelCode = FipeIntelligence.pickBestModelCode(processedModels, currentState.model)
+          console.log('🔍 DynamicFiltersService - Melhor modelCode encontrado:', bestModelCode)
+          
+          const selectedModelData = processedModels.find(m => m.code === bestModelCode)
           console.log('🔍 DynamicFiltersService - Modelo selecionado encontrado:', selectedModelData)
           
           if (selectedModelData) {
@@ -126,7 +130,12 @@ export class DynamicFiltersService {
         if (selectedBrand) {
           // Buscar o código FIPE do modelo selecionado
           const processedModels = await fipeDynamicData.getProcessedModels(selectedBrand.code)
-          const selectedModelData = processedModels.find(m => m.name === currentState.model)
+          
+          // Usar pickBestModelCode para escolher o melhor modelo
+          const bestModelCode = FipeIntelligence.pickBestModelCode(processedModels, currentState.model)
+          console.log('🔍 DynamicFiltersService (versions) - Melhor modelCode encontrado:', bestModelCode)
+          
+          const selectedModelData = processedModels.find(m => m.code === bestModelCode)
           
           if (selectedModelData) {
             const versionsByYear = await fipeDynamicData.getVersionsByYear(
