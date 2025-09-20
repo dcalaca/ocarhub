@@ -102,7 +102,6 @@ const config = {
   },
   plugins: [
     require("tailwindcss-animate"),
-    require("@tailwindcss/typography"),
     ({ matchUtilities, theme }: { matchUtilities: any; theme: any }) => {
       matchUtilities(
         {
