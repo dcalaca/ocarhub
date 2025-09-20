@@ -2,8 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Forçar tema escuro */
+html.dark {
+  color-scheme: dark;
+}
+
+html.dark body {
+  background-color: #0B0F1A !important;
+  color: #F9FAFB !important;
+}
+
 body {
   @apply bg-background text-foreground;
+  background-color: #0B0F1A;
+  color: #F9FAFB;
 }
 
 @layer utilities {

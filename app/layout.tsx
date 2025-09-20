@@ -29,8 +29,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="pt-BR" className="dark">
-      <body className={`min-h-screen ${poppins.variable}`}>
+    <html lang="pt-BR" className="dark" style={{ colorScheme: 'dark' }}>
+      <body className={`min-h-screen ${poppins.variable} bg-gray-900 text-white`}>
         <AuthProvider>{children}</AuthProvider>
         <Analytics />
       </body>
