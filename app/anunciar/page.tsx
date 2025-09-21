@@ -15,7 +15,6 @@ import { Separator } from "@/components/ui/separator"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { VehicleSelector } from "@/components/vehicle-selector"
 import { PhotoUpload } from "@/components/photo-upload"
-import { FipeSelector } from "@/components/fipe-selector"
 import { CacheDebug } from "@/components/cache-debug"
 import { useAuth } from "@/contexts/auth-context"
 import { useToast } from "@/hooks/use-toast"
@@ -788,14 +787,6 @@ export default function AnunciarPage() {
                   </div>
                 </div>
 
-                {brandId && modelId && year && (
-                  <FipeSelector
-                    brandId={selectedBrandCode || brandId}
-                    modelId={selectedModelCode || modelId}
-                    year={Number.parseInt(year.split(' ')[0])} // Extrair apenas o ano do texto
-                    onSelect={setFipeData}
-                  />
-                )}
               </CardContent>
             </Card>
 
