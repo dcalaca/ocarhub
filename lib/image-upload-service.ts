@@ -17,7 +17,7 @@ export class ImageUploadService {
 
       // Gerar nome único para o arquivo
       const fileExt = file.name.split('.').pop()
-      const fileName = `${vehicleId}/${index}-${Date.now()}.${fileExt}`
+      const fileName = `${vehicleId}/${index}-${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`
       
       console.log('📤 Fazendo upload da imagem:', fileName)
 

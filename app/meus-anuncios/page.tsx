@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Link from "next/link"
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -450,16 +451,17 @@ export default function MeusAnunciosPage() {
               const expiradoAnuncio = expirado(anuncio)
               
               return (
-                <Card key={anuncio.id} className={`overflow-hidden ${
+                <Card key={anuncio.id} className={`overflow-hidden cursor-pointer hover:shadow-lg transition-shadow ${
                   proximoVencimentoAnuncio ? 'ring-2 ring-orange-300' : ''
                 }`}>
-                  <div className="relative aspect-video">
-                    <Image
-                      src={anuncio.fotos[0] || "/placeholder.svg?height=200&width=300"}
-                      alt={`${anuncio.marca} ${anuncio.modelo}`}
-                      fill
-                      className="object-cover"
-                    />
+                  <Link href={`/veiculo/${anuncio.id}`}>
+                    <div className="relative aspect-video">
+                      <Image
+                        src={anuncio.fotos && anuncio.fotos.length > 0 ? anuncio.fotos[0] : "/placeholder.svg?height=200&width=300"}
+                        alt={`${anuncio.marca} ${anuncio.modelo}`}
+                        fill
+                        className="object-cover"
+                      />
                     <div className="absolute top-2 left-2 flex gap-2 flex-wrap">
                       {getStatusBadge(anuncio.status)}
                       {getPlanoBadge(anuncio.plano)}
@@ -585,6 +587,7 @@ export default function MeusAnunciosPage() {
                       )}
                     </div>
                   </div>
+                  </Link>
                 </CardContent>
               </Card>
               )
