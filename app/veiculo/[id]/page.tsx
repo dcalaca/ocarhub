@@ -274,7 +274,13 @@ export default function VehicleDetailPage() {
                 <Eye className="w-3 h-3" />
                 {views} visualizações
               </Badge>
-              <Badge variant={vehicle.status === 'ativo' ? 'default' : 'secondary'} className={vehicle.status === 'ativo' ? 'bg-green-600 hover:bg-green-700 text-white' : ''}>
+              <Badge 
+                variant="outline" 
+                className={vehicle.status === 'ativo' 
+                  ? 'bg-green-600 hover:bg-green-700 text-white border-green-600' 
+                  : 'bg-gray-500 hover:bg-gray-600 text-white border-gray-500'
+                }
+              >
                 {vehicle.status === 'ativo' ? 'Ativo' : 'Inativo'}
               </Badge>
             </div>
