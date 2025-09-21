@@ -46,6 +46,9 @@ export interface Vehicle {
   views: number
   likes: number // Contagem total de likes
   shares: number
+  titulo?: string
+  descricao?: string
+  categoria?: string
 }
 
 export interface Chat {
