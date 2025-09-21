@@ -290,11 +290,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return
       }
       
-      const { data, error } = await supabase
+      console.log('🔄 Iniciando consulta ao banco...')
+      
+      // Adicionar timeout para evitar travamento
+      const queryPromise = supabase
         .from('ocar_usuarios')
         .select('*')
         .eq('id', userId)
         .single()
+
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout na consulta')), 10000)
+      )
+
+      const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as any
 
       console.log('🔍 Resultado da consulta:', { data, error })
       
