@@ -46,6 +46,7 @@ import { DynamicVehicleFiltersFipe } from "@/components/dynamic-vehicle-filters-
 import { cores, combustiveis } from "@/lib/data/filters"
 import { VehicleService } from "@/lib/vehicle-service"
 import { PlansService, type Plan } from "@/lib/plans-service"
+import { ImageUploadService } from "@/lib/image-upload-service"
 
 export default function AnunciarPage() {
   const { user, debitSaldo } = useAuth()
@@ -430,10 +431,7 @@ export default function AnunciarPage() {
     setLoading(true)
 
     try {
-      // Simular upload de fotos com progresso
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-
-      // Primeiro, tentar criar o veículo no Supabase
+      // Primeiro, criar o veículo no Supabase para obter o ID
       let veiculoCriado = null
       if (user?.id) {
         console.log('🚗 Salvando veículo no Supabase...')
@@ -454,7 +452,7 @@ export default function AnunciarPage() {
           placa_parcial: licensePlate,
           numero_proprietarios: parseInt(owners),
           observacoes: description,
-          fotos: photos.map(file => URL.createObjectURL(file)), // URLs temporárias
+          fotos: [], // Inicialmente vazio, será preenchido após upload
           plano: plano.nome.toLowerCase(),
           cidade: location.split(',')[0]?.trim() || 'São Paulo',
           estado: location.split(',')[1]?.trim() || 'SP',
@@ -464,6 +462,27 @@ export default function AnunciarPage() {
           console.log('📝 Dados do veículo a serem salvos:', vehicleData)
           veiculoCriado = await VehicleService.createVehicle(vehicleData, user.id)
           console.log('✅ Veículo salvo com sucesso:', veiculoCriado)
+
+          // Upload das fotos se houver
+          if (photos.length > 0 && veiculoCriado?.id) {
+            console.log('📤 Fazendo upload das fotos...')
+            try {
+              const photoUrls = await ImageUploadService.uploadImages(photos, veiculoCriado.id)
+              console.log('✅ Fotos enviadas com sucesso:', photoUrls)
+              
+              // Atualizar o veículo com as URLs das fotos
+              await VehicleService.updateVehicle(veiculoCriado.id, { fotos: photoUrls })
+              console.log('✅ Veículo atualizado com as fotos')
+              
+            } catch (photoError) {
+              console.error('❌ Erro no upload das fotos:', photoError)
+              toast({
+                title: "Aviso",
+                description: "Anúncio criado, mas houve erro no upload das fotos. Você pode editá-las depois.",
+                variant: "destructive",
+              })
+            }
+          }
         } catch (error) {
           console.error('❌ Erro ao salvar veículo:', error)
           console.error('❌ Detalhes do erro:', error.message)
