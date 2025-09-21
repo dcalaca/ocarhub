@@ -296,6 +296,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('id', userId)
         .single()
 
+      console.log('🔍 Resultado da consulta:', { data, error })
+      
       if (error) {
         // Só exibir erro se não for "usuário não encontrado" (normal durante cadastro)
         if (error.code !== 'PGRST116' && !error.message?.includes('No rows found')) {
@@ -382,6 +384,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         console.log('ℹ️ Usuário não encontrado (normal durante cadastro)')
       }
+    } finally {
+      console.log('🏁 loadUserData finalizada')
     }
   }
 
