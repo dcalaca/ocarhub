@@ -1,5 +1,7 @@
 import type { Config } from 'tailwindcss'
 
+const withAlpha = (variable: string) => `hsl(var(${variable}) / <alpha-value>)`
+
 const config: Config = {
   darkMode: ['class'],
   content: [
@@ -12,25 +14,25 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: 'hsl(var(--background))',
-        foreground: 'hsl(var(--foreground))',
-        card: 'hsl(var(--card))',
-        'card-foreground': 'hsl(var(--card-foreground))',
-        popover: 'hsl(var(--popover))',
-        'popover-foreground': 'hsl(var(--popover-foreground))',
-        primary: 'hsl(var(--primary))',
-        'primary-foreground': 'hsl(var(--primary-foreground))',
-        secondary: 'hsl(var(--secondary))',
-        'secondary-foreground': 'hsl(var(--secondary-foreground))',
-        muted: 'hsl(var(--muted))',
-        'muted-foreground': 'hsl(var(--muted-foreground))',
-        accent: 'hsl(var(--accent))',
-        'accent-foreground': 'hsl(var(--accent-foreground))',
-        destructive: 'hsl(var(--destructive))',
-        'destructive-foreground': 'hsl(var(--destructive-foreground))',
-        border: 'hsl(var(--border))',
-        input: 'hsl(var(--input))',
-        ring: 'hsl(var(--ring))',
+        background: withAlpha('--background'),
+        foreground: withAlpha('--foreground'),
+        card: withAlpha('--card'),
+        'card-foreground': withAlpha('--card-foreground'),
+        popover: withAlpha('--popover'),
+        'popover-foreground': withAlpha('--popover-foreground'),
+        primary: withAlpha('--primary'),
+        'primary-foreground': withAlpha('--primary-foreground'),
+        secondary: withAlpha('--secondary'),
+        'secondary-foreground': withAlpha('--secondary-foreground'),
+        muted: withAlpha('--muted'),
+        'muted-foreground': withAlpha('--muted-foreground'),
+        accent: withAlpha('--accent'),
+        'accent-foreground': withAlpha('--accent-foreground'),
+        destructive: withAlpha('--destructive'),
+        'destructive-foreground': withAlpha('--destructive-foreground'),
+        border: withAlpha('--border'),
+        input: withAlpha('--input'),
+        ring: withAlpha('--ring'),
       },
       borderRadius: {
         lg: 'var(--radius)',
