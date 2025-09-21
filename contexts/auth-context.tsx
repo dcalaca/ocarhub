@@ -185,12 +185,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         } else {
           console.log('ℹ️ Nenhuma sessão ativa no Supabase')
-        // Limpar dados do localStorage se não há sessão ativa
-        console.log('🧹 Limpando dados do localStorage (usuário deletado)')
-        safeLocalStorage.removeItem("ocar-user")
-        safeLocalStorage.removeItem("ocar-interactions")
-        setUser(null)
-        setUserInteractions({ favoritos: [], curtidas: [] })
+          // Limpar dados do localStorage se não há sessão ativa
+          console.log('🧹 Limpando dados do localStorage (usuário deletado)')
+          safeLocalStorage.removeItem("ocar-user")
+          safeLocalStorage.removeItem("ocar-interactions")
+          setUser(null)
+          setUserInteractions({ favoritos: [], curtidas: [] })
         }
 
         // Carregar interações do localStorage
@@ -281,6 +281,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const loadUserData = async (userId: string) => {
     try {
       console.log('🔍 Buscando usuário no Supabase:', userId)
+      console.log('🔍 Tipo do userId:', typeof userId)
+      console.log('🔍 Tamanho do userId:', userId?.length)
       
       // Verificar se o userId é válido
       if (!userId || userId === 'undefined' || userId === 'null') {
