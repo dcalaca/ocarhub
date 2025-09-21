@@ -26,6 +26,7 @@ import {
   Eye
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import Header from "@/components/header"
 
 export default function VehicleDetailPage() {
   const params = useParams()
@@ -39,14 +40,41 @@ export default function VehicleDetailPage() {
   const [isFavorited, setIsFavorited] = useState(false)
   const [isLiked, setIsLiked] = useState(false)
   const [views, setViews] = useState(0)
+  const [suggestedVehicles, setSuggestedVehicles] = useState<Vehicle[]>([])
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false)
 
   const vehicleId = params.id as string
 
   useEffect(() => {
     if (vehicleId) {
       loadVehicle()
+      loadSuggestions()
     }
   }, [vehicleId])
+
+  const loadSuggestions = async () => {
+    try {
+      setLoadingSuggestions(true)
+      console.log('🔍 Carregando sugestões de veículos...')
+      
+      // Buscar veículos similares (mesma marca ou modelo)
+      const suggestions = await VehicleService.searchVehicles({
+        status: 'ativo'
+      })
+      
+      // Filtrar o veículo atual e limitar a 4 sugestões
+      const filteredSuggestions = suggestions
+        .filter(v => v.id !== vehicleId)
+        .slice(0, 4)
+      
+      console.log('✅ Sugestões carregadas:', filteredSuggestions)
+      setSuggestedVehicles(filteredSuggestions)
+    } catch (error) {
+      console.error('❌ Erro ao carregar sugestões:', error)
+    } finally {
+      setLoadingSuggestions(false)
+    }
+  }
 
   const loadVehicle = async () => {
     try {
@@ -224,7 +252,10 @@ export default function VehicleDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
+      {/* Header Oficial */}
+      <Header />
+      
+      {/* Breadcrumb */}
       <div className="bg-white border-b">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
@@ -310,6 +341,20 @@ export default function VehicleDetailPage() {
                   </div>
                 )}
               </div>
+              
+              {/* Valor FIPE destacado */}
+              {vehicle.fipe && (
+                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <Star className="w-4 h-4 text-blue-600" />
+                    <span className="text-sm font-medium text-blue-800">Valor FIPE:</span>
+                    <span className="text-lg font-bold text-blue-900">{formatPrice(vehicle.fipe)}</span>
+                  </div>
+                  <p className="text-xs text-blue-600 mt-1">
+                    Preço de referência da tabela FIPE
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Botões de Interação */}
@@ -406,6 +451,70 @@ export default function VehicleDetailPage() {
             </div>
           </div>
         </div>
+        
+        {/* Sugestões de Anúncios */}
+        {suggestedVehicles.length > 0 && (
+          <div className="mt-16">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Sugestões para você</h2>
+              <Button 
+                variant="outline" 
+                onClick={() => router.push('/buscar')}
+              >
+                Ver todos
+              </Button>
+            </div>
+            
+            {loadingSuggestions ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="aspect-video bg-gray-200 rounded-lg mb-4"></div>
+                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {suggestedVehicles.map((suggestion) => (
+                  <Card key={suggestion.id} className="group cursor-pointer hover:shadow-lg transition-shadow">
+                    <Link href={`/veiculo/${suggestion.id}`}>
+                      <CardHeader className="p-0">
+                        <div className="aspect-video relative overflow-hidden rounded-t-lg">
+                          <Image
+                            src={suggestion.fotos && suggestion.fotos.length > 0 ? suggestion.fotos[0] : '/placeholder-car.jpg'}
+                            alt={`${suggestion.marca} ${suggestion.modelo}`}
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform duration-200"
+                          />
+                        </div>
+                      </CardHeader>
+                      <CardContent className="p-4">
+                        <h3 className="font-semibold text-gray-900 mb-1">
+                          {suggestion.marca} {suggestion.modelo}
+                        </h3>
+                        <p className="text-sm text-gray-600 mb-2">
+                          {suggestion.ano} • {suggestion.cor} • {formatMileage(suggestion.quilometragem)}
+                        </p>
+                        <div className="flex items-center justify-between">
+                          <span className="text-lg font-bold text-primary">
+                            {formatPrice(suggestion.preco)}
+                          </span>
+                          {suggestion.fipe && (
+                            <span className="text-sm text-gray-500">
+                              FIPE: {formatPrice(suggestion.fipe)}
+                            </span>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Link>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )
