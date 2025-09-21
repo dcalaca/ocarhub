@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -15,8 +15,13 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [mounted, setMounted] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -40,6 +45,21 @@ export default function AdminLoginPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4 p-3 bg-blue-100 rounded-full w-fit">
+              <Shield className="w-8 h-8 text-blue-600" />
+            </div>
+            <CardTitle className="text-2xl font-bold">Carregando...</CardTitle>
+          </CardHeader>
+        </Card>
+      </div>
+    )
   }
 
   return (

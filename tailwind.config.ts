@@ -1,13 +1,13 @@
 import type { Config } from "tailwindcss"
 
-const config = {
+const config: Config = {
   darkMode: ["class"],
   content: [
-    "./pages/**/*.{ts,tsx}",
-    "./components/**/*.{ts,tsx}",
-    "./app/**/*.{ts,tsx}",
-    "./src/**/*.{ts,tsx}",
-    "*.{js,ts,jsx,tsx,mdx}",
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./components/**/*.{js,ts,jsx,tsx,mdx}",
+    "./styles/**/*.{css,scss}",
+    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
+    "./lib/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   prefix: "",
   theme: {
@@ -20,7 +20,6 @@ const config = {
     },
     extend: {
       fontFamily: {
-        // Usar Poppins como fonte padrão
         sans: ["var(--font-poppins)", "sans-serif"],
         poppins: ["Poppins", "sans-serif"],
       },
@@ -113,6 +112,6 @@ const config = {
       )
     },
   ],
-} satisfies Config
+}
 
 export default config
