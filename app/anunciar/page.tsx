@@ -283,8 +283,13 @@ export default function AnunciarPage() {
 
       // Carregar transmissões (usar dados estáticos por enquanto)
       const modelTransmissions = getTransmissionsByModel(brandId, modelId)
+      console.log('🔧 Carregando transmissões para:', { brandId, modelId, modelTransmissions })
+      
+      // Se não houver transmissões específicas do modelo, usar lista padrão
+      const transmissionsList = modelTransmissions.length > 0 ? modelTransmissions : ['Manual', 'Automático', 'CVT', 'Semi-automático']
+      
       setTransmissions(
-        modelTransmissions.map((transmission) => ({
+        transmissionsList.map((transmission) => ({
           value: transmission,
           label: transmission,
         })),
@@ -329,7 +334,7 @@ export default function AnunciarPage() {
   // Calcular progresso do formulário
   useEffect(() => {
     let completed = 0
-    const total = 8 // Campos obrigatórios (incluindo versão)
+    const total = 9 // Campos obrigatórios (incluindo versão e câmbio)
 
     if (brandId) completed++
     if (modelId) completed++
@@ -339,14 +344,21 @@ export default function AnunciarPage() {
     if (mileage) completed++
     if (color) completed++
     if (fuelType) completed++
+    if (transmission) completed++
 
     const percentage = Math.floor((completed / total) * 100)
     setProgress(percentage)
     setFormCompleted(percentage === 100)
-  }, [brandId, modelId, year, selectedVersion, price, mileage, color, fuelType])
+  }, [brandId, modelId, year, selectedVersion, price, mileage, color, fuelType, transmission])
 
   const handlePublicarAnuncio = async () => {
+    console.log('🚀 Iniciando publicação do anúncio...')
+    console.log('👤 Usuário:', user)
+    console.log('📋 Formulário completo:', formCompleted)
+    console.log('📦 Plano selecionado:', planoSelecionado)
+    
     if (!user) {
+      console.log('❌ Usuário não logado')
       toast({
         title: "Login necessário",
         description: "Você precisa estar logado para anunciar",
@@ -356,6 +368,10 @@ export default function AnunciarPage() {
     }
 
     if (!formCompleted) {
+      console.log('❌ Formulário incompleto')
+      console.log('📊 Dados do formulário:', {
+        brandId, modelId, year, selectedVersion, price, mileage, color, fuelType, transmission
+      })
       toast({
         title: "Formulário incompleto",
         description: "Preencha todos os campos obrigatórios",
