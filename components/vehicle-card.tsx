@@ -164,7 +164,7 @@ const VehicleCard = React.memo(function VehicleCard({ vehicle, className, showRe
             <div className="aspect-[16/10] overflow-hidden">
               <Image
                 src={
-                  vehicle.fotos[0] ||
+                  vehicle.fotos && vehicle.fotos.length > 0 ? vehicle.fotos[0] :
                   `/placeholder.svg?width=400&height=250&query=${encodeURIComponent(vehicle.marca || "car")}+${encodeURIComponent(vehicle.modelo || "model")}`
                 }
                 alt={`${vehicle.marca} ${vehicle.modelo}`}

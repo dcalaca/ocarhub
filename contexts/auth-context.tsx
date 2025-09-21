@@ -114,6 +114,39 @@ export function useAuth() {
   return context
 }
 
+// Função helper para localStorage seguro
+const safeLocalStorage = {
+  getItem: (key: string): string | null => {
+    if (typeof window !== 'undefined' && localStorage) {
+      try {
+        return localStorage.getItem(key)
+      } catch (error) {
+        console.error('❌ Erro ao acessar localStorage:', error)
+        return null
+      }
+    }
+    return null
+  },
+  setItem: (key: string, value: string): void => {
+    if (typeof window !== 'undefined' && localStorage) {
+      try {
+        localStorage.setItem(key, value)
+      } catch (error) {
+        console.error('❌ Erro ao salvar no localStorage:', error)
+      }
+    }
+  },
+  removeItem: (key: string): void => {
+    if (typeof window !== 'undefined' && localStorage) {
+      try {
+        localStorage.removeItem(key)
+      } catch (error) {
+        console.error('❌ Erro ao remover do localStorage:', error)
+      }
+    }
+  }
+}
+
 // Componente Provider
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
@@ -127,6 +160,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
+        console.log('🚀 Inicializando autenticação...')
+        
         // Verificar sessão atual do Supabase
         const { data: { session }, error } = await supabase.auth.getSession()
         
@@ -135,38 +170,56 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Se for erro de refresh token, limpar dados locais
           if (error.message?.includes('Invalid Refresh Token') || error.message?.includes('Refresh Token Not Found')) {
             console.log('🔄 Limpando dados de sessão inválida')
-            localStorage.removeItem("ocar-user")
-            localStorage.removeItem("ocar-interactions")
+            safeLocalStorage.removeItem("ocar-user")
+            safeLocalStorage.removeItem("ocar-interactions")
             setUser(null)
             setUserInteractions({ favoritos: [], curtidas: [] })
           }
         } else if (session?.user) {
           console.log('🔐 Usuário logado no Supabase:', session.user.id)
-          await loadUserData(session.user.id)
-        } else {
-          // Fallback para dados do localStorage (para desenvolvimento)
-          const savedUser = localStorage.getItem("ocar-user")
-          if (savedUser) {
-            const userData = JSON.parse(savedUser)
-            console.log('💾 Usuário do localStorage:', userData.id)
-            // Tentar recarregar do Supabase mesmo sem sessão ativa
-            await loadUserData(userData.id)
+          console.log('📧 Email do usuário:', session.user.email)
+          try {
+            await loadUserData(session.user.id)
+          } catch (loadError) {
+            console.error('❌ Erro ao carregar dados do usuário no initializeAuth:', loadError)
           }
+        } else {
+          console.log('ℹ️ Nenhuma sessão ativa no Supabase')
+        // Limpar dados do localStorage se não há sessão ativa
+        console.log('🧹 Limpando dados do localStorage (usuário deletado)')
+        safeLocalStorage.removeItem("ocar-user")
+        safeLocalStorage.removeItem("ocar-interactions")
+        setUser(null)
+        setUserInteractions({ favoritos: [], curtidas: [] })
         }
 
         // Carregar interações do localStorage
-        const savedInteractions = localStorage.getItem("ocar-interactions")
-        if (savedInteractions) {
-          setUserInteractions(JSON.parse(savedInteractions))
+        try {
+          const savedInteractions = safeLocalStorage.getItem("ocar-interactions")
+          if (savedInteractions) {
+            const parsedInteractions = JSON.parse(savedInteractions)
+            if (parsedInteractions && typeof parsedInteractions === 'object') {
+              setUserInteractions(parsedInteractions)
+            } else {
+              console.log('⚠️ Interações inválidas no localStorage, usando padrão')
+              setUserInteractions({ favoritos: [], curtidas: [] })
+            }
+          }
+        } catch (parseError) {
+          console.error('❌ Erro ao parsear interações do localStorage:', parseError)
+          safeLocalStorage.removeItem("ocar-interactions")
+          setUserInteractions({ favoritos: [], curtidas: [] })
         }
       } catch (error) {
-        console.error("Erro ao inicializar autenticação:", error)
+        console.error("❌ Erro ao inicializar autenticação:", error)
+        console.error("❌ Stack trace:", error.stack)
         // Em caso de erro, limpar dados locais para forçar novo login
-        localStorage.removeItem("ocar-user")
-        localStorage.removeItem("ocar-interactions")
+        safeLocalStorage.removeItem("ocar-user")
+        safeLocalStorage.removeItem("ocar-interactions")
         setUser(null)
         setUserInteractions({ favoritos: [], curtidas: [] })
       } finally {
+        console.log('✅ Inicialização da autenticação concluída')
         setIsLoading(false)
       }
     }
@@ -180,15 +233,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         try {
           if (event === 'SIGNED_IN' && session?.user) {
-            await loadUserData(session.user.id)
+            try {
+              await loadUserData(session.user.id)
+            } catch (loadError) {
+              console.error('❌ Erro ao carregar dados do usuário no onAuthStateChange:', loadError)
+            }
           } else if (event === 'SIGNED_OUT') {
             setUser(null)
             setUserInteractions({ favoritos: [], curtidas: [] })
-            localStorage.removeItem("ocar-user")
-            localStorage.removeItem("ocar-interactions")
+            safeLocalStorage.removeItem("ocar-user")
+            safeLocalStorage.removeItem("ocar-interactions")
           } else if (event === 'TOKEN_REFRESHED' && session?.user) {
             console.log('🔄 Token renovado com sucesso')
-            await loadUserData(session.user.id)
+            try {
+              await loadUserData(session.user.id)
+            } catch (loadError) {
+              console.error('❌ Erro ao carregar dados do usuário no TOKEN_REFRESHED:', loadError)
+            }
           } else if (event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
             // Limpar dados em caso de logout ou atualização
             if (event === 'SIGNED_OUT') {
@@ -204,8 +265,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (error instanceof Error && error.message?.includes('Invalid Refresh Token')) {
             setUser(null)
             setUserInteractions({ favoritos: [], curtidas: [] })
-            localStorage.removeItem("ocar-user")
-            localStorage.removeItem("ocar-interactions")
+            safeLocalStorage.removeItem("ocar-user")
+            safeLocalStorage.removeItem("ocar-interactions")
           }
         } finally {
           setIsLoading(false)
@@ -220,6 +281,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const loadUserData = async (userId: string) => {
     try {
       console.log('🔍 Buscando usuário no Supabase:', userId)
+      
+      // Verificar se o userId é válido
+      if (!userId || userId === 'undefined' || userId === 'null') {
+        console.error('❌ ID do usuário inválido:', userId)
+        return
+      }
+      
       const { data, error } = await supabase
         .from('ocar_usuarios')
         .select('*')
@@ -227,7 +295,64 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single()
 
       if (error) {
-        console.error('❌ Erro ao carregar dados do usuário:', error)
+        // Só exibir erro se não for "usuário não encontrado" (normal durante cadastro)
+        if (error.code !== 'PGRST116' && !error.message?.includes('No rows found')) {
+          console.error('❌ Erro ao carregar dados do usuário:', error)
+          console.error('❌ Código do erro:', error.code)
+          console.error('❌ Mensagem do erro:', error.message)
+        } else {
+          console.log('ℹ️ Usuário não encontrado na tabela (normal durante cadastro)')
+        }
+        
+        // Se o usuário não existe na tabela ou foi deletado
+        if (error.code === 'PGRST116' || error.message?.includes('No rows found')) {
+          console.log('🔄 Usuário não encontrado na tabela (pode ter sido deletado)')
+          
+          // Verificar se ainda existe no Supabase Auth
+          const { data: authUser } = await supabase.auth.getUser()
+          if (authUser.user && authUser.user.id === userId) {
+            console.log('🔄 Usuário ainda existe no Auth, criando perfil básico...')
+            
+            const { data: newProfile, error: createError } = await supabase
+              .from('ocar_usuarios')
+              .insert({
+                id: userId,
+                email: authUser.user.email || '',
+                nome: 'Usuário',
+                tipo_usuario: 'comprador',
+                verificado: false,
+                ativo: true,
+                promocoes_email: true,
+                alertas_multas: false,
+                tema_preferido: 'claro',
+                saldo: 0
+              })
+              .select()
+              .single()
+
+            if (createError) {
+              console.error('❌ Erro ao criar perfil básico:', createError)
+              return
+            }
+
+            console.log('✅ Perfil básico criado:', newProfile)
+            setUser(newProfile)
+            safeLocalStorage.setItem("ocar-user", JSON.stringify(newProfile))
+          } else {
+            console.log('❌ Usuário não existe mais no Supabase Auth, limpando dados locais')
+            safeLocalStorage.removeItem("ocar-user")
+            safeLocalStorage.removeItem("ocar-interactions")
+            setUser(null)
+            setUserInteractions({ favoritos: [], curtidas: [] })
+          }
+        } else {
+          // Para outros erros, limpar dados locais
+          console.log('❌ Erro não tratado, limpando dados locais')
+          safeLocalStorage.removeItem("ocar-user")
+          safeLocalStorage.removeItem("ocar-interactions")
+          setUser(null)
+          setUserInteractions({ favoritos: [], curtidas: [] })
+        }
         return
       }
 
@@ -240,12 +365,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         console.log('💰 Saldo do usuário:', userData.saldo)
         setUser(userData)
-        localStorage.setItem("ocar-user", JSON.stringify(userData))
+        safeLocalStorage.setItem("ocar-user", JSON.stringify(userData))
       } else {
         console.log('❌ Nenhum dado encontrado para o usuário')
       }
     } catch (error) {
-      console.error('❌ Erro ao carregar dados do usuário:', error)
+      // Só exibir erro se for um erro real, não durante cadastro
+      if (error instanceof Error && !error.message?.includes('User not found')) {
+        console.error('❌ Erro ao carregar dados do usuário:', error)
+        console.error('❌ Tipo do erro:', typeof error)
+        console.error('❌ Stack trace:', error.stack)
+      } else {
+        console.log('ℹ️ Usuário não encontrado (normal durante cadastro)')
+      }
     }
   }
 
@@ -269,7 +401,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const newFavoritos = userInteractions.favoritos.filter((id) => id !== vehicleId)
         const newInteractions = { ...userInteractions, favoritos: newFavoritos }
         setUserInteractions(newInteractions)
-        localStorage.setItem("ocar-interactions", JSON.stringify(newInteractions))
+        safeLocalStorage.setItem("ocar-interactions", JSON.stringify(newInteractions))
       } else {
         // Adicionar favorito
         const { error } = await supabase
@@ -284,7 +416,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const newFavoritos = [...userInteractions.favoritos, vehicleId]
         const newInteractions = { ...userInteractions, favoritos: newFavoritos }
         setUserInteractions(newInteractions)
-        localStorage.setItem("ocar-interactions", JSON.stringify(newInteractions))
+        safeLocalStorage.setItem("ocar-interactions", JSON.stringify(newInteractions))
       }
     } catch (error) {
       console.error('Erro ao toggle favorito:', error)
@@ -310,7 +442,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const newCurtidas = userInteractions.curtidas.filter((id) => id !== vehicleId)
         const newInteractions = { ...userInteractions, curtidas: newCurtidas }
         setUserInteractions(newInteractions)
-        localStorage.setItem("ocar-interactions", JSON.stringify(newInteractions))
+        safeLocalStorage.setItem("ocar-interactions", JSON.stringify(newInteractions))
       } else {
         // Adicionar curtida
         const { error } = await supabase
@@ -325,7 +457,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const newCurtidas = [...userInteractions.curtidas, vehicleId]
         const newInteractions = { ...userInteractions, curtidas: newCurtidas }
         setUserInteractions(newInteractions)
-        localStorage.setItem("ocar-interactions", JSON.stringify(newInteractions))
+        safeLocalStorage.setItem("ocar-interactions", JSON.stringify(newInteractions))
       }
     } catch (error) {
       console.error('Erro ao toggle curtida:', error)
@@ -391,6 +523,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }) => {
     setIsLoading(true)
     try {
+      console.log('🔐 Criando usuário no Supabase Auth:', userData.email)
+      
       // Criar usuário no Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: userData.email,
@@ -398,38 +532,116 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       })
 
       if (authError) {
+        console.error('❌ Erro no Supabase Auth:', authError)
+        
+        // Tratar erros específicos
+        if (authError.message?.includes('User already registered')) {
+          throw new Error('Este email já está cadastrado. Tente fazer login ou use outro email.')
+        } else if (authError.message?.includes('Invalid email')) {
+          throw new Error('Email inválido. Verifique o formato do email.')
+        } else if (authError.message?.includes('Password should be at least')) {
+          throw new Error('A senha deve ter pelo menos 6 caracteres.')
+        } else if (authError.message?.includes('Signup is disabled')) {
+          throw new Error('Cadastro temporariamente desabilitado. Tente novamente mais tarde.')
+        }
+        
         throw authError
       }
 
+      console.log('✅ Usuário criado no Supabase Auth:', authData.user?.id)
+
       if (authData.user) {
-        // Criar perfil do usuário na tabela ocar_usuarios
-        const { error: profileError } = await supabase
+        console.log('📝 Criando perfil na tabela ocar_usuarios...')
+        console.log('🔍 Dados do usuário Auth:', authData.user)
+        
+        const userId = authData.user.id;
+        console.log('🆔 ID do usuário recebido:', userId);
+        console.log('🔍 Tipo do ID:', typeof userId);
+        console.log('📏 Tamanho do ID:', userId?.length);
+        console.log('📧 Email do usuário:', authData.user.email);
+        
+        // Verificar se o perfil já existe antes de tentar criar
+        console.log('🔍 Verificando se perfil já existe...')
+        
+        const { data: existingProfile, error: checkError } = await supabase
           .from('ocar_usuarios')
-          .insert({
-            id: authData.user.id,
-            email: userData.email,
-            nome: userData.nome,
-            tipo_usuario: userData.tipo_usuario,
-            cpf: userData.cpf,
-            telefone: userData.telefone,
-            endereco: userData.endereco,
-            data_nascimento: userData.data_nascimento,
-            cnpj: userData.cnpj,
-            verificado: false,
-            ativo: true,
-            promocoes_email: true,
-            alertas_multas: false,
-            tema_preferido: 'claro'
-          })
-
-        if (profileError) {
-          throw profileError
+          .select('id')
+          .eq('id', userId)
+          .single()
+        
+        if (checkError && checkError.code !== 'PGRST116') {
+          console.error('❌ Erro ao verificar perfil existente:', checkError)
+          throw checkError
         }
-
+        
+        if (existingProfile) {
+          console.log('✅ Perfil já existe, atualizando dados...')
+          
+          // Atualizar perfil existente com dados do cadastro
+          const { data: updatedProfile, error: updateError } = await supabase
+            .from('ocar_usuarios')
+            .update({
+              nome: userData.nome,
+              email: userData.email,
+              tipo_usuario: userData.tipo_usuario || 'comprador',
+              // Dados opcionais - serão preenchidos depois
+              cpf: userData.cpf || null,
+              telefone: userData.telefone || null,
+              endereco: userData.endereco || null,
+              data_nascimento: userData.data_nascimento || null,
+              cnpj: userData.cnpj || null,
+            })
+            .eq('id', userId)
+            .select()
+          
+          if (updateError) {
+            console.error('❌ Erro ao atualizar perfil:', updateError)
+            throw updateError
+          }
+          
+          console.log('✅ Perfil atualizado com sucesso:', updatedProfile)
+        } else {
+          console.log('🔄 Criando novo perfil...')
+          
+          // Criar novo perfil
+          const { data: profileData, error: profileError } = await supabase
+            .from('ocar_usuarios')
+            .insert({
+              id: userId,
+              email: userData.email,
+              nome: userData.nome,
+              tipo_usuario: userData.tipo_usuario || 'comprador',
+              // Dados opcionais - serão preenchidos depois
+              cpf: userData.cpf || null,
+              telefone: userData.telefone || null,
+              endereco: userData.endereco || null,
+              data_nascimento: userData.data_nascimento || null,
+              cnpj: userData.cnpj || null,
+              verificado: false,
+              ativo: true,
+              promocoes_email: true,
+              alertas_multas: false,
+              tema_preferido: 'claro'
+            })
+            .select()
+          
+          if (profileError) {
+            console.error('❌ Erro ao criar perfil:', profileError)
+            throw profileError
+          }
+          
+          console.log('✅ Perfil criado com sucesso:', profileData)
+        }
+        
+        // Aguardar um pouco antes de carregar os dados
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
         await loadUserData(authData.user.id)
+      } else {
+        throw new Error('Usuário não foi criado no Supabase Auth')
       }
     } catch (error) {
-      console.error('Erro no registro:', error)
+      console.error('❌ Erro no registro:', error)
       throw error
     } finally {
       setIsLoading(false)
@@ -441,8 +653,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await supabase.auth.signOut()
       setUser(null)
       setUserInteractions({ favoritos: [], curtidas: [] })
-      localStorage.removeItem("ocar-user")
-      localStorage.removeItem("ocar-interactions")
+      safeLocalStorage.removeItem("ocar-user")
+      safeLocalStorage.removeItem("ocar-interactions")
     } catch (error) {
       console.error('Erro no logout:', error)
     }
@@ -455,7 +667,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await loadUserData(user.id)
     } else {
       // Se não há usuário logado, tentar carregar do localStorage
-      const savedUser = localStorage.getItem("ocar-user")
+      const savedUser = safeLocalStorage.getItem("ocar-user")
       if (savedUser) {
         const userData = JSON.parse(savedUser)
         console.log('🔄 Recarregando dados do localStorage:', userData.id)
@@ -502,7 +714,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const novoSaldo = (user.saldo || 0) - valor
       const userAtualizado = { ...user, saldo: novoSaldo }
       setUser(userAtualizado)
-      localStorage.setItem("ocar-user", JSON.stringify(userAtualizado))
+      safeLocalStorage.setItem("ocar-user", JSON.stringify(userAtualizado))
 
       console.log('✅ Saldo debitado com sucesso. Novo saldo:', novoSaldo)
       return true
@@ -544,7 +756,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const novoSaldo = (user.saldo || 0) + valor
       const userAtualizado = { ...user, saldo: novoSaldo }
       setUser(userAtualizado)
-      localStorage.setItem("ocar-user", JSON.stringify(userAtualizado))
+      safeLocalStorage.setItem("ocar-user", JSON.stringify(userAtualizado))
 
       console.log('✅ Saldo creditado com sucesso. Novo saldo:', novoSaldo)
       return true
@@ -577,7 +789,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Atualizar usuário local
       const userAtualizado = { ...user, ...userData }
       setUser(userAtualizado)
-      localStorage.setItem("ocar-user", JSON.stringify(userAtualizado))
+      safeLocalStorage.setItem("ocar-user", JSON.stringify(userAtualizado))
 
       console.log('✅ Usuário atualizado com sucesso')
     } catch (error) {

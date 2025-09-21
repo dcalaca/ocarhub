@@ -71,9 +71,19 @@ function SearchPageContent() {
   }, [])
 
   // Aplica filtros quando mudam
+  // Aplicar filtros quando filtros mudarem
   useEffect(() => {
-    applyFilters()
-  }, [vehicles, currentFilters, currentPage, itemsPerPage])
+    if (vehicles.length > 0) {
+      applyFilters()
+    }
+  }, [currentFilters, currentPage, itemsPerPage])
+  
+  // Aplicar filtros quando veículos forem carregados
+  useEffect(() => {
+    if (vehicles.length > 0) {
+      applyFilters()
+    }
+  }, [vehicles])
 
   const loadVehicles = async () => {
     setLoading(true)
