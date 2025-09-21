@@ -1,7 +1,7 @@
 import type React from "react"
 import type { Metadata } from "next"
 import { Poppins } from "next/font/google"
-import "./globals.css"
+import "./ocar-globals.css"
 import { AuthProvider } from "@/contexts/auth-context"
 import { Analytics } from "@vercel/analytics/react"
 

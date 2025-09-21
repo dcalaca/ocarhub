@@ -77,6 +77,8 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Checagem rápida - remover após teste */}
+      <p className="p-2 rounded-md bg-primary text-primary-foreground">CSS global + utilities ativos</p>
       <Header />
 
       <section className="relative bg-gradient-to-br from-purple-900 via-purple-800 to-purple-600 text-white py-20 md:py-32">
