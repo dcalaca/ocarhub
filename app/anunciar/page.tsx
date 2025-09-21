@@ -43,6 +43,7 @@ import {
 import { useFipeBrands, useFipeModels, useFipeYears } from "@/hooks/use-fipe-data"
 import { useFipeProcessedModels, useFipeProcessedVersions, useFipeUniqueYears, useFipeVersionsByYear } from "@/hooks/use-fipe-intelligence"
 import { DynamicVehicleFilters } from "@/components/dynamic-vehicle-filters"
+import { DynamicVehicleFiltersFipe } from "@/components/dynamic-vehicle-filters-fipe"
 import { cores, combustiveis } from "@/lib/data/filters"
 import { VehicleService } from "@/lib/vehicle-service"
 import { PlansService, type Plan } from "@/lib/plans-service"
@@ -86,19 +87,19 @@ export default function AnunciarPage() {
   // Função para lidar com seleção dos filtros dinâmicos
   const handleDynamicSelection = (selection: {
     brand: string
+    vehicle: string
     model: string
     year: number
-    version: string
     fipePrice?: number
   }) => {
     setBrandId(selection.brand)
     setModelId(selection.model)
     setYear(selection.year.toString())
-    setSelectedVersion(selection.version)
+    setSelectedVersion(selection.vehicle) // Usar veículo como versão
     
     // Atualizar preço FIPE se disponível
     if (selection.fipePrice) {
-      setFipe(selection.fipePrice)
+      setFipeData({ price: selection.fipePrice, fipeCode: '' })
     }
   }
 
@@ -678,8 +679,8 @@ export default function AnunciarPage() {
                 </div>
 
                 {useDynamicFilters ? (
-                  /* Filtros Dinâmicos */
-                  <DynamicVehicleFilters
+                  /* Filtros Dinâmicos FIPE */
+                  <DynamicVehicleFiltersFipe
                     onSelectionComplete={handleDynamicSelection}
                     showFipePrice={true}
                     className="w-full"

@@ -99,6 +99,7 @@ function SearchPageContent() {
     const filters: Partial<SearchFiltersType> = {}
 
     // Parse dos parâmetros da URL
+    const term = searchParams.get("term")
     const brand = searchParams.get("brand")
     const model = searchParams.get("model")
     const year = searchParams.get("year")
@@ -107,6 +108,7 @@ function SearchPageContent() {
     const city = searchParams.get("cidade")
     const plan = searchParams.get("plano")
 
+    if (term) filters.termo = term
     if (brand) filters.marca = brand
     if (model) filters.modelo = model
     if (year) filters.anoMin = Number.parseInt(year)
@@ -119,6 +121,20 @@ function SearchPageContent() {
 
   const applyFilters = () => {
     let filtered = [...vehicles]
+
+    // Aplicar filtro por termo (busca em marca, modelo, versão e descrição)
+    if (currentFilters.termo) {
+      const termo = currentFilters.termo.toLowerCase()
+      filtered = filtered.filter((v) => {
+        return (
+          v.marca.toLowerCase().includes(termo) ||
+          v.modelo.toLowerCase().includes(termo) ||
+          v.versao?.toLowerCase().includes(termo) ||
+          v.descricao?.toLowerCase().includes(termo) ||
+          v.titulo?.toLowerCase().includes(termo)
+        )
+      })
+    }
 
     // Aplicar filtros
     if (currentFilters.marca) {
@@ -249,7 +265,11 @@ function SearchPageContent() {
     const params = new URLSearchParams()
     Object.entries(filters).forEach(([key, value]) => {
       if (value && value !== "relevancia") {
-        params.set(key, value.toString())
+        if (key === "termo") {
+          params.set("term", value.toString())
+        } else {
+          params.set(key, value.toString())
+        }
       }
     })
 
@@ -407,6 +427,15 @@ function SearchPageContent() {
           {getActiveFiltersCount() > 0 && (
             <div className="flex items-center gap-2 flex-wrap mt-4">
               <span className="text-sm text-purple-100">Filtros ativos:</span>
+              {currentFilters.termo && (
+                <Badge variant="secondary" className="flex items-center gap-1 bg-white/20 text-white">
+                  Termo: {currentFilters.termo}
+                  <X
+                    className="w-3 h-3 cursor-pointer"
+                    onClick={() => handleSearch({ ...currentFilters, termo: undefined })}
+                  />
+                </Badge>
+              )}
               {currentFilters.marca && (
                 <Badge variant="secondary" className="flex items-center gap-1 bg-white/20 text-white">
                   Marca: {currentFilters.marca}

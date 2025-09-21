@@ -333,6 +333,48 @@ export class FipeDatabaseService {
     }
   }
 
+  // Obter todos os modelos
+  static async getAllModels(): Promise<FipeModelDB[]> {
+    try {
+      const { data, error } = await supabase
+        .from('ocar_fipe_models')
+        .select('*')
+        .eq('active', true)
+        .order('name', { ascending: true })
+
+      if (error) {
+        console.error('Erro ao buscar todos os modelos:', error)
+        throw error
+      }
+
+      return data || []
+    } catch (error) {
+      console.error('Erro no FipeDatabaseService.getAllModels:', error)
+      throw error
+    }
+  }
+
+  // Obter todos os anos
+  static async getAllYears(): Promise<FipeYearDB[]> {
+    try {
+      const { data, error } = await supabase
+        .from('ocar_fipe_years')
+        .select('*')
+        .eq('active', true)
+        .order('year', { ascending: false })
+
+      if (error) {
+        console.error('Erro ao buscar todos os anos:', error)
+        throw error
+      }
+
+      return data || []
+    } catch (error) {
+      console.error('Erro no FipeDatabaseService.getAllYears:', error)
+      throw error
+    }
+  }
+
   // Obter estatísticas do banco
   static async getStats(): Promise<{ brands: number; models: number; years: number; prices: number }> {
     try {
