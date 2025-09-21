@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Limpar LocalStorage - Ocar</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #7c3aed;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+        }
+        button:hover {
+            background: #6d28d9;
+        }
+        .success {
+            color: green;
+            font-weight: bold;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧹 Limpar LocalStorage - Ocar</h1>
+        <p>Este script limpa todos os dados salvos no navegador relacionados ao Ocar.</p>
+        
+        <button onclick="clearOcarData()">Limpar Dados do Ocar</button>
+        <button onclick="clearAllData()">Limpar Tudo (Cuidado!)</button>
+        <button onclick="showCurrentData()">Ver Dados Atuais</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        function clearOcarData() {
+            try {
+                // Limpar dados específicos do Ocar
+                localStorage.removeItem("ocar-user");
+                localStorage.removeItem("ocar-interactions");
+                
+                // Limpar dados do Supabase
+                const keys = Object.keys(localStorage);
+                keys.forEach(key => {
+                    if (key.includes('supabase') || key.includes('sb-')) {
+                        localStorage.removeItem(key);
+                    }
+                });
+                
+                document.getElementById('result').innerHTML = 
+                    '<p class="success">✅ Dados do Ocar limpos com sucesso!</p>';
+            } catch (error) {
+                document.getElementById('result').innerHTML = 
+                    '<p class="error">❌ Erro ao limpar dados: ' + error.message + '</p>';
+            }
+        }
+        
+        function clearAllData() {
+            if (confirm('⚠️ ATENÇÃO: Isso vai limpar TODOS os dados salvos no navegador. Continuar?')) {
+                try {
+                    localStorage.clear();
+                    document.getElementById('result').innerHTML = 
+                        '<p class="success">✅ Todos os dados foram limpos!</p>';
+                } catch (error) {
+                    document.getElementById('result').innerHTML = 
+                        '<p class="error">❌ Erro ao limpar dados: ' + error.message + '</p>';
+                }
+            }
+        }
+        
+        function showCurrentData() {
+            try {
+                const ocarUser = localStorage.getItem("ocar-user");
+                const ocarInteractions = localStorage.getItem("ocar-interactions");
+                
+                let html = '<h3>Dados Atuais:</h3>';
+                html += '<p><strong>ocar-user:</strong> ' + (ocarUser ? 'Presente' : 'Não encontrado') + '</p>';
+                html += '<p><strong>ocar-interactions:</strong> ' + (ocarInteractions ? 'Presente' : 'Não encontrado') + '</p>';
+                
+                if (ocarUser) {
+                    html += '<p><strong>Detalhes do usuário:</strong></p>';
+                    html += '<pre>' + JSON.stringify(JSON.parse(ocarUser), null, 2) + '</pre>';
+                }
+                
+                document.getElementById('result').innerHTML = html;
+            } catch (error) {
+                document.getElementById('result').innerHTML = 
+                    '<p class="error">❌ Erro ao ler dados: ' + error.message + '</p>';
+            }
+        }
+    </script>
+</body>
+</html>
