@@ -427,6 +427,7 @@ export default function AnunciarPage() {
         const vehicleData = {
           marca: brands.find(b => b.value === brandId)?.label || '',
           modelo: models.find(m => m.value === modelId)?.label || '',
+          versao: selectedVersion || 'Não informado', // Campo obrigatório
           ano: parseInt(year),
           cor: color,
           quilometragem: parseInt(mileage),
