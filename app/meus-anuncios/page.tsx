@@ -588,8 +588,61 @@ export default function MeusAnunciosPage() {
                     </div>
                   </div>
                   </Link>
-                </CardContent>
-              </Card>
+                  <CardContent className="p-4">
+                    <div className="space-y-2">
+                      <h3 className="font-semibold text-lg">
+                        {anuncio.marca} {anuncio.modelo} {anuncio.ano}
+                      </h3>
+                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                        <MapPin className="h-4 w-4" />
+                        {anuncio.cidade}{anuncio.estado ? `, ${anuncio.estado}` : ''}
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <div className="text-2xl font-bold text-green-600">
+                          {formatPrice(anuncio.preco)}
+                        </div>
+                        {anuncio.fipe && (
+                          <div className="text-sm text-muted-foreground">
+                            FIPE: {formatPrice(anuncio.fipe)}
+                          </div>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-3 gap-4 pt-2">
+                        <div className="text-center">
+                          <Eye className="h-4 w-4 mx-auto mb-1 text-muted-foreground" />
+                          <div className="text-sm font-medium">{anuncio.views}</div>
+                          <div className="text-xs text-muted-foreground">Visualizações</div>
+                        </div>
+                        <div className="text-center">
+                          <MessageCircle className="h-4 w-4 mx-auto mb-1 text-muted-foreground" />
+                          <div className="text-sm font-medium">{anuncio.likes}</div>
+                          <div className="text-xs text-muted-foreground">Contatos</div>
+                        </div>
+                        <div className="text-center">
+                          <Heart className="h-4 w-4 mx-auto mb-1 text-muted-foreground" />
+                          <div className="text-sm font-medium">{anuncio.shares}</div>
+                          <div className="text-xs text-muted-foreground">Favoritos</div>
+                        </div>
+                      </div>
+                      <div className="flex justify-between pt-2 border-t text-xs text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          Criado em {formatDate(anuncio.created_at)}
+                        </div>
+                        {diasRestantes !== null && (
+                          <div className={`flex items-center gap-1 ${
+                            proximoVencimentoAnuncio ? 'text-orange-600 font-medium' : 
+                            expiradoAnuncio ? 'text-red-600 font-medium' : 
+                            'text-muted-foreground'
+                          }`}>
+                            <Clock className="h-3 w-3" />
+                            {expiradoAnuncio ? 'Expirado' : `${diasRestantes} dias restantes`}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               )
             })}
           </div>
