@@ -157,6 +157,48 @@ export class VehicleService {
     }
   }
 
+  // Buscar veículo por ID
+  static async getVehicleById(vehicleId: string): Promise<Vehicle | null> {
+    try {
+      const { data, error } = await supabase
+        .from('ocar_vehicles')
+        .select('*')
+        .eq('id', vehicleId)
+        .single()
+
+      if (error) {
+        console.error('❌ Erro ao buscar veículo:', error)
+        throw error
+      }
+
+      return data
+    } catch (error) {
+      console.error('❌ Erro no VehicleService.getVehicleById:', error)
+      throw error
+    }
+  }
+
+  // Incrementar visualizações
+  static async incrementViews(vehicleId: string): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('ocar_vehicles')
+        .update({ 
+          views: supabase.raw('views + 1'),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', vehicleId)
+
+      if (error) {
+        console.error('❌ Erro ao incrementar visualizações:', error)
+        throw error
+      }
+    } catch (error) {
+      console.error('❌ Erro no VehicleService.incrementViews:', error)
+      throw error
+    }
+  }
+
   // Deletar veículo
   static async deleteVehicle(vehicleId: string): Promise<boolean> {
     try {
