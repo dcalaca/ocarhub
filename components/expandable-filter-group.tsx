@@ -51,19 +51,19 @@ export function ExpandableFilterGroup({
       <button
         type="button"
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between text-white hover:text-gray-300 transition-colors"
+        className="w-full flex items-center justify-between text-white hover:text-gray-300 transition-colors py-2"
       >
         <span className="text-sm font-medium">{title}</span>
         <div className="flex items-center gap-2">
           {selectedCount > 0 && (
-            <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded-full">
+            <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded-full min-w-[20px] text-center">
               {selectedCount}
             </span>
           )}
           {isExpanded ? (
-            <ChevronUp className="h-4 w-4" />
+            <ChevronUp className="h-4 w-4 flex-shrink-0" />
           ) : (
-            <ChevronDown className="h-4 w-4" />
+            <ChevronDown className="h-4 w-4 flex-shrink-0" />
           )}
         </div>
       </button>
@@ -89,22 +89,22 @@ export function ExpandableFilterGroup({
             )}
           </div>
 
-          <div className="max-h-48 overflow-y-auto space-y-2">
+          <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
             {options.map((option) => (
               <div key={option.value} className="flex items-center space-x-2">
                 <Checkbox
                   id={`${title}-${option.value}`}
                   checked={selectedValues.includes(option.value)}
                   onCheckedChange={() => handleOptionToggle(option.value)}
-                  className="border-gray-600 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                  className="border-gray-600 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 flex-shrink-0"
                 />
                 <label
                   htmlFor={`${title}-${option.value}`}
-                  className="text-sm text-gray-300 cursor-pointer flex-1 flex items-center justify-between"
+                  className="text-sm text-gray-300 cursor-pointer flex-1 flex items-center justify-between min-w-0"
                 >
-                  <span>{option.label}</span>
+                  <span className="truncate">{option.label}</span>
                   {option.count !== undefined && (
-                    <span className="text-xs text-gray-500 ml-2">
+                    <span className="text-xs text-gray-500 ml-2 flex-shrink-0">
                       ({option.count.toLocaleString('pt-BR')})
                     </span>
                   )}
