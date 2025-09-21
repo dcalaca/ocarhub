@@ -299,6 +299,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('🔍 Resultado da consulta:', { data, error })
       
       if (error) {
+        console.log('❌ Erro na consulta ao banco:', error)
+        console.log('❌ Código do erro:', error.code)
+        console.log('❌ Mensagem do erro:', error.message)
         // Só exibir erro se não for "usuário não encontrado" (normal durante cadastro)
         if (error.code !== 'PGRST116' && !error.message?.includes('No rows found')) {
           console.error('❌ Erro ao carregar dados do usuário:', error)
@@ -374,6 +377,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log('✅ Estado do usuário atualizado')
       } else {
         console.log('❌ Nenhum dado encontrado para o usuário')
+        console.log('🔍 Dados retornados:', data)
+        console.log('🔍 Tipo dos dados:', typeof data)
+        console.log('🔍 Dados é null?', data === null)
+        console.log('🔍 Dados é undefined?', data === undefined)
       }
     } catch (error) {
       // Só exibir erro se for um erro real, não durante cadastro
