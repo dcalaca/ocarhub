@@ -77,10 +77,6 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Diagnóstico temporário - remover após teste */}
-      <div className="bg-red-500 text-white p-2 text-center">
-        <p className="text-red-500">Tailwind ativo</p>
-      </div>
       <Header />
 
       <section className="relative bg-gradient-to-br from-purple-900 via-purple-800 to-purple-600 text-white py-20 md:py-32">
