@@ -30,7 +30,9 @@ export default function LoginPage() {
 
   // Redirecionar se já estiver logado
   useEffect(() => {
+    console.log('🔄 useEffect user mudou:', { user, hasUser: !!user })
     if (user) {
+      console.log('✅ Usuário logado, redirecionando para /')
       router.push("/")
     }
   }, [user, router])
@@ -49,16 +51,24 @@ export default function LoginPage() {
     console.log('🟡 Iniciando login...')
 
     try {
+      console.log('🔄 Chamando função login...')
       await login(email, senha)
       console.log('✅ Login bem-sucedido!')
+      console.log('👤 Usuário após login:', user)
 
       toast({
         title: "Login realizado com sucesso!",
         description: "Bem-vindo de volta à Ocar!",
       })
 
-      router.push("/")
+      // Aguardar um pouco para o contexto atualizar
+      console.log('⏳ Aguardando atualização do contexto...')
+      setTimeout(() => {
+        console.log('🔄 Tentando redirecionar para /')
+        router.push("/")
+      }, 1000)
     } catch (error) {
+      console.error('❌ Erro no login:', error)
       setError("Erro ao fazer login. Tente novamente.")
     } finally {
       setLoading(false)
