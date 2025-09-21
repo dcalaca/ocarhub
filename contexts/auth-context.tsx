@@ -364,8 +364,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           saldo: data.saldo || 0
         }
         console.log('💰 Saldo do usuário:', userData.saldo)
+        console.log('🔄 Atualizando estado do usuário...')
         setUser(userData)
         safeLocalStorage.setItem("ocar-user", JSON.stringify(userData))
+        console.log('✅ Estado do usuário atualizado')
       } else {
         console.log('❌ Nenhum dado encontrado para o usuário')
       }
@@ -491,7 +493,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (data.user) {
         console.log('✅ Login bem-sucedido:', data.user.id)
+        console.log('🔄 Chamando loadUserData...')
         await loadUserData(data.user.id)
+        console.log('✅ loadUserData concluído')
       } else {
         throw new Error('Usuário não encontrado')
       }
