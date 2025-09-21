@@ -1,6 +1,7 @@
 import type React from "react"
 import type { Metadata } from "next"
 import { Poppins } from "next/font/google"
+import "./globals.css"
 import { AuthProvider } from "@/contexts/auth-context"
 import { Analytics } from "@vercel/analytics/react"
 
@@ -29,9 +30,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR" className="dark">
-      <head>
-        <link rel="stylesheet" href="/compiled.css" />
-      </head>
       <body className={`min-h-screen ${poppins.variable}`}>
         <AuthProvider>{children}</AuthProvider>
         <Analytics />
