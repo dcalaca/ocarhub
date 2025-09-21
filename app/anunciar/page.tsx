@@ -147,19 +147,10 @@ export default function AnunciarPage() {
   // Função para verificar limite de anúncios gratuitos por CPF
   const verificarLimiteAnunciosGratuitos = async (cpf: string): Promise<{ podeAnunciar: boolean; anunciosRestantes: number }> => {
     try {
-      const { data, error } = await supabase
-        .from('ocar_vehicles')
-        .select('id')
-        .eq('dono_id', user?.id)
-        .eq('plano', 'gratuito')
-        .eq('status', 'ativo')
-
-      if (error) {
-        console.error('Erro ao verificar anúncios gratuitos:', error)
-        return { podeAnunciar: false, anunciosRestantes: 0 }
-      }
-
-      const anunciosGratuitosAtivos = data?.length || 0
+      // Buscar todos os veículos do usuário e filtrar os gratuitos ativos
+      const todosVeiculos = await VehicleService.getUserVehicles(user?.id || '')
+      const anunciosGratuitosAtivos = todosVeiculos.filter(v => v.plano === 'gratuito' && v.status === 'ativo').length
+      
       const planoGratuito = plans.find(p => p.preco === 0)
       const limite = planoGratuito?.limite_anuncios || 3
       const anunciosRestantes = Math.max(0, limite - anunciosGratuitosAtivos)
