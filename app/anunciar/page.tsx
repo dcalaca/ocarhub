@@ -287,6 +287,7 @@ export default function AnunciarPage() {
       
       // Se não houver transmissões específicas do modelo, usar lista padrão
       const transmissionsList = modelTransmissions.length > 0 ? modelTransmissions : ['Manual', 'Automático', 'CVT', 'Semi-automático']
+      console.log('🔧 Lista de transmissões final:', transmissionsList)
       
       setTransmissions(
         transmissionsList.map((transmission) => ({
@@ -336,6 +337,18 @@ export default function AnunciarPage() {
     let completed = 0
     const total = 9 // Campos obrigatórios (incluindo versão e câmbio)
 
+    const fields = {
+      brandId: !!brandId,
+      modelId: !!modelId,
+      year: !!year,
+      selectedVersion: !!selectedVersion,
+      price: !!price,
+      mileage: !!mileage,
+      color: !!color,
+      fuelType: !!fuelType,
+      transmission: !!transmission
+    }
+
     if (brandId) completed++
     if (modelId) completed++
     if (year) completed++
@@ -347,6 +360,7 @@ export default function AnunciarPage() {
     if (transmission) completed++
 
     const percentage = Math.floor((completed / total) * 100)
+    console.log('📊 Validação do formulário:', { fields, completed, total, percentage, formCompleted: percentage === 100 })
     setProgress(percentage)
     setFormCompleted(percentage === 100)
   }, [brandId, modelId, year, selectedVersion, price, mileage, color, fuelType, transmission])
