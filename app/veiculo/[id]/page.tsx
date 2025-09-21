@@ -207,24 +207,24 @@ export default function VehicleDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8">
           <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
+            <div className="h-8 bg-muted rounded w-1/4 mb-6"></div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <div className="space-y-4">
-                <div className="aspect-video bg-gray-200 rounded-lg"></div>
+                <div className="aspect-video bg-muted rounded-lg"></div>
                 <div className="grid grid-cols-4 gap-2">
                   {[...Array(4)].map((_, i) => (
-                    <div key={i} className="aspect-video bg-gray-200 rounded"></div>
+                    <div key={i} className="aspect-video bg-muted rounded"></div>
                   ))}
                 </div>
               </div>
               <div className="space-y-4">
-                <div className="h-8 bg-gray-200 rounded w-3/4"></div>
-                <div className="h-6 bg-gray-200 rounded w-1/2"></div>
-                <div className="h-4 bg-gray-200 rounded w-full"></div>
-                <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                <div className="h-8 bg-muted rounded w-3/4"></div>
+                <div className="h-6 bg-muted rounded w-1/2"></div>
+                <div className="h-4 bg-muted rounded w-full"></div>
+                <div className="h-4 bg-muted rounded w-2/3"></div>
               </div>
             </div>
           </div>
@@ -235,10 +235,10 @@ export default function VehicleDetailPage() {
 
   if (!vehicle) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Veículo não encontrado</h1>
-          <p className="text-gray-600 mb-6">Este anúncio pode ter sido removido ou não existe.</p>
+          <h1 className="text-2xl font-bold text-foreground mb-4">Veículo não encontrado</h1>
+          <p className="text-muted-foreground mb-6">Este anúncio pode ter sido removido ou não existe.</p>
           <Button onClick={() => router.push('/buscar')}>
             <ArrowLeft className="w-4 h-4 mr-2" />
             Voltar para busca
@@ -252,12 +252,12 @@ export default function VehicleDetailPage() {
   const currentImage = images[currentImageIndex]
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Header Oficial */}
       <Header />
       
       {/* Breadcrumb */}
-      <div className="bg-muted/40 backdrop-blur-sm border-b border-border/50">
+      <div className="bg-card border-b">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Button 
@@ -291,7 +291,7 @@ export default function VehicleDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Galeria de Imagens */}
           <div className="space-y-4">
-            <div className="aspect-video relative rounded-lg overflow-hidden bg-gray-100">
+            <div className="aspect-video relative rounded-lg overflow-hidden bg-muted">
               <Image
                 src={currentImage}
                 alt={`${vehicle.marca} ${vehicle.modelo}`}
@@ -329,10 +329,10 @@ export default function VehicleDetailPage() {
           <div className="space-y-6">
             {/* Título e Preço */}
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              <h1 className="text-3xl font-bold text-foreground mb-2">
                 {vehicle.marca} {vehicle.modelo} {vehicle.versao}
               </h1>
-              <p className="text-lg text-gray-600 mb-4">
+              <p className="text-lg text-muted-foreground mb-4">
                 {vehicle.ano} • {vehicle.cor} • {formatMileage(vehicle.quilometragem)}
               </p>
               
@@ -341,8 +341,8 @@ export default function VehicleDetailPage() {
                   {formatPrice(vehicle.preco)}
                 </div>
                 {vehicle.fipe && (
-                  <div className="text-sm text-gray-500">
-                    <div className="text-xs text-gray-400">FIPE</div>
+                  <div className="text-sm text-muted-foreground">
+                    <div className="text-xs text-muted-foreground/70">FIPE</div>
                     <div className="font-medium">{formatPrice(vehicle.fipe)}</div>
                   </div>
                 )}
@@ -350,13 +350,13 @@ export default function VehicleDetailPage() {
               
               {/* Valor FIPE destacado */}
               {vehicle.fipe && (
-                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="mb-4 p-3 bg-primary/10 border border-primary/20 rounded-lg">
                   <div className="flex items-center gap-2">
-                    <Star className="w-4 h-4 text-blue-600" />
-                    <span className="text-sm font-medium text-blue-800">Valor FIPE:</span>
-                    <span className="text-lg font-bold text-blue-900">{formatPrice(vehicle.fipe)}</span>
+                    <Star className="w-4 h-4 text-primary" />
+                    <span className="text-sm font-medium text-foreground">Valor FIPE:</span>
+                    <span className="text-lg font-bold text-primary">{formatPrice(vehicle.fipe)}</span>
                   </div>
-                  <p className="text-xs text-blue-600 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     Preço de referência da tabela FIPE
                   </p>
                 </div>
@@ -395,42 +395,42 @@ export default function VehicleDetailPage() {
 
             {/* Informações Detalhadas */}
             <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Informações do Veículo</h3>
+              <h3 className="text-lg font-semibold mb-4 text-foreground">Informações do Veículo</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm text-gray-600">Ano:</span>
-                  <span className="font-medium">{vehicle.ano}</span>
+                  <Calendar className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Ano:</span>
+                  <span className="font-medium text-foreground">{vehicle.ano}</span>
                 </div>
                 
                 <div className="flex items-center gap-2">
-                  <Gauge className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm text-gray-600">Quilometragem:</span>
-                  <span className="font-medium">{formatMileage(vehicle.quilometragem)}</span>
+                  <Gauge className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Quilometragem:</span>
+                  <span className="font-medium text-foreground">{formatMileage(vehicle.quilometragem)}</span>
                 </div>
                 
                 <div className="flex items-center gap-2">
-                  <Fuel className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm text-gray-600">Combustível:</span>
-                  <span className="font-medium">{vehicle.combustivel?.join(', ') || 'Não informado'}</span>
+                  <Fuel className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Combustível:</span>
+                  <span className="font-medium text-foreground">{vehicle.combustivel?.join(', ') || 'Não informado'}</span>
                 </div>
                 
                 <div className="flex items-center gap-2">
-                  <Settings className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm text-gray-600">Câmbio:</span>
-                  <span className="font-medium">{vehicle.cambio || 'Não informado'}</span>
+                  <Settings className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Câmbio:</span>
+                  <span className="font-medium text-foreground">{vehicle.cambio || 'Não informado'}</span>
                 </div>
                 
                 <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm text-gray-600">Localização:</span>
-                  <span className="font-medium">{vehicle.cidade}, {vehicle.estado}</span>
+                  <MapPin className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Localização:</span>
+                  <span className="font-medium text-foreground">{vehicle.cidade}, {vehicle.estado}</span>
                 </div>
                 
                 {vehicle.placa_parcial && (
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">Placa:</span>
-                    <span className="font-medium">{vehicle.placa_parcial}</span>
+                    <span className="text-sm text-muted-foreground">Placa:</span>
+                    <span className="font-medium text-foreground">{vehicle.placa_parcial}</span>
                   </div>
                 )}
               </div>
@@ -439,8 +439,8 @@ export default function VehicleDetailPage() {
             {/* Descrição */}
             {vehicle.observacoes && (
               <Card className="p-6">
-                <h3 className="text-lg font-semibold mb-4">Descrição</h3>
-                <p className="text-gray-700 whitespace-pre-wrap">{vehicle.observacoes}</p>
+                <h3 className="text-lg font-semibold mb-4 text-foreground">Descrição</h3>
+                <p className="text-muted-foreground whitespace-pre-wrap">{vehicle.observacoes}</p>
               </Card>
             )}
 
@@ -462,7 +462,7 @@ export default function VehicleDetailPage() {
         {suggestedVehicles.length > 0 && (
           <div className="mt-16">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Sugestões para você</h2>
+              <h2 className="text-2xl font-bold text-foreground">Sugestões para você</h2>
               <Button 
                 variant="outline" 
                 onClick={() => router.push('/buscar')}
@@ -475,9 +475,9 @@ export default function VehicleDetailPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[...Array(4)].map((_, i) => (
                   <div key={i} className="animate-pulse">
-                    <div className="aspect-video bg-gray-200 rounded-lg mb-4"></div>
-                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                    <div className="aspect-video bg-muted rounded-lg mb-4"></div>
+                    <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
+                    <div className="h-4 bg-muted rounded w-1/2"></div>
                   </div>
                 ))}
               </div>
@@ -497,10 +497,10 @@ export default function VehicleDetailPage() {
                         </div>
                       </CardHeader>
                       <CardContent className="p-4">
-                        <h3 className="font-semibold text-gray-900 mb-1">
+                        <h3 className="font-semibold text-foreground mb-1">
                           {suggestion.marca} {suggestion.modelo}
                         </h3>
-                        <p className="text-sm text-gray-600 mb-2">
+                        <p className="text-sm text-muted-foreground mb-2">
                           {suggestion.ano} • {suggestion.cor} • {formatMileage(suggestion.quilometragem)}
                         </p>
                         <div className="flex items-center justify-between">
@@ -508,7 +508,7 @@ export default function VehicleDetailPage() {
                             {formatPrice(suggestion.preco)}
                           </span>
                           {suggestion.fipe && (
-                            <span className="text-sm text-gray-500">
+                            <span className="text-sm text-muted-foreground">
                               FIPE: {formatPrice(suggestion.fipe)}
                             </span>
                           )}
