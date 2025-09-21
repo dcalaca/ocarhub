@@ -11,6 +11,25 @@ const config: Config = {
     './pages/**/*.{js,ts,jsx,tsx,mdx}',
     './lib/**/*.{js,ts,jsx,tsx,mdx}',
   ],
+  safelist: [
+    'bg-primary',
+    'text-primary',
+    'border-primary',
+    'bg-background',
+    'text-foreground',
+    'bg-card',
+    'text-card-foreground',
+    'bg-popover',
+    'text-popover-foreground',
+    'bg-secondary',
+    'text-secondary-foreground',
+    'bg-muted',
+    'text-muted-foreground',
+    'bg-accent',
+    'text-accent-foreground',
+    'bg-destructive',
+    'text-destructive-foreground',
+  ],
   theme: {
     extend: {
       colors: {
