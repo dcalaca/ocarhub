@@ -277,8 +277,12 @@ export default function VehicleDetailPage() {
               <Badge 
                 variant="outline" 
                 className={vehicle.status === 'ativo' 
-                  ? 'bg-green-600 hover:bg-green-700 text-white border-green-600' 
-                  : 'bg-gray-500 hover:bg-gray-600 text-white border-gray-500'
+                  ? '!bg-green-600 hover:!bg-green-700 !text-white !border-green-600' 
+                  : '!bg-gray-500 hover:!bg-gray-600 !text-white !border-gray-500'
+                }
+                style={vehicle.status === 'ativo' 
+                  ? { backgroundColor: '#16a34a', color: 'white', borderColor: '#16a34a' }
+                  : { backgroundColor: '#6b7280', color: 'white', borderColor: '#6b7280' }
                 }
               >
                 {vehicle.status === 'ativo' ? 'Ativo' : 'Inativo'}
