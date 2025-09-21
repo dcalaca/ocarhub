@@ -257,7 +257,7 @@ export default function VehicleDetailPage() {
       <Header />
       
       {/* Breadcrumb */}
-      <div className="bg-white border-b">
+      <div className="bg-muted/40 backdrop-blur-sm border-b border-border/50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Button 
@@ -275,14 +275,9 @@ export default function VehicleDetailPage() {
                 {views} visualizações
               </Badge>
               <Badge 
-                variant="outline" 
                 className={vehicle.status === 'ativo' 
-                  ? '!bg-green-600 hover:!bg-green-700 !text-white !border-green-600' 
-                  : '!bg-gray-500 hover:!bg-gray-600 !text-white !border-gray-500'
-                }
-                style={vehicle.status === 'ativo' 
-                  ? { backgroundColor: '#16a34a', color: 'white', borderColor: '#16a34a' }
-                  : { backgroundColor: '#6b7280', color: 'white', borderColor: '#6b7280' }
+                  ? 'bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700' 
+                  : 'bg-gray-500 text-white border-gray-500 hover:bg-gray-600'
                 }
               >
                 {vehicle.status === 'ativo' ? 'Ativo' : 'Inativo'}
