@@ -78,7 +78,9 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Checagem rápida - remover após teste */}
-      <p className="p-2 rounded-md bg-primary text-primary-foreground">CSS global + utilities ativos</p>
+      <div className="p-3 rounded-lg bg-primary text-primary-foreground">
+        Agora o primary deve ficar roxo.
+      </div>
       <Header />
 
       <section className="relative bg-gradient-to-br from-purple-900 via-purple-800 to-purple-600 text-white py-20 md:py-32">
