@@ -73,6 +73,20 @@ export default function AnunciarPage() {
   const [photos, setPhotos] = useState<File[]>([])
   const [location, setLocation] = useState("")
 
+  // Novos campos de filtros
+  const [tipoVendedor, setTipoVendedor] = useState("")
+  const [aceitaTroca, setAceitaTroca] = useState(false)
+  const [alienado, setAlienado] = useState(false)
+  const [garantiaFabrica, setGarantiaFabrica] = useState(false)
+  const [ipvaPago, setIpvaPago] = useState(false)
+  const [licenciado, setLicenciado] = useState(false)
+  const [revisoesConcessionaria, setRevisoesConcessionaria] = useState(false)
+  const [unicoDono, setUnicoDono] = useState(false)
+  const [blindagem, setBlindagem] = useState("")
+  const [leilao, setLeilao] = useState(false)
+  const [carroceria, setCarroceria] = useState("")
+  const [opcionais, setOpcionais] = useState<string[]>([])
+
   // Opções dinâmicas
   const [brands, setBrands] = useState<{ value: string; label: string; image: string }[]>([])
   const [models, setModels] = useState<{ value: string; label: string }[]>([])
@@ -83,6 +97,40 @@ export default function AnunciarPage() {
   const [plans, setPlans] = useState<Plan[]>([])
   const [plansLoading, setPlansLoading] = useState(true)
   const [useDynamicFilters, setUseDynamicFilters] = useState(true)
+
+  // Opções para os novos campos
+  const tiposVendedor = [
+    { value: "particular", label: "Particular" },
+    { value: "concessionaria", label: "Concessionária" },
+    { value: "loja", label: "Loja" },
+    { value: "revenda", label: "Revenda" }
+  ]
+
+  const coresVeiculo = [
+    "Branco", "Prata", "Preto", "Cinza", "Vermelho", "Azul", "Verde", 
+    "Amarelo", "Bege", "Marrom", "Dourado", "Laranja", "Rosa", "Roxo", "Vinho"
+  ]
+
+  const tiposCarroceria = [
+    "Sedã", "Hatch", "SUV", "Cupê", "Conversível", "Picape", "Van/Utilitário", 
+    "Perua/SW", "Minivan", "Buggy"
+  ]
+
+  const opcionaisVeiculo = [
+    "Ar Condicionado", "Vidros Elétricos", "Teto Solar", "Travas Elétricas",
+    "Direção Hidráulica", "Direção Elétrica", "Bancos de Couro", "Rodas de Liga Leve",
+    "Sistema de Som", "GPS", "Câmera de Ré", "Sensor de Estacionamento",
+    "Airbag", "ABS", "Controle de Estabilidade", "Freio ABS"
+  ]
+
+  // Funções para lidar com opcionais
+  const handleOpcionalChange = (opcional: string, checked: boolean) => {
+    if (checked) {
+      setOpcionais(prev => [...prev, opcional])
+    } else {
+      setOpcionais(prev => prev.filter(o => o !== opcional))
+    }
+  }
 
   // Função para lidar com seleção dos filtros dinâmicos
   const handleDynamicSelection = (selection: {
@@ -446,7 +494,7 @@ export default function AnunciarPage() {
           motor: `${fuelType} ${transmission}`,
           combustivel: [fuelType],
           cambio: transmission,
-          opcionais: [], // TODO: Implementar opcionais
+          opcionais: opcionais, // Novos opcionais
           preco: parseFloat(price),
           fipe: fipeData?.price,
           placa_parcial: licensePlate,
@@ -456,6 +504,18 @@ export default function AnunciarPage() {
           plano: plano.nome.toLowerCase(),
           cidade: location.split(',')[0]?.trim() || 'São Paulo',
           estado: location.split(',')[1]?.trim() || 'SP',
+          // Novos campos de filtros
+          tipo_vendedor: tipoVendedor,
+          aceita_troca: aceitaTroca,
+          alienado: alienado,
+          garantia_fabrica: garantiaFabrica,
+          ipva_pago: ipvaPago,
+          licenciado: licenciado,
+          revisoes_concessionaria: revisoesConcessionaria,
+          unico_dono: unicoDono,
+          blindagem: blindagem,
+          leilao: leilao,
+          carroceria: carroceria,
         }
 
         try {
@@ -942,6 +1002,138 @@ export default function AnunciarPage() {
                         <Label htmlFor="owner-4">4+</Label>
                       </div>
                     </RadioGroup>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Novos campos de filtros */}
+                <div className="space-y-6">
+                  <h3 className="text-lg font-semibold">Informações do Vendedor</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="tipoVendedor">Tipo de Vendedor</Label>
+                      <VehicleSelector
+                        options={tiposVendedor}
+                        value={tipoVendedor}
+                        onChange={setTipoVendedor}
+                        placeholder="Selecione o tipo"
+                      />
+                    </div>
+                  </div>
+
+                  <h3 className="text-lg font-semibold">Características do Veículo</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-center space-x-2">
+                      <Switch 
+                        id="aceitaTroca" 
+                        checked={aceitaTroca}
+                        onCheckedChange={setAceitaTroca}
+                      />
+                      <Label htmlFor="aceitaTroca">Aceita Troca</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch 
+                        id="alienado" 
+                        checked={alienado}
+                        onCheckedChange={setAlienado}
+                      />
+                      <Label htmlFor="alienado">Alienado</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch 
+                        id="garantiaFabrica" 
+                        checked={garantiaFabrica}
+                        onCheckedChange={setGarantiaFabrica}
+                      />
+                      <Label htmlFor="garantiaFabrica">Garantia de Fábrica</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch 
+                        id="ipvaPago" 
+                        checked={ipvaPago}
+                        onCheckedChange={setIpvaPago}
+                      />
+                      <Label htmlFor="ipvaPago">IPVA Pago</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch 
+                        id="licenciado" 
+                        checked={licenciado}
+                        onCheckedChange={setLicenciado}
+                      />
+                      <Label htmlFor="licenciado">Licenciado</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch 
+                        id="revisoesConcessionaria" 
+                        checked={revisoesConcessionaria}
+                        onCheckedChange={setRevisoesConcessionaria}
+                      />
+                      <Label htmlFor="revisoesConcessionaria">Revisões na Concessionária</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch 
+                        id="unicoDono" 
+                        checked={unicoDono}
+                        onCheckedChange={setUnicoDono}
+                      />
+                      <Label htmlFor="unicoDono">Único Dono</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch 
+                        id="leilao" 
+                        checked={leilao}
+                        onCheckedChange={setLeilao}
+                      />
+                      <Label htmlFor="leilao">Leilão</Label>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="blindagem">Blindagem</Label>
+                      <RadioGroup value={blindagem} onValueChange={setBlindagem} className="flex gap-4">
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="sim" id="blindagem-sim" />
+                          <Label htmlFor="blindagem-sim">Sim</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="nao" id="blindagem-nao" />
+                          <Label htmlFor="blindagem-nao">Não</Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="carroceria">Carroceria</Label>
+                      <VehicleSelector
+                        options={tiposCarroceria.map(tipo => ({ value: tipo, label: tipo }))}
+                        value={carroceria}
+                        onChange={setCarroceria}
+                        placeholder="Selecione a carroceria"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <Label>Opcionais</Label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {opcionaisVeiculo.map((opcional) => (
+                        <div key={opcional} className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id={`opcional-${opcional}`}
+                            checked={opcionais.includes(opcional)}
+                            onChange={(e) => handleOpcionalChange(opcional, e.target.checked)}
+                            className="rounded border-gray-300"
+                          />
+                          <Label htmlFor={`opcional-${opcional}`} className="text-sm">
+                            {opcional}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
