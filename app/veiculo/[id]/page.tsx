@@ -349,6 +349,20 @@ export default function VehicleDetailPage() {
                     <Star className="w-4 h-4 text-primary" />
                     <span className="text-sm font-medium text-foreground">Valor FIPE:</span>
                     <span className="text-lg font-bold text-primary">{formatPrice(vehicle.fipe)}</span>
+                    {(() => {
+                      const diferenca = vehicle.preco - vehicle.fipe
+                      const percentual = ((diferenca / vehicle.fipe) * 100).toFixed(1)
+                      const isAcima = diferenca > 0
+                      return (
+                        <span className={`text-sm font-medium px-2 py-1 rounded-full ${
+                          isAcima 
+                            ? 'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400' 
+                            : 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400'
+                        }`}>
+                          {isAcima ? '+' : ''}{percentual}%
+                        </span>
+                      )
+                    })()}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
                     Preço de referência da tabela FIPE
