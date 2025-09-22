@@ -24,7 +24,13 @@ import {
   MessageCircle,
   ArrowLeft,
   Star,
-  Eye
+  Eye,
+  Info,
+  X,
+  CheckCircle,
+  Shield,
+  Car,
+  Wrench
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import Header from "@/components/header"
@@ -43,6 +49,7 @@ export default function VehicleDetailPage() {
   const [views, setViews] = useState(0)
   const [suggestedVehicles, setSuggestedVehicles] = useState<Vehicle[]>([])
   const [loadingSuggestions, setLoadingSuggestions] = useState(false)
+  const [showCharacteristics, setShowCharacteristics] = useState(false)
 
   const vehicleId = params.id as string
 
@@ -453,14 +460,26 @@ export default function VehicleDetailPage() {
             )}
 
             {/* Botões de Contato */}
-            <div className="flex gap-3">
-              <Button size="lg" className="flex-1">
-                <Phone className="w-4 h-4 mr-2" />
-                Ver Telefone
-              </Button>
-              <Button size="lg" variant="outline" className="flex-1">
-                <MessageCircle className="w-4 h-4 mr-2" />
-                Enviar Mensagem
+            <div className="space-y-3">
+              <div className="flex gap-3">
+                <Button size="lg" className="flex-1">
+                  <Phone className="w-4 h-4 mr-2" />
+                  Ver Telefone
+                </Button>
+                <Button size="lg" variant="outline" className="flex-1">
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  Enviar Mensagem
+                </Button>
+              </div>
+              
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="w-full"
+                onClick={() => setShowCharacteristics(true)}
+              >
+                <Info className="w-4 h-4 mr-2" />
+                Consultar Características
               </Button>
             </div>
           </div>
@@ -527,6 +546,199 @@ export default function VehicleDetailPage() {
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {/* Modal de Características */}
+        {showCharacteristics && vehicle && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-background rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-background border-b p-6 flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
+                  <Car className="w-6 h-6" />
+                  Características do {vehicle.marca} {vehicle.modelo}
+                </h2>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowCharacteristics(false)}
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+              
+              <div className="p-6 space-y-6">
+                {/* Informações Básicas */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Card className="p-4">
+                    <h3 className="font-semibold mb-3 text-foreground flex items-center gap-2">
+                      <Settings className="w-4 h-4" />
+                      Informações Técnicas
+                    </h3>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Ano:</span>
+                        <span className="font-medium">{vehicle.ano}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Quilometragem:</span>
+                        <span className="font-medium">{formatMileage(vehicle.quilometragem)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Combustível:</span>
+                        <span className="font-medium">{vehicle.combustivel?.join(', ') || 'Não informado'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Câmbio:</span>
+                        <span className="font-medium">{vehicle.cambio || 'Não informado'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Proprietários:</span>
+                        <span className="font-medium">{vehicle.numero_proprietarios || 1}</span>
+                      </div>
+                    </div>
+                  </Card>
+
+                  <Card className="p-4">
+                    <h3 className="font-semibold mb-3 text-foreground flex items-center gap-2">
+                      <Shield className="w-4 h-4" />
+                      Características Especiais
+                    </h3>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center gap-2">
+                        {vehicle.aceita_troca ? (
+                          <CheckCircle className="w-4 h-4 text-green-500" />
+                        ) : (
+                          <X className="w-4 h-4 text-red-500" />
+                        )}
+                        <span>Aceita Troca</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {vehicle.alienado ? (
+                          <CheckCircle className="w-4 h-4 text-green-500" />
+                        ) : (
+                          <X className="w-4 h-4 text-red-500" />
+                        )}
+                        <span>Alienado</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {vehicle.garantia_fabrica ? (
+                          <CheckCircle className="w-4 h-4 text-green-500" />
+                        ) : (
+                          <X className="w-4 h-4 text-red-500" />
+                        )}
+                        <span>Garantia de Fábrica</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {vehicle.ipva_pago ? (
+                          <CheckCircle className="w-4 h-4 text-green-500" />
+                        ) : (
+                          <X className="w-4 h-4 text-red-500" />
+                        )}
+                        <span>IPVA Pago</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {vehicle.licenciado ? (
+                          <CheckCircle className="w-4 h-4 text-green-500" />
+                        ) : (
+                          <X className="w-4 h-4 text-red-500" />
+                        )}
+                        <span>Licenciado</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {vehicle.revisoes_concessionaria ? (
+                          <CheckCircle className="w-4 h-4 text-green-500" />
+                        ) : (
+                          <X className="w-4 h-4 text-red-500" />
+                        )}
+                        <span>Revisões na Concessionária</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {vehicle.unico_dono ? (
+                          <CheckCircle className="w-4 h-4 text-green-500" />
+                        ) : (
+                          <X className="w-4 h-4 text-red-500" />
+                        )}
+                        <span>Único Dono</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {vehicle.leilao ? (
+                          <CheckCircle className="w-4 h-4 text-green-500" />
+                        ) : (
+                          <X className="w-4 h-4 text-red-500" />
+                        )}
+                        <span>Leilão</span>
+                      </div>
+                    </div>
+                  </Card>
+                </div>
+
+                {/* Opcionais */}
+                {vehicle.opcionais && vehicle.opcionais.length > 0 && (
+                  <Card className="p-4">
+                    <h3 className="font-semibold mb-3 text-foreground flex items-center gap-2">
+                      <Wrench className="w-4 h-4" />
+                      Opcionais ({vehicle.opcionais.length})
+                    </h3>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                      {vehicle.opcionais.map((opcional, index) => (
+                        <div key={index} className="flex items-center gap-2 text-sm">
+                          <CheckCircle className="w-4 h-4 text-green-500" />
+                          <span>{opcional}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </Card>
+                )}
+
+                {/* Informações Adicionais */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Card className="p-4">
+                    <h3 className="font-semibold mb-3 text-foreground">Informações do Vendedor</h3>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Tipo:</span>
+                        <span className="font-medium capitalize">
+                          {vehicle.tipo_vendedor || 'Particular'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Blindagem:</span>
+                        <span className="font-medium capitalize">
+                          {vehicle.blindagem || 'Não informado'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Carroceria:</span>
+                        <span className="font-medium">
+                          {vehicle.carroceria || 'Não informado'}
+                        </span>
+                      </div>
+                    </div>
+                  </Card>
+
+                  <Card className="p-4">
+                    <h3 className="font-semibold mb-3 text-foreground">Localização</h3>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Cidade:</span>
+                        <span className="font-medium">{vehicle.cidade}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Estado:</span>
+                        <span className="font-medium">{vehicle.estado}</span>
+                      </div>
+                      {vehicle.placa_parcial && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Placa:</span>
+                          <span className="font-medium">{vehicle.placa_parcial}</span>
+                        </div>
+                      )}
+                    </div>
+                  </Card>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>

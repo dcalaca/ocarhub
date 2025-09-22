@@ -33,8 +33,8 @@ export interface Vehicle {
   opcionais: string[]
   preco: number
   fipe?: number
-  placaParcial: string
-  numeroProprietarios: number
+  placa_parcial?: string
+  numero_proprietarios?: number
   observacoes?: string
   fotos: string[]
   plano: "gratuito" | "destaque"
@@ -43,12 +43,26 @@ export interface Vehicle {
   dataCadastro: Date
   status: "ativo" | "vendido" | "pausado"
   cidade: string
+  estado?: string
   views: number
   likes: number // Contagem total de likes
   shares: number
   titulo?: string
   descricao?: string
   categoria?: string
+  
+  // Novos campos de filtros
+  tipo_vendedor?: string
+  aceita_troca?: boolean
+  alienado?: boolean
+  garantia_fabrica?: boolean
+  ipva_pago?: boolean
+  licenciado?: boolean
+  revisoes_concessionaria?: boolean
+  unico_dono?: boolean
+  blindagem?: string
+  leilao?: boolean
+  carroceria?: string
 }
 
 export interface Chat {
