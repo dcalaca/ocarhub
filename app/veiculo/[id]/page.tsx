@@ -340,12 +340,6 @@ export default function VehicleDetailPage() {
                 <div className="text-4xl font-bold text-primary">
                   {formatPrice(vehicle.preco)}
                 </div>
-                {vehicle.fipe && (
-                  <div className="text-sm text-muted-foreground">
-                    <div className="text-xs text-muted-foreground/70">FIPE</div>
-                    <div className="font-medium">{formatPrice(vehicle.fipe)}</div>
-                  </div>
-                )}
               </div>
               
               {/* Valor FIPE destacado */}
