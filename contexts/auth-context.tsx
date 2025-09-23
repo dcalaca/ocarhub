@@ -292,7 +292,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       console.log('🔄 Iniciando consulta ao banco...')
       
-      // Adicionar timeout para evitar travamento
+      // Adicionar timeout para evitar travamento (reduzido para 5 segundos)
       const queryPromise = supabase
         .from('ocar_usuarios')
         .select('*')
@@ -300,7 +300,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single()
 
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout na consulta')), 10000)
+        setTimeout(() => reject(new Error('Timeout na consulta')), 5000)
       )
 
       const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as any
@@ -311,6 +311,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log('❌ Erro na consulta ao banco:', error)
         console.log('❌ Código do erro:', error.code)
         console.log('❌ Mensagem do erro:', error.message)
+        
+        // Tratamento específico para timeout
+        if (error.message?.includes('Timeout na consulta')) {
+          console.warn('⚠️ Timeout na consulta ao banco - continuando sem dados do usuário')
+          // Continuar sem dados do usuário, mas manter a sessão ativa
+          setUser({
+            id: userId,
+            email: '',
+            nome: 'Usuário',
+            tipo_usuario: 'comprador',
+            verificado: false,
+            ativo: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          return
+        }
+        
         // Só exibir erro se não for "usuário não encontrado" (normal durante cadastro)
         if (error.code !== 'PGRST116' && !error.message?.includes('No rows found')) {
           console.error('❌ Erro ao carregar dados do usuário:', error)
