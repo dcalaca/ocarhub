@@ -39,11 +39,8 @@ import {
   getVersionsByModel,
   getTransmissionsByModel,
 } from "@/lib/data/car-brands"
-import { useFipeBrands, useFipeModels, useFipeYears } from "@/hooks/use-fipe-data"
-import { useFipeProcessedModels, useFipeProcessedVersions, useFipeUniqueYears, useFipeVersionsByYear } from "@/hooks/use-fipe-intelligence"
-import { DynamicVehicleFilters } from "@/components/dynamic-vehicle-filters"
-import { DynamicVehicleFiltersFipe } from "@/components/dynamic-vehicle-filters-fipe"
-import { DynamicVehicleFiltersWorking } from "@/components/dynamic-vehicle-filters-working"
+// Removido: hooks FIPE desnecessários
+// Removido: imports de filtros dinâmicos
 import { cores, combustiveis } from "@/lib/data/filters"
 import { VehicleService } from "@/lib/vehicle-service"
 import { PlansService, type Plan } from "@/lib/plans-service"
@@ -97,7 +94,7 @@ export default function AnunciarPage() {
   const [transmissions, setTransmissions] = useState<{ value: string; label: string }[]>([])
   const [plans, setPlans] = useState<Plan[]>([])
   const [plansLoading, setPlansLoading] = useState(true)
-  const [useDynamicFilters, setUseDynamicFilters] = useState(true)
+  // Removido: filtros dinâmicos - usando sistema simples
 
   // Opções para os novos campos
   const tiposVendedor = [
@@ -133,39 +130,14 @@ export default function AnunciarPage() {
     }
   }
 
-  // Função para lidar com seleção dos filtros dinâmicos
-  const handleDynamicSelection = (selection: {
-    brand: string
-    vehicle: string
-    model: string
-    year: number
-    fipePrice?: number
-  }) => {
-    setBrandId(selection.brand)
-    setModelId(selection.model)
-    setYear(selection.year.toString())
-    setSelectedVersion(selection.vehicle) // Usar veículo como versão
-    
-    // Atualizar preço FIPE se disponível
-    if (selection.fipePrice) {
-      setFipeData({ price: selection.fipePrice, fipeCode: '' })
-    }
-  }
+  // Removido: função de seleção dinâmica
 
   // Estados para armazenar códigos da FIPE
   const [selectedBrandCode, setSelectedBrandCode] = useState("")
   const [selectedModelCode, setSelectedModelCode] = useState("")
   const [selectedVersion, setSelectedVersion] = useState("")
 
-  // Dados dinâmicos da FIPE
-  const { brands: fipeBrands, loading: brandsLoading, error: brandsError } = useFipeBrands()
-  const { models: fipeModels, loading: modelsLoading, error: modelsError } = useFipeModels(brandId)
-  const { years: fipeYears, loading: yearsLoading, error: yearsError } = useFipeYears(brandId, modelId)
-
-  // Dados processados com inteligência
-  const { models: processedModels, loading: processedModelsLoading } = useFipeProcessedModels(selectedBrandCode)
-  const { years: uniqueYears, loading: uniqueYearsLoading } = useFipeUniqueYears(selectedBrandCode, selectedModelCode, modelId)
-  const { versions: versionsByYear, loading: versionsLoading } = useFipeVersionsByYear(selectedBrandCode, selectedModelCode, modelId, year ? parseInt(year) : null)
+  // Removido: dados dinâmicos da FIPE
 
   // Carregar planos do banco de dados (otimizado)
   useEffect(() => {
@@ -762,33 +734,7 @@ export default function AnunciarPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Toggle para escolher entre filtros dinâmicos ou tradicionais */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Label htmlFor="dynamic-filters">Filtros Dinâmicos (Webmotors)</Label>
-                    <input
-                      id="dynamic-filters"
-                      type="checkbox"
-                      checked={useDynamicFilters}
-                      onChange={(e) => setUseDynamicFilters(e.target.checked)}
-                      className="rounded"
-                    />
-                  </div>
-                  <div className="text-xs text-muted-500">
-                    {useDynamicFilters ? "Filtros atualizam automaticamente" : "Filtros tradicionais"}
-                  </div>
-                </div>
-
-                {useDynamicFilters ? (
-                  /* Filtros Dinâmicos FIPE */
-                  <DynamicVehicleFiltersWorking
-                    onSelectionComplete={handleDynamicSelection}
-                    showFipePrice={true}
-                    className="w-full"
-                  />
-                ) : (
-                  /* Filtros Tradicionais */
-                  <>
+                {/* Filtros de Veículo - Sistema Simples */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <Label htmlFor="brand">
@@ -888,7 +834,6 @@ export default function AnunciarPage() {
                     </div>
                   </div>
                 </div>
-
               </CardContent>
             </Card>
 
