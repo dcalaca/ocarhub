@@ -417,6 +417,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         throw timeoutError // Re-throw se não for timeout
       }
+    } catch (error) {
+      console.error('❌ Erro geral na loadUserData:', error)
+    } finally {
+      console.log('🏁 loadUserData finalizada')
+    }
   }
 
   // Funções de favoritos e curtidas integradas com Supabase
