@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { SmartFilterInput } from '@/components/smart-filter-input';
 import { Label } from '@/components/ui/label';
 
@@ -45,6 +45,16 @@ export function FipeVehicleSelector({ onSelectionChange, initialValues = {} }: F
   const [anoSelecionado, setAnoSelecionado] = useState<string>(initialValues.ano?.toString() || '');
   const [modeloSelecionado, setModeloSelecionado] = useState<string>(initialValues.modelo || '');
 
+  // Função estável para notificar mudanças
+  const notifyChange = useCallback((selection: {
+    marca?: string;
+    veiculo?: string;
+    ano?: number;
+    modelo?: string;
+  }) => {
+    onSelectionChange?.(selection);
+  }, [onSelectionChange]);
+
   // Carregar marcas
   useEffect(() => {
     const carregarMarcas = async () => {
@@ -76,7 +86,7 @@ export function FipeVehicleSelector({ onSelectionChange, initialValues = {} }: F
           setModeloSelecionado('');
           
           // Notificar mudança
-          onSelectionChange?.({
+          notifyChange({
             marca: marcaSelecionada,
             veiculo: undefined,
             ano: undefined,
@@ -91,7 +101,7 @@ export function FipeVehicleSelector({ onSelectionChange, initialValues = {} }: F
       setVeiculos([]);
       setVeiculoSelecionado('');
     }
-  }, [marcaSelecionada, onSelectionChange]);
+  }, [marcaSelecionada]);
 
   // Carregar anos quando veículo for selecionado
   useEffect(() => {
@@ -119,7 +129,7 @@ export function FipeVehicleSelector({ onSelectionChange, initialValues = {} }: F
           setModeloSelecionado('');
           
           // Notificar mudança
-          onSelectionChange?.({
+          notifyChange({
             marca: marcaSelecionada,
             veiculo: veiculoSelecionado,
             ano: undefined,
@@ -136,7 +146,7 @@ export function FipeVehicleSelector({ onSelectionChange, initialValues = {} }: F
       setAnos([]);
       setAnoSelecionado('');
     }
-  }, [marcaSelecionada, veiculoSelecionado, onSelectionChange]);
+  }, [marcaSelecionada, veiculoSelecionado]);
 
   // Carregar modelos quando ano for selecionado
   useEffect(() => {
@@ -151,7 +161,7 @@ export function FipeVehicleSelector({ onSelectionChange, initialValues = {} }: F
           setModeloSelecionado('');
           
           // Notificar mudança
-          onSelectionChange?.({
+          notifyChange({
             marca: marcaSelecionada,
             veiculo: veiculoSelecionado,
             ano: parseInt(anoSelecionado),
@@ -166,19 +176,19 @@ export function FipeVehicleSelector({ onSelectionChange, initialValues = {} }: F
       setModelos([]);
       setModeloSelecionado('');
     }
-  }, [marcaSelecionada, veiculoSelecionado, anoSelecionado, onSelectionChange]);
+  }, [marcaSelecionada, veiculoSelecionado, anoSelecionado]);
 
   // Notificar quando modelo for selecionado
   useEffect(() => {
     if (modeloSelecionado) {
-      onSelectionChange?.({
+      notifyChange({
         marca: marcaSelecionada,
         veiculo: veiculoSelecionado,
         ano: parseInt(anoSelecionado),
         modelo: modeloSelecionado
       });
     }
-  }, [modeloSelecionado, marcaSelecionada, veiculoSelecionado, anoSelecionado, onSelectionChange]);
+  }, [modeloSelecionado, marcaSelecionada, veiculoSelecionado, anoSelecionado, notifyChange]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
