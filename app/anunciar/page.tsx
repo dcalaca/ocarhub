@@ -42,7 +42,6 @@ import {
 import { useFipeBrands, useFipeModels, useFipeYears } from "@/hooks/use-fipe-data"
 import { useFipeProcessedModels, useFipeProcessedVersions, useFipeUniqueYears, useFipeVersionsByYear } from "@/hooks/use-fipe-intelligence"
 import { DynamicVehicleFilters } from "@/components/dynamic-vehicle-filters"
-import { DynamicVehicleFiltersFipe } from "@/components/dynamic-vehicle-filters-fipe"
 import { cores, combustiveis } from "@/lib/data/filters"
 import { VehicleService } from "@/lib/vehicle-service"
 import { PlansService, type Plan } from "@/lib/plans-service"
@@ -720,7 +719,7 @@ export default function AnunciarPage() {
 
                 {useDynamicFilters ? (
                   /* Filtros Dinâmicos FIPE */
-                  <DynamicVehicleFiltersFipe
+                  <DynamicVehicleFilters
                     onSelectionComplete={handleDynamicSelection}
                     showFipePrice={true}
                     className="w-full"
