@@ -41,6 +41,7 @@ import {
 } from "@/lib/data/car-brands"
 import { useFipeBrands, useFipeModels, useFipeYears } from "@/hooks/use-fipe-data"
 import { useFipeProcessedModels, useFipeProcessedVersions, useFipeUniqueYears, useFipeVersionsByYear } from "@/hooks/use-fipe-intelligence"
+import { SmartVehicleSelector } from "@/components/smart-vehicle-selector"
 import { cores, combustiveis } from "@/lib/data/filters"
 import { VehicleService } from "@/lib/vehicle-service"
 import { PlansService, type Plan } from "@/lib/plans-service"
@@ -80,6 +81,7 @@ export default function AnunciarPage() {
   const [transmissions, setTransmissions] = useState<{ value: string; label: string }[]>([])
   const [plans, setPlans] = useState<Plan[]>([])
   const [plansLoading, setPlansLoading] = useState(true)
+  const [useDynamicFilters, setUseDynamicFilters] = useState(true)
 
   // Função para lidar com seleção dos filtros dinâmicos
   const handleDynamicSelection = (selection: {
@@ -698,9 +700,32 @@ export default function AnunciarPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
+                {/* Toggle para escolher entre filtros dinâmicos ou tradicionais */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="dynamic-filters">Filtros Dinâmicos (Webmotors)</Label>
+                    <input
+                      id="dynamic-filters"
+                      type="checkbox"
+                      checked={useDynamicFilters}
+                      onChange={(e) => setUseDynamicFilters(e.target.checked)}
+                      className="rounded"
+                    />
+                  </div>
+                  <div className="text-xs text-muted-500">
+                    {useDynamicFilters ? "Filtros atualizam automaticamente" : "Filtros tradicionais"}
+                  </div>
+                </div>
 
-                {/* Filtros Tradicionais */}
-                <>
+                {useDynamicFilters ? (
+                  /* Filtros Dinâmicos */
+                  <SmartVehicleSelector
+                    onSelectionChange={handleDynamicSelection}
+                    initialValues={{}}
+                  />
+                ) : (
+                  /* Filtros Tradicionais */
+                  <>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <Label htmlFor="brand">
