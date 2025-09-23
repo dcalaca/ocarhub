@@ -187,27 +187,16 @@ export default function AnunciarPage() {
     }
   }
 
-  // Carregar marcas da FIPE
+  // Carregar marcas (dados estáticos)
   useEffect(() => {
-    if (fipeBrands.length > 0) {
-      setBrands(
-        fipeBrands.map((brand) => ({
-          value: brand.name, // Usar nome em vez de código
-          label: brand.name,
-          image: `/brands/${brand.id}.svg`, // Assumindo que temos logos para as marcas
-        })),
-      )
-    } else {
-      // Fallback para dados estáticos
-      const allBrands = getAllBrands()
-      setBrands(
-        allBrands.map((brand) => ({
-          value: brand.id,
-          label: brand.name,
-          image: brand.logo,
-        })),
-      )
-    }
+    const allBrands = getAllBrands()
+    setBrands(
+      allBrands.map((brand) => ({
+        value: brand.id,
+        label: brand.name,
+        image: brand.logo,
+      })),
+    )
 
     // Carregar combustíveis (lista fixa)
     setFuelTypes(
@@ -216,84 +205,38 @@ export default function AnunciarPage() {
         label: fuel,
       })),
     )
-  }, [fipeBrands])
+  }, [])
 
   // Carregar modelos quando a marca mudar
   useEffect(() => {
     if (brandId) {
-      // Encontrar o código da marca selecionada
-      const selectedBrand = fipeBrands.find(brand => brand.name === brandId)
-      if (selectedBrand) {
-        setSelectedBrandCode(selectedBrand.code)
-      }
-
-      // Usar modelos processados com inteligência se disponíveis
-      if (processedModels.length > 0) {
-        setModels(
-          processedModels.map((model) => ({
-            value: model.name, // Nome limpo do modelo
-            label: model.name,
-          })),
-        )
-      } else if (fipeModels.length > 0) {
-        setModels(
-          fipeModels.map((model) => ({
-            value: model.name, // Usar nome em vez de código
-            label: model.name,
-          })),
-        )
-      } else {
-        // Fallback para dados estáticos
-        const brandModels = getModelsByBrand(brandId)
-        setModels(
-          brandModels.map((model) => ({
-            value: model.id,
-            label: model.name,
-          })),
-        )
-      }
+      // Usar dados estáticos
+      const brandModels = getModelsByBrand(brandId)
+      setModels(
+        brandModels.map((model) => ({
+          value: model.id,
+          label: model.name,
+        })),
+      )
       setModelId("")
       setYear("")
       setSelectedVersion("")
     } else {
       setModels([])
     }
-  }, [brandId, processedModels, fipeModels, fipeBrands])
+  }, [brandId])
 
   // Carregar anos quando o modelo mudar
   useEffect(() => {
     if (brandId && modelId) {
-      // Encontrar o código do modelo selecionado
-      const selectedModel = fipeModels.find(model => model.name === modelId)
-      if (selectedModel) {
-        setSelectedModelCode(selectedModel.code)
-      }
-
-      // Usar anos únicos processados com inteligência se disponíveis
-      if (uniqueYears.length > 0) {
-        setYears(
-          uniqueYears.map((year) => ({
-            value: year.toString(),
-            label: year.toString(),
-          })),
-        )
-      } else if (fipeYears.length > 0) {
-        setYears(
-          fipeYears.map((year) => ({
-            value: year.name, // Usar nome em vez de código
-            label: year.name,
-          })),
-        )
-      } else {
-        // Fallback para dados estáticos
-        const modelYears = getYearsByModel(brandId, modelId)
-        setYears(
-          modelYears.map((year) => ({
-            value: year.toString(),
-            label: year.toString(),
-          })),
-        )
-      }
+      // Usar dados estáticos
+      const modelYears = getYearsByModel(brandId, modelId)
+      setYears(
+        modelYears.map((year) => ({
+          value: year.toString(),
+          label: year.toString(),
+        })),
+      )
 
       // Carregar tipos de combustível (lista fixa)
       setFuelTypes(
@@ -325,34 +268,24 @@ export default function AnunciarPage() {
       setFuelTypes([])
       setTransmissions([])
     }
-  }, [brandId, modelId, uniqueYears, fipeYears, fipeModels])
+  }, [brandId, modelId])
 
   // Carregar versões quando o ano mudar
   useEffect(() => {
     if (brandId && modelId && year) {
-      // Usar versões processadas com inteligência se disponíveis
-      if (versionsByYear.length > 0) {
-        setVersions(
-          versionsByYear.map((version) => ({
-            value: version.name, // Nome limpo da versão
-            label: version.name,
-          })),
-        )
-      } else {
-        // Fallback para dados estáticos
-        const modelVersions = getVersionsByModel(brandId, modelId)
-        setVersions(
-          modelVersions.map((version) => ({
-            value: version.id,
-            label: version.name,
-          })),
-        )
-      }
+      // Usar dados estáticos
+      const modelVersions = getVersionsByModel(brandId, modelId)
+      setVersions(
+        modelVersions.map((version) => ({
+          value: version.id,
+          label: version.name,
+        })),
+      )
       setSelectedVersion("")
     } else {
       setVersions([])
     }
-  }, [brandId, modelId, year, versionsByYear])
+  }, [brandId, modelId, year])
 
   // Calcular progresso do formulário
   useEffect(() => {
@@ -754,14 +687,14 @@ export default function AnunciarPage() {
                       <div className="space-y-2">
                         <Label htmlFor="model">
                           Modelo <span className="text-red-500">*</span>
-                          {(modelsLoading || processedModelsLoading) && <span className="text-xs text-blue-600 ml-2">Carregando...</span>}
+                          {modelsLoading && <span className="text-xs text-blue-600 ml-2">Carregando...</span>}
                         </Label>
                         <VehicleSelector
                           options={models}
                           value={modelId}
                           onChange={setModelId}
-                          placeholder={(modelsLoading || processedModelsLoading) ? "Carregando modelos..." : "Selecione o modelo"}
-                          disabled={!brandId || modelsLoading || processedModelsLoading}
+                          placeholder={modelsLoading ? "Carregando modelos..." : "Selecione o modelo"}
+                          disabled={!brandId || modelsLoading}
                         />
                       </div>
                     </div>
@@ -770,14 +703,14 @@ export default function AnunciarPage() {
                       <div className="space-y-2">
                         <Label htmlFor="year">
                           Ano <span className="text-red-500">*</span>
-                          {(yearsLoading || uniqueYearsLoading) && <span className="text-xs text-blue-600 ml-2">Carregando...</span>}
+                          {yearsLoading && <span className="text-xs text-blue-600 ml-2">Carregando...</span>}
                         </Label>
                         <VehicleSelector
                           options={years}
                           value={year}
                           onChange={setYear}
-                          placeholder={(yearsLoading || uniqueYearsLoading) ? "Carregando anos..." : "Selecione o ano"}
-                          disabled={!modelId || yearsLoading || uniqueYearsLoading}
+                          placeholder={yearsLoading ? "Carregando anos..." : "Selecione o ano"}
+                          disabled={!modelId || yearsLoading}
                         />
                       </div>
 
