@@ -30,19 +30,19 @@ export default function HomePage() {
     try {
       console.log('🔍 Carregando veículos da página inicial...')
       
-      // Buscar veículos em destaque
+      // Buscar veículos em destaque (otimizado)
       const featuredData = await VehiclesService.getVehicles({
         status: 'ativo',
+        plano: 'destaque',
         limit: 6
       })
       
-      // Filtrar apenas os que têm plano destaque
+      // Ordenar por data de criação
       const featured = featuredData
-        .filter((v) => v.plano === "destaque")
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
         .slice(0, 6)
       
-      // Buscar veículos recentes
+      // Buscar veículos recentes (otimizado)
       const recentData = await VehiclesService.getVehicles({
         status: 'ativo',
         limit: 6

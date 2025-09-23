@@ -2,7 +2,7 @@ import { supabase } from './supabase'
 import type { Vehicle } from '@/types'
 
 export class VehiclesService {
-  // Buscar veículos com filtros
+  // Buscar veículos com filtros (otimizado)
   static async getVehicles(filters?: {
     marca?: string
     modelo?: string
@@ -17,14 +17,36 @@ export class VehiclesService {
     offset?: number
   }) {
     try {
+      // Query otimizada - sem JOIN desnecessário para listagem
       let query = supabase
         .from('ocar_vehicles')
         .select(`
-          *,
-          ocar_usuarios!ocar_vehicles_dono_id_fkey(nome, endereco, telefone)
+          id,
+          marca,
+          modelo,
+          versao,
+          ano,
+          cor,
+          quilometragem,
+          motor,
+          combustivel,
+          cambio,
+          opcionais,
+          preco,
+          fipe,
+          plano,
+          status,
+          cidade,
+          estado,
+          views,
+          likes,
+          shares,
+          created_at,
+          updated_at
         `)
         .eq('status', 'ativo')
 
+      // Aplicar filtros de forma otimizada
       if (filters?.marca) {
         query = query.eq('marca', filters.marca)
       }
@@ -50,14 +72,15 @@ export class VehiclesService {
         query = query.eq('cambio', filters.cambio)
       }
 
-      if (filters?.limit) {
-        query = query.limit(filters.limit)
-      }
-      if (filters?.offset) {
-        query = query.range(filters.offset, filters.offset + (filters.limit || 10) - 1)
-      }
+      // Paginação otimizada
+      const limit = filters?.limit || 20
+      const offset = filters?.offset || 0
+      query = query.range(offset, offset + limit - 1)
 
-      const { data, error } = await query.order('created_at', { ascending: false })
+      // Ordenação otimizada - priorizar veículos em destaque
+      const { data, error } = await query
+        .order('plano', { ascending: false }) // destaque primeiro
+        .order('created_at', { ascending: false })
 
       if (error) {
         throw error

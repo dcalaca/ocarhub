@@ -43,6 +43,7 @@ import { useFipeBrands, useFipeModels, useFipeYears } from "@/hooks/use-fipe-dat
 import { useFipeProcessedModels, useFipeProcessedVersions, useFipeUniqueYears, useFipeVersionsByYear } from "@/hooks/use-fipe-intelligence"
 import { DynamicVehicleFilters } from "@/components/dynamic-vehicle-filters"
 import { DynamicVehicleFiltersFipe } from "@/components/dynamic-vehicle-filters-fipe"
+import { DynamicVehicleFiltersWorking } from "@/components/dynamic-vehicle-filters-working"
 import { cores, combustiveis } from "@/lib/data/filters"
 import { VehicleService } from "@/lib/vehicle-service"
 import { PlansService, type Plan } from "@/lib/plans-service"
@@ -166,7 +167,7 @@ export default function AnunciarPage() {
   const { years: uniqueYears, loading: uniqueYearsLoading } = useFipeUniqueYears(selectedBrandCode, selectedModelCode, modelId)
   const { versions: versionsByYear, loading: versionsLoading } = useFipeVersionsByYear(selectedBrandCode, selectedModelCode, modelId, year ? parseInt(year) : null)
 
-  // Carregar planos do banco de dados
+  // Carregar planos do banco de dados (otimizado)
   useEffect(() => {
     const loadPlans = async () => {
       try {
@@ -780,7 +781,7 @@ export default function AnunciarPage() {
 
                 {useDynamicFilters ? (
                   /* Filtros Dinâmicos FIPE */
-                  <DynamicVehicleFiltersFipe
+                  <DynamicVehicleFiltersWorking
                     onSelectionComplete={handleDynamicSelection}
                     showFipePrice={true}
                     className="w-full"

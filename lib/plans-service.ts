@@ -34,8 +34,21 @@ export interface UpdatePlanData extends Partial<CreatePlanData> {
 }
 
 export class PlansService {
-  // Buscar todos os planos ativos
+  private static cache = new Map<string, { data: Plan[], timestamp: number }>()
+  private static CACHE_TTL = 5 * 60 * 1000 // 5 minutos
+
+  // Buscar todos os planos ativos (com cache)
   static async getActivePlans(): Promise<Plan[]> {
+    const cacheKey = 'active_plans'
+    const now = Date.now()
+    
+    // Verificar cache
+    const cached = this.cache.get(cacheKey)
+    if (cached && (now - cached.timestamp) < this.CACHE_TTL) {
+      console.log('📦 Planos carregados do cache')
+      return cached.data
+    }
+
     try {
       const { data, error } = await supabase
         .from('ocar_planos')
@@ -49,10 +62,16 @@ export class PlansService {
       }
 
       // Converter beneficios de jsonb para array de strings
-      return (data || []).map(plan => ({
+      const plans = (data || []).map(plan => ({
         ...plan,
         beneficios: Array.isArray(plan.beneficios) ? plan.beneficios : []
       }))
+
+      // Salvar no cache
+      this.cache.set(cacheKey, { data: plans, timestamp: now })
+      console.log('💾 Planos salvos no cache')
+
+      return plans
     } catch (error) {
       console.error('❌ Erro no PlansService.getActivePlans:', error)
       throw error
