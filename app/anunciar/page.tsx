@@ -41,7 +41,7 @@ import {
 } from "@/lib/data/car-brands"
 import { useFipeBrands, useFipeModels, useFipeYears } from "@/hooks/use-fipe-data"
 import { useFipeProcessedModels, useFipeProcessedVersions, useFipeUniqueYears, useFipeVersionsByYear } from "@/hooks/use-fipe-intelligence"
-import { SmartVehicleSelector } from "@/components/smart-vehicle-selector"
+import { FipeVehicleSelector } from "@/components/fipe-vehicle-selector"
 import { cores, combustiveis } from "@/lib/data/filters"
 import { VehicleService } from "@/lib/vehicle-service"
 import { PlansService, type Plan } from "@/lib/plans-service"
@@ -85,20 +85,15 @@ export default function AnunciarPage() {
 
   // Função para lidar com seleção dos filtros dinâmicos
   const handleDynamicSelection = (selection: {
-    ano?: number
     marca?: string
+    veiculo?: string
+    ano?: number
     modelo?: string
-    versao?: string
-    origem?: "Nacional" | "Importado"
-    categoria?: string
-    motor?: string
-    combustivel?: string[]
-    cambio?: string[]
   }) => {
     if (selection.marca) setBrandId(selection.marca)
-    if (selection.modelo) setModelId(selection.modelo)
+    if (selection.veiculo) setSelectedVersion(selection.veiculo)
     if (selection.ano) setYear(selection.ano.toString())
-    if (selection.versao) setSelectedVersion(selection.versao)
+    if (selection.modelo) setModelId(selection.modelo)
   }
 
   // Estados para armazenar códigos da FIPE
@@ -717,8 +712,8 @@ export default function AnunciarPage() {
                 </div>
 
                 {useDynamicFilters ? (
-                  /* Filtros Dinâmicos */
-                  <SmartVehicleSelector
+                  /* Filtros Dinâmicos FIPE */
+                  <FipeVehicleSelector
                     onSelectionChange={handleDynamicSelection}
                     initialValues={{}}
                   />
