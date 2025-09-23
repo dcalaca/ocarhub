@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
 
     // Extrair anos únicos e priorizar anos mais recentes
     const anosUnicos = [...new Set(data?.map(item => item.year) || [])]
-      .filter(ano => ano && ano > 1990) // Filtrar anos válidos
+      .filter(ano => ano && ano > 1980) // Filtrar anos válidos (mais antigos)
       .sort((a, b) => b - a) // Ordenar do mais recente para o mais antigo
       .map(ano => ({ ano }));
 

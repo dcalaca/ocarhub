@@ -64,8 +64,10 @@ export function FipeVehicleSelector({ onSelectionChange, initialValues = {} }: F
     if (marcaSelecionada) {
       const carregarVeiculos = async () => {
         try {
+          console.log('🔍 Carregando veículos para marca:', marcaSelecionada);
           const response = await fetch(`/api/fipe/modelos?marca=${marcaSelecionada}`);
           const data = await response.json();
+          console.log('🚗 Veículos carregados:', data);
           setVeiculos(data);
           setVeiculoSelecionado('');
           setAnos([]);
@@ -96,15 +98,19 @@ export function FipeVehicleSelector({ onSelectionChange, initialValues = {} }: F
     if (marcaSelecionada && veiculoSelecionado) {
       const carregarAnos = async () => {
         try {
+          console.log('🔍 Carregando anos para:', { marcaSelecionada, veiculoSelecionado });
           const response = await fetch(`/api/fipe/anos-por-veiculo?marca=${marcaSelecionada}&veiculo=${veiculoSelecionado}`);
           const data = await response.json();
+          console.log('📅 Dados de anos recebidos:', data);
           
           if (Array.isArray(data)) {
             const anosUnicos = [...new Set(data.map((item: any) => item.ano))]
               .filter(ano => ano && ano > 1980) // Filtrar anos válidos (mais antigos)
               .sort((a, b) => b - a); // Priorizar anos mais recentes
+            console.log('📅 Anos únicos processados:', anosUnicos);
             setAnos(anosUnicos);
           } else {
+            console.log('⚠️ Dados de anos não são array:', data);
             setAnos([]);
           }
           
@@ -126,6 +132,7 @@ export function FipeVehicleSelector({ onSelectionChange, initialValues = {} }: F
       };
       carregarAnos();
     } else {
+      console.log('⚠️ Condições não atendidas para carregar anos:', { marcaSelecionada, veiculoSelecionado });
       setAnos([]);
       setAnoSelecionado('');
     }
