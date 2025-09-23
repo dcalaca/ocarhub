@@ -96,6 +96,7 @@ export default function AnunciarPage() {
   const [plansLoading, setPlansLoading] = useState(true)
   
   // Estados de loading para os filtros
+  const [brandsLoading, setBrandsLoading] = useState(false)
   const [modelsLoading, setModelsLoading] = useState(false)
   const [yearsLoading, setYearsLoading] = useState(false)
   const [versionsLoading, setVersionsLoading] = useState(false)
@@ -741,7 +742,6 @@ export default function AnunciarPage() {
                         />
                       </div>
                     </div>
-                  </>
                 )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
