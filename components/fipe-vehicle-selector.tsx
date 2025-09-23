@@ -101,7 +101,7 @@ export function FipeVehicleSelector({ onSelectionChange, initialValues = {} }: F
           
           if (Array.isArray(data)) {
             const anosUnicos = [...new Set(data.map((item: any) => item.ano))]
-              .filter(ano => ano && ano > 1990) // Filtrar anos válidos
+              .filter(ano => ano && ano > 1980) // Filtrar anos válidos (mais antigos)
               .sort((a, b) => b - a); // Priorizar anos mais recentes
             setAnos(anosUnicos);
           } else {
@@ -136,8 +136,10 @@ export function FipeVehicleSelector({ onSelectionChange, initialValues = {} }: F
     if (marcaSelecionada && veiculoSelecionado && anoSelecionado) {
       const carregarModelos = async () => {
         try {
+          console.log('🔍 Carregando modelos para:', { marcaSelecionada, veiculoSelecionado, anoSelecionado });
           const response = await fetch(`/api/fipe/modelos-por-ano?marca=${marcaSelecionada}&veiculo=${veiculoSelecionado}&ano=${anoSelecionado}`);
           const data = await response.json();
+          console.log('📋 Modelos carregados:', data);
           setModelos(data);
           setModeloSelecionado('');
           
@@ -200,7 +202,7 @@ export function FipeVehicleSelector({ onSelectionChange, initialValues = {} }: F
       <div className="space-y-2">
         <Label htmlFor="ano">Ano</Label>
         <SmartFilterInput
-          options={anos.map(ano => ({ id: ano, name: ano.toString() }))}
+          options={anos.map(ano => ({ id: ano.toString(), name: ano.toString() }))}
           value={anoSelecionado}
           onChange={setAnoSelecionado}
           placeholder="Digite ou selecione o ano"
