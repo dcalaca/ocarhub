@@ -360,6 +360,12 @@ export default function AnunciarPage() {
   }, [brandId, modelId, year, selectedVersion, price, mileage, color, fuelType, transmission])
 
   const handlePublicarAnuncio = async () => {
+    // Proteção contra duplo submit
+    if (loading) {
+      console.log('⚠️ Publicação já em andamento, ignorando duplo clique')
+      return
+    }
+
     console.log('🚀 Iniciando publicação do anúncio...')
     console.log('👤 Usuário:', user)
     console.log('📋 Formulário completo:', formCompleted)
