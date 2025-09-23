@@ -85,21 +85,20 @@ export default function AnunciarPage() {
 
   // Função para lidar com seleção dos filtros dinâmicos
   const handleDynamicSelection = (selection: {
-    brand: string
-    vehicle: string
-    model: string
-    year: number
-    fipePrice?: number
+    ano?: number
+    marca?: string
+    modelo?: string
+    versao?: string
+    origem?: "Nacional" | "Importado"
+    categoria?: string
+    motor?: string
+    combustivel?: string[]
+    cambio?: string[]
   }) => {
-    setBrandId(selection.brand)
-    setModelId(selection.model)
-    setYear(selection.year.toString())
-    setSelectedVersion(selection.vehicle) // Usar veículo como versão
-    
-    // Atualizar preço FIPE se disponível
-    if (selection.fipePrice) {
-      setFipeData({ price: selection.fipePrice, fipeCode: '' })
-    }
+    if (selection.marca) setBrandId(selection.marca)
+    if (selection.modelo) setModelId(selection.modelo)
+    if (selection.ano) setYear(selection.ano.toString())
+    if (selection.versao) setSelectedVersion(selection.versao)
   }
 
   // Estados para armazenar códigos da FIPE
