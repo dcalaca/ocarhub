@@ -303,19 +303,106 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setTimeout(() => reject(new Error('Timeout na consulta')), 5000)
       )
 
-      const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as any
+      try {
+        const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as any
 
-      console.log('🔍 Resultado da consulta:', { data, error })
-      
-      if (error) {
-        console.log('❌ Erro na consulta ao banco:', error)
-        console.log('❌ Código do erro:', error.code)
-        console.log('❌ Mensagem do erro:', error.message)
+        console.log('🔍 Resultado da consulta:', { data, error })
         
-        // Tratamento específico para timeout
-        if (error.message?.includes('Timeout na consulta')) {
-          console.warn('⚠️ Timeout na consulta ao banco - continuando sem dados do usuário')
-          // Continuar sem dados do usuário, mas manter a sessão ativa
+        if (error) {
+          console.log('❌ Erro na consulta ao banco:', error)
+          console.log('❌ Código do erro:', error.code)
+          console.log('❌ Mensagem do erro:', error.message)
+          
+          // Tratamento específico para timeout
+          if (error.message?.includes('Timeout na consulta')) {
+            console.warn('⚠️ Timeout na consulta ao banco - continuando sem dados do usuário')
+            // Continuar sem dados do usuário, mas manter a sessão ativa
+            setUser({
+              id: userId,
+              email: '',
+              nome: 'Usuário',
+              tipo_usuario: 'comprador',
+              verificado: false,
+              ativo: true,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
+            return
+          }
+          
+          // Só exibir erro se não for "usuário não encontrado" (normal durante cadastro)
+          if (error.code !== 'PGRST116' && !error.message?.includes('No rows found')) {
+            console.error('❌ Erro ao carregar dados do usuário:', error)
+            console.error('❌ Código do erro:', error.code)
+            console.error('❌ Mensagem do erro:', error.message)
+          } else {
+            console.log('ℹ️ Usuário não encontrado na tabela (normal durante cadastro)')
+          }
+          
+          // Se o usuário não existe na tabela ou foi deletado
+          if (error.code === 'PGRST116' || error.message?.includes('No rows found')) {
+            console.log('🔄 Usuário não encontrado na tabela (pode ter sido deletado)')
+            
+            // Verificar se ainda existe no Supabase Auth
+            const { data: authUser } = await supabase.auth.getUser()
+            if (authUser.user && authUser.user.id === userId) {
+              console.log('🔄 Usuário ainda existe no Auth, criando perfil básico...')
+              
+              const { data: newProfile, error: createError } = await supabase
+                .from('ocar_usuarios')
+                .insert({
+                  id: userId,
+                  email: authUser.user.email || '',
+                  nome: 'Usuário',
+                  tipo_usuario: 'comprador',
+                  verificado: false,
+                  ativo: true,
+                  promocoes_email: true,
+                  alertas_multas: false,
+                  tema_preferido: 'claro',
+                  saldo: 0
+                })
+                .select()
+                .single()
+
+              if (createError) {
+                console.error('❌ Erro ao criar perfil básico:', createError)
+                return
+              }
+
+              console.log('✅ Perfil básico criado:', newProfile)
+              setUser(newProfile)
+              safeLocalStorage.setItem("ocar-user", JSON.stringify(newProfile))
+            } else {
+              console.log('❌ Usuário não existe mais no Supabase Auth, limpando dados locais')
+              safeLocalStorage.removeItem("ocar-user")
+              safeLocalStorage.removeItem("ocar-interactions")
+              setUser(null)
+              setUserInteractions({ favoritos: [], curtidas: [] })
+            }
+          } else {
+            // Para outros erros, limpar dados locais
+            console.log('❌ Erro não tratado, limpando dados locais')
+            safeLocalStorage.removeItem("ocar-user")
+            safeLocalStorage.removeItem("ocar-interactions")
+            setUser(null)
+            setUserInteractions({ favoritos: [], curtidas: [] })
+          }
+        } else if (data) {
+          // Sucesso na consulta
+          console.log('✅ Dados do usuário carregados:', data)
+          console.log('💰 Saldo do usuário:', data.saldo || 0)
+          
+          // Atualizar estado do usuário
+          console.log('🔄 Atualizando estado do usuário...')
+          setUser(data)
+          safeLocalStorage.setItem("ocar-user", JSON.stringify(data))
+          console.log('✅ Estado do usuário atualizado')
+        }
+      } catch (timeoutError) {
+        // Capturar especificamente o erro de timeout
+        if (timeoutError instanceof Error && timeoutError.message.includes('Timeout na consulta')) {
+          console.warn('⚠️ Timeout capturado - continuando sem dados do usuário')
           setUser({
             id: userId,
             email: '',
@@ -328,99 +415,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           })
           return
         }
-        
-        // Só exibir erro se não for "usuário não encontrado" (normal durante cadastro)
-        if (error.code !== 'PGRST116' && !error.message?.includes('No rows found')) {
-          console.error('❌ Erro ao carregar dados do usuário:', error)
-          console.error('❌ Código do erro:', error.code)
-          console.error('❌ Mensagem do erro:', error.message)
-        } else {
-          console.log('ℹ️ Usuário não encontrado na tabela (normal durante cadastro)')
-        }
-        
-        // Se o usuário não existe na tabela ou foi deletado
-        if (error.code === 'PGRST116' || error.message?.includes('No rows found')) {
-          console.log('🔄 Usuário não encontrado na tabela (pode ter sido deletado)')
-          
-          // Verificar se ainda existe no Supabase Auth
-          const { data: authUser } = await supabase.auth.getUser()
-          if (authUser.user && authUser.user.id === userId) {
-            console.log('🔄 Usuário ainda existe no Auth, criando perfil básico...')
-            
-            const { data: newProfile, error: createError } = await supabase
-              .from('ocar_usuarios')
-              .insert({
-                id: userId,
-                email: authUser.user.email || '',
-                nome: 'Usuário',
-                tipo_usuario: 'comprador',
-                verificado: false,
-                ativo: true,
-                promocoes_email: true,
-                alertas_multas: false,
-                tema_preferido: 'claro',
-                saldo: 0
-              })
-              .select()
-              .single()
-
-            if (createError) {
-              console.error('❌ Erro ao criar perfil básico:', createError)
-              return
-            }
-
-            console.log('✅ Perfil básico criado:', newProfile)
-            setUser(newProfile)
-            safeLocalStorage.setItem("ocar-user", JSON.stringify(newProfile))
-          } else {
-            console.log('❌ Usuário não existe mais no Supabase Auth, limpando dados locais')
-            safeLocalStorage.removeItem("ocar-user")
-            safeLocalStorage.removeItem("ocar-interactions")
-            setUser(null)
-            setUserInteractions({ favoritos: [], curtidas: [] })
-          }
-        } else {
-          // Para outros erros, limpar dados locais
-          console.log('❌ Erro não tratado, limpando dados locais')
-          safeLocalStorage.removeItem("ocar-user")
-          safeLocalStorage.removeItem("ocar-interactions")
-          setUser(null)
-          setUserInteractions({ favoritos: [], curtidas: [] })
-        }
-        return
+        throw timeoutError // Re-throw se não for timeout
       }
-
-      if (data) {
-        console.log('✅ Dados do usuário carregados:', data)
-        // Adicionar saldo padrão se não existir
-        const userData = {
-          ...data,
-          saldo: data.saldo || 0
-        }
-        console.log('💰 Saldo do usuário:', userData.saldo)
-        console.log('🔄 Atualizando estado do usuário...')
-        setUser(userData)
-        safeLocalStorage.setItem("ocar-user", JSON.stringify(userData))
-        console.log('✅ Estado do usuário atualizado')
-      } else {
-        console.log('❌ Nenhum dado encontrado para o usuário')
-        console.log('🔍 Dados retornados:', data)
-        console.log('🔍 Tipo dos dados:', typeof data)
-        console.log('🔍 Dados é null?', data === null)
-        console.log('🔍 Dados é undefined?', data === undefined)
-      }
-    } catch (error) {
-      // Só exibir erro se for um erro real, não durante cadastro
-      if (error instanceof Error && !error.message?.includes('User not found')) {
-        console.error('❌ Erro ao carregar dados do usuário:', error)
-        console.error('❌ Tipo do erro:', typeof error)
-        console.error('❌ Stack trace:', error.stack)
-      } else {
-        console.log('ℹ️ Usuário não encontrado (normal durante cadastro)')
-      }
-    } finally {
-      console.log('🏁 loadUserData finalizada')
-    }
   }
 
   // Funções de favoritos e curtidas integradas com Supabase
