@@ -92,7 +92,7 @@ function SearchPageContent() {
     try {
       const vehiclesData = await VehiclesService.getVehicles({
         status: 'ativo',
-        limit: 100 // Carregar mais veículos para busca
+        limit: 20 // Carregar menos veículos para melhor performance
       })
       
       setVehicles(vehiclesData)
