@@ -725,6 +725,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Funções de saldo
   const debitSaldo = async (valor: number, descricao: string, tipo: string = "gasto", referenciaId?: string) => {
+    console.log('🚀 DEBITO SALDO - VERSÃO ATUALIZADA - CACHE FORÇADO')
+    console.log('🚀 Timestamp:', Date.now())
+    
     if (!user) {
       console.error('❌ Usuário não logado')
       return false
@@ -780,7 +783,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         status: 'aprovado',
         referencia_id: referenciaId,
         saldo_anterior: saldoAnterior,
-        saldo_posterior: novoSaldo
+        saldo_posterior: novoSaldo,
+        timestamp: Date.now() // Forçar refresh do cache
       })
       
       const { error: transacaoError } = await supabase
