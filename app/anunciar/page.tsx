@@ -42,6 +42,7 @@ import {
 import { useFipeBrands, useFipeModels, useFipeYears } from "@/hooks/use-fipe-data"
 import { useFipeProcessedModels, useFipeProcessedVersions, useFipeUniqueYears, useFipeVersionsByYear } from "@/hooks/use-fipe-intelligence"
 import { FipeVehicleSelector } from "@/components/fipe-vehicle-selector"
+import { OpcionaisSelector } from "@/components/opcionais-selector"
 import { cores, combustiveis } from "@/lib/data/filters"
 import { VehicleService } from "@/lib/vehicle-service"
 import { PlansService, type Plan } from "@/lib/plans-service"
@@ -82,6 +83,14 @@ export default function AnunciarPage() {
   const [plans, setPlans] = useState<Plan[]>([])
   const [plansLoading, setPlansLoading] = useState(true)
   const [useDynamicFilters, setUseDynamicFilters] = useState(true)
+
+  // Estados para opcionais
+  const [selectedOpcionais, setSelectedOpcionais] = useState<string[]>([])
+  const [selectedCarroceria, setSelectedCarroceria] = useState("")
+  const [selectedTipoVendedor, setSelectedTipoVendedor] = useState("")
+  const [selectedCaracteristicas, setSelectedCaracteristicas] = useState<string[]>([])
+  const [selectedBlindagem, setSelectedBlindagem] = useState("")
+  const [selectedLeilao, setSelectedLeilao] = useState("")
 
   // Função para lidar com seleção dos filtros dinâmicos
   const handleDynamicSelection = (selection: {
@@ -445,7 +454,12 @@ export default function AnunciarPage() {
           motor: `${fuelType} ${transmission}`,
           combustivel: [fuelType],
           cambio: transmission,
-          opcionais: [], // TODO: Implementar opcionais
+          opcionais: selectedOpcionais,
+          carroceria: selectedCarroceria,
+          tipo_vendedor: selectedTipoVendedor,
+          caracteristicas: selectedCaracteristicas,
+          blindagem: selectedBlindagem,
+          leilao: selectedLeilao,
           preco: parseFloat(price),
           fipe: fipeData?.price,
           placa_parcial: licensePlate,
@@ -964,6 +978,24 @@ export default function AnunciarPage() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Seletor de Opcionais */}
+            <OpcionaisSelector
+              onOpcionaisChange={setSelectedOpcionais}
+              onCarroceriaChange={setSelectedCarroceria}
+              onTipoVendedorChange={setSelectedTipoVendedor}
+              onCaracteristicasChange={setSelectedCaracteristicas}
+              onBlindagemChange={setSelectedBlindagem}
+              onLeilaoChange={setSelectedLeilao}
+              initialValues={{
+                opcionais: selectedOpcionais,
+                carroceria: selectedCarroceria,
+                tipoVendedor: selectedTipoVendedor,
+                caracteristicas: selectedCaracteristicas,
+                blindagem: selectedBlindagem,
+                leilao: selectedLeilao
+              }}
+            />
 
             <div className="flex justify-between">
               <Button variant="outline" onClick={() => setCurrentTab("info")}>

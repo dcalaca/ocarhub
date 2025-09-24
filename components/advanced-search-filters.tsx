@@ -14,17 +14,11 @@ import { SmartFilterInput } from "@/components/smart-filter-input"
 import { ExpandableFilterGroup } from "@/components/expandable-filter-group"
 import { getAllBrands, getModelsByBrand, getVersionsByModel, getYearsByVersion } from "@/lib/data/vehicles-database"
 import {
-  cores,
-  carrocerias,
-  opcionais,
-  tiposVendedor,
-  finaisPlaca,
-  caracteristicas,
   estados,
   cidadesPorEstado,
   cambios,
-  combustiveis,
 } from "@/lib/data/filters"
+import { useFiltersData } from "@/hooks/use-filters-data"
 
 export interface AdvancedSearchFilters {
   termo?: string
@@ -62,6 +56,8 @@ interface AdvancedSearchFiltersProps {
 }
 
 export function AdvancedSearchFilters({ onSearch, initialFilters = {} }: AdvancedSearchFiltersProps) {
+  const { filtersData, loading: filtersLoading } = useFiltersData()
+  
   const [filters, setFilters] = useState<AdvancedSearchFilters>({
     ordenacao: initialFilters.ordenacao || "relevancia",
     combustivel: [],
@@ -77,66 +73,59 @@ export function AdvancedSearchFilters({ onSearch, initialFilters = {} }: Advance
   })
 
 
-  // Opções para os filtros expansíveis
-  const combustivelOptions = [
-    { value: "flex", label: "Flex (Gasolina/Álcool)", count: 125956 },
-    { value: "gasolina", label: "Gasolina", count: 32586 },
-    { value: "alcool", label: "Álcool/Etanol", count: 433 },
-    { value: "diesel", label: "Diesel", count: 13429 },
-    { value: "diesel-s10", label: "Diesel S-10", count: 0 },
-    { value: "eletrico", label: "Elétrico", count: 2321 },
-    { value: "hibrido", label: "Híbrido", count: 7544 },
-    { value: "hibrido-flex", label: "Híbrido Flex", count: 0 },
-    { value: "gnv", label: "GNV", count: 178 },
-    { value: "gnv-gasolina", label: "GNV/Gasolina", count: 0 },
-    { value: "gasolina-gnv", label: "Gasolina/GNV", count: 0 },
-    { value: "plug-in-hybrid", label: "Plug-in Hybrid", count: 0 },
-  ]
+  // Opções para os filtros expansíveis (agora vindas do banco)
+  const combustivelOptions = filtersData.combustiveis.map(combustivel => ({
+    value: combustivel.nome.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
+    label: combustivel.nome,
+    count: 0 // TODO: Implementar contagem real
+  }))
 
-  const finalPlacaOptions = [
-    { value: "0", label: "0", count: 0 },
-    { value: "1", label: "1", count: 0 },
-    { value: "2", label: "2", count: 0 },
-    { value: "3", label: "3", count: 0 },
-    { value: "4", label: "4", count: 0 },
-    { value: "5", label: "5", count: 0 },
-    { value: "6", label: "6", count: 0 },
-    { value: "7", label: "7", count: 0 },
-    { value: "8", label: "8", count: 0 },
-    { value: "9", label: "9", count: 0 },
-  ]
+  const finalPlacaOptions = filtersData.finaisPlaca.map(final => ({
+    value: final.numero.toString(),
+    label: final.numero.toString(),
+    count: 0 // TODO: Implementar contagem real
+  }))
 
-  const tipoVendedorOptions = [
-    { value: "concessionaria", label: "Concessionária", count: 0 },
-    { value: "loja", label: "Loja", count: 0 },
-    { value: "particular", label: "Particular", count: 0 },
-    { value: "revenda", label: "Revenda", count: 0 },
-  ]
+  const tipoVendedorOptions = filtersData.tiposVendedor.map(tipo => ({
+    value: tipo.nome.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
+    label: tipo.nome,
+    count: 0 // TODO: Implementar contagem real
+  }))
 
-  const caracteristicasVeiculoOptions = [
-    { value: "aceita-troca", label: "Aceita Troca", count: 0 },
-    { value: "alienado", label: "Alienado", count: 0 },
-    { value: "garantia-fabrica", label: "Garantia de Fábrica", count: 0 },
-    { value: "ipva-pago", label: "IPVA Pago", count: 0 },
-    { value: "licenciado", label: "Licenciado", count: 0 },
-    { value: "revisoes-concessionaria", label: "Revisões na Concessionária", count: 0 },
-    { value: "unico-dono", label: "Único Dono", count: 0 },
-  ]
+  const caracteristicasVeiculoOptions = filtersData.caracteristicas.map(caracteristica => ({
+    value: caracteristica.nome.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
+    label: caracteristica.nome,
+    count: 0 // TODO: Implementar contagem real
+  }))
 
-  const blindagemOptions = [
-    { value: "sim", label: "Sim", count: 0 },
-    { value: "nao", label: "Não", count: 0 },
-  ]
+  const blindagemOptions = filtersData.blindagem.map(blindagem => ({
+    value: blindagem.nome.toLowerCase(),
+    label: blindagem.nome,
+    count: 0 // TODO: Implementar contagem real
+  }))
 
-  const leilaoOptions = [
-    { value: "sim", label: "Sim", count: 0 },
-    { value: "nao", label: "Não", count: 0 },
-  ]
+  const leilaoOptions = filtersData.leilao.map(leilao => ({
+    value: leilao.nome.toLowerCase(),
+    label: leilao.nome,
+    count: 0 // TODO: Implementar contagem real
+  }))
 
-  // Converter arrays existentes para o formato do ExpandableFilterGroup
-  const coresOptions = cores.map(cor => ({ value: cor, label: cor, count: 0 }))
-  const carroceriaOptions = carrocerias.map(carroceria => ({ value: carroceria, label: carroceria, count: 0 }))
-  const opcionaisOptions = opcionais.map(opcional => ({ value: opcional, label: opcional, count: 0 }))
+  // Converter arrays do banco para o formato do ExpandableFilterGroup
+  const coresOptions = filtersData.cores.map(cor => ({ 
+    value: cor.nome.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''), 
+    label: cor.nome, 
+    count: 0 
+  }))
+  const carroceriaOptions = filtersData.carrocerias.map(carroceria => ({ 
+    value: carroceria.nome.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''), 
+    label: carroceria.nome, 
+    count: 0 
+  }))
+  const opcionaisOptions = filtersData.opcionais.map(opcional => ({ 
+    value: opcional.nome.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''), 
+    label: opcional.nome, 
+    count: 0 
+  }))
 
   // Estados para filtros inteligentes
   const [marcas, setMarcas] = useState<Array<{id: string, name: string}>>([])
@@ -329,6 +318,17 @@ export function AdvancedSearchFilters({ onSearch, initialFilters = {} }: Advance
 
   // Obter todas as marcas disponíveis
   const allBrands = getAllBrands()
+
+  if (filtersLoading) {
+    return (
+      <div className="w-full bg-gray-900 text-white p-4 space-y-4 lg:max-w-sm">
+        <div className="flex items-center justify-center py-8">
+          <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          <span className="ml-2">Carregando filtros...</span>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="w-full bg-gray-900 text-white p-4 space-y-4 lg:max-w-sm">
