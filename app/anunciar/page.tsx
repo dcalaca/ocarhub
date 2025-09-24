@@ -417,13 +417,24 @@ export default function AnunciarPage() {
 
     const plano = plans.find(p => p.id === planoSelecionado)
     if (!plano) {
+      console.log('❌ Plano não encontrado para ID:', planoSelecionado)
+      console.log('📋 Planos disponíveis:', plans.map(p => ({ id: p.id, nome: p.nome, preco: p.preco })))
       toast({
         title: "Plano não encontrado",
         description: "Selecione um plano válido para continuar.",
         variant: "destructive",
       })
+      setLoading(false)
       return
     }
+
+    console.log('📦 Plano selecionado:', {
+      id: plano.id,
+      nome: plano.nome,
+      preco: plano.preco,
+      limite_anuncios: plano.limite_anuncios,
+      tipo: plano.tipo
+    })
 
     // Verificar limite de anúncios gratuitos se for plano gratuito
     if (plano.preco === 0) {
@@ -436,9 +447,14 @@ export default function AnunciarPage() {
         
         if (!podeAnunciar) {
           console.log('❌ Limite de anúncios atingido')
+          console.log('📊 Detalhes do limite:', {
+            limite: plano.limite_anuncios,
+            anunciosRestantes,
+            planoNome: plano.nome
+          })
           toast({
             title: "Limite de anúncios atingido",
-            description: `Você já atingiu o limite de ${plano.limite_anuncios} anúncios gratuitos por CPF. Anúncios restantes: ${anunciosRestantes}`,
+            description: `Você já atingiu o limite de ${plano.limite_anuncios} anúncios gratuitos. Escolha um plano pago para continuar anunciando.`,
             variant: "destructive",
           })
           setLoading(false)
