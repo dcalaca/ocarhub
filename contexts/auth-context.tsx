@@ -775,7 +775,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         usuario_id: user.id,
         valor: -valor,
         descricao: descricao,
-        tipo: tipo,
+        tipo: 'gasto', // FORÇANDO 'gasto' para evitar cache
         metodo_pagamento: 'saldo',
         status: 'aprovado',
         referencia_id: referenciaId,
