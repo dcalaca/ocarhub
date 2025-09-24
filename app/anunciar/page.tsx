@@ -466,7 +466,7 @@ export default function AnunciarPage() {
           numero_proprietarios: parseInt(owners),
           observacoes: description,
           fotos: [], // Inicialmente vazio, será preenchido após upload
-          plano: plano.nome.toLowerCase(),
+          plano: plano.nome.toLowerCase() as 'gratuito' | 'destaque' | 'premium',
           cidade: location.split(',')[0]?.trim() || 'São Paulo',
           estado: location.split(',')[1]?.trim() || 'SP',
         }

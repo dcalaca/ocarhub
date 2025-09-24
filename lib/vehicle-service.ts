@@ -42,6 +42,11 @@ export interface CreateVehicleData {
   combustivel: string[]
   cambio: string
   opcionais?: string[]
+  carroceria?: string
+  tipo_vendedor?: string
+  caracteristicas?: string[]
+  blindagem?: string
+  leilao?: string
   preco: number
   fipe?: number
   placa_parcial?: string
@@ -120,6 +125,8 @@ export class VehicleService {
         console.error('❌ Detalhes do erro:', JSON.stringify(error, null, 2))
         console.error('❌ Código do erro:', error.code)
         console.error('❌ Mensagem do erro:', error.message)
+        console.error('❌ Detalhes do erro:', error.details)
+        console.error('❌ Hint do erro:', error.hint)
         console.error('❌ Dados enviados:', JSON.stringify({ ...vehicleData, dono_id: userId }, null, 2))
         throw error
       }
