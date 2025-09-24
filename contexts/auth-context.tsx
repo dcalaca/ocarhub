@@ -760,6 +760,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Registrar transação no extrato
+      console.log('📝 Tentando registrar transação no extrato...')
       const { error: transacaoError } = await supabase
         .from('ocar_transacoes')
         .insert({
@@ -776,7 +777,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (transacaoError) {
         console.error('❌ Erro ao registrar transação:', transacaoError)
+        console.error('❌ Detalhes do erro de transação:', {
+          code: transacaoError.code,
+          message: transacaoError.message,
+          details: transacaoError.details,
+          hint: transacaoError.hint
+        })
         // Reverter o débito do saldo se falhar ao registrar transação
+        console.log('🔄 Revertendo débito do saldo...')
         await supabase
           .from('ocar_usuarios')
           .update({ 
@@ -786,6 +794,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .eq('id', user.id)
         return false
       }
+
+      console.log('✅ Transação registrada com sucesso no extrato')
 
       // Atualizar usuário local
       const userAtualizado = { ...user, saldo: novoSaldo }
