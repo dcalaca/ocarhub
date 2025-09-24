@@ -9,7 +9,7 @@ ALTER TABLE ocar_vehicles ADD CONSTRAINT ocar_vehicles_plano_check
 CHECK (plano IN ('gratuito', 'destaque', 'premium'));
 
 -- Verificar se a constraint foi aplicada corretamente
-SELECT conname, consrc 
+SELECT conname, pg_get_constraintdef(oid) as definition
 FROM pg_constraint 
 WHERE conrelid = 'ocar_vehicles'::regclass 
 AND conname = 'ocar_vehicles_plano_check';
