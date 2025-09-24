@@ -56,6 +56,8 @@ export default function AnunciarPage() {
   const [loading, setLoading] = useState(false)
   const [progress, setProgress] = useState(0)
   const [formCompleted, setFormCompleted] = useState(false)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [savingStep, setSavingStep] = useState('')
 
   // Dados do veículo
   const [brandId, setBrandId] = useState("")
@@ -437,12 +439,14 @@ export default function AnunciarPage() {
     }
 
     setLoading(true)
+    setSavingStep('Preparando dados do veículo...')
 
     try {
       // Primeiro, criar o veículo no Supabase para obter o ID
       let veiculoCriado = null
       if (user?.id) {
         console.log('🚗 Salvando veículo no Supabase...')
+        setSavingStep('Salvando dados do veículo...')
         
         const vehicleData = {
           marca: brands.find(b => b.value === brandId)?.label || '',
@@ -479,11 +483,13 @@ export default function AnunciarPage() {
           // Upload das fotos se houver
           if (photos.length > 0 && veiculoCriado?.id) {
             console.log('📤 Fazendo upload das fotos...')
+            setSavingStep('Fazendo upload das fotos...')
             try {
               const photoUrls = await ImageUploadService.uploadImages(photos, veiculoCriado.id)
               console.log('✅ Fotos enviadas com sucesso:', photoUrls)
               
               // Atualizar o veículo com as URLs das fotos
+              setSavingStep('Atualizando veículo com fotos...')
               await VehicleService.updateVehicle(veiculoCriado.id, { fotos: photoUrls })
               console.log('✅ Veículo atualizado com as fotos')
               
@@ -518,6 +524,7 @@ export default function AnunciarPage() {
           usuario: user?.id
         })
         
+        setSavingStep('Processando pagamento...')
         const sucesso = await debitSaldo(
           plano.preco,
           `Anúncio ${plano.nome} - ${plano.duracao_dias ? `${plano.duracao_dias} dias` : "vitalício"}`,
@@ -541,16 +548,19 @@ export default function AnunciarPage() {
       const mensagemDuracao = plano.duracao_dias 
         ? `${plano.duracao_dias} dias` 
         : "vitalício até vender"
-        
+      
+      setSavingStep('Finalizando...')
+      setShowSuccessModal(true)
+      
       toast({
         title: "Anúncio publicado com sucesso!",
         description: `Seu anúncio ${plano.nome} está ativo por ${mensagemDuracao}`,
       })
 
-      // Redirecionar para meus anúncios após 2 segundos
+      // Redirecionar para meus anúncios após 3 segundos
       setTimeout(() => {
         window.location.href = "/meus-anuncios"
-      }, 2000)
+      }, 3000)
     } catch (error) {
       console.error("Erro ao publicar anúncio:", error)
       toast({
@@ -1049,9 +1059,16 @@ export default function AnunciarPage() {
                 className="px-8 min-w-[200px]"
               >
                 {loading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Publicando...
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Publicando...
+                    </div>
+                    {savingStep && (
+                      <div className="text-xs text-white/80 text-center">
+                        {savingStep}
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <>
@@ -1080,6 +1097,27 @@ export default function AnunciarPage() {
       </div>
 
       <CacheDebug />
+
+      {/* Modal de Sucesso */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 max-w-md mx-4 text-center">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="w-8 h-8 text-green-600" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              Anúncio Publicado!
+            </h3>
+            <p className="text-gray-600 mb-4">
+              Seu anúncio foi publicado com sucesso e está ativo.
+            </p>
+            <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+              <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+              Redirecionando para seus anúncios...
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
