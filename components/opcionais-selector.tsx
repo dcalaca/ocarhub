@@ -6,6 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { AlertTriangle } from 'lucide-react';
 import { useFiltersData } from '@/hooks/use-filters-data';
 
 interface OpcionaisSelectorProps {
@@ -34,7 +35,24 @@ export function OpcionaisSelector({
   onLeilaoChange,
   initialValues = {}
 }: OpcionaisSelectorProps) {
-  const { filtersData, loading, error } = useFiltersData();
+  const { filtersData, loading, error } = useFiltersData()
+  
+  // Debug logs
+  console.log('🔍 OpcionaisSelector Debug:', {
+    loading,
+    error,
+    filtersData: {
+      combustiveis: filtersData.combustiveis?.length || 0,
+      cores: filtersData.cores?.length || 0,
+      carrocerias: filtersData.carrocerias?.length || 0,
+      opcionais: filtersData.opcionais?.length || 0,
+      tiposVendedor: filtersData.tiposVendedor?.length || 0,
+      caracteristicas: filtersData.caracteristicas?.length || 0,
+      finaisPlaca: filtersData.finaisPlaca?.length || 0,
+      blindagem: filtersData.blindagem?.length || 0,
+      leilao: filtersData.leilao?.length || 0
+    }
+  });
   const [selectedOpcionais, setSelectedOpcionais] = useState<string[]>(initialValues.opcionais || []);
   const [selectedCarroceria, setSelectedCarroceria] = useState<string>(initialValues.carroceria || '');
   const [selectedTipoVendedor, setSelectedTipoVendedor] = useState<string>(initialValues.tipoVendedor || '');
@@ -142,16 +160,25 @@ export function OpcionaisSelector({
 
   // Usar dados do banco se disponíveis, senão usar fallback
   const dataToUse = {
-    combustiveis: Array.isArray(filtersData.combustiveis) && filtersData.combustiveis.length > 0 ? filtersData.combustiveis : fallbackData.combustiveis,
-    cores: Array.isArray(filtersData.cores) && filtersData.cores.length > 0 ? filtersData.cores : fallbackData.cores,
-    carrocerias: Array.isArray(filtersData.carrocerias) && filtersData.carrocerias.length > 0 ? filtersData.carrocerias : fallbackData.carrocerias,
-    opcionais: Array.isArray(filtersData.opcionais) && filtersData.opcionais.length > 0 ? filtersData.opcionais : fallbackData.opcionais,
-    tiposVendedor: Array.isArray(filtersData.tiposVendedor) && filtersData.tiposVendedor.length > 0 ? filtersData.tiposVendedor : fallbackData.tiposVendedor,
-    caracteristicas: Array.isArray(filtersData.caracteristicas) && filtersData.caracteristicas.length > 0 ? filtersData.caracteristicas : fallbackData.caracteristicas,
-    finaisPlaca: Array.isArray(filtersData.finaisPlaca) && filtersData.finaisPlaca.length > 0 ? filtersData.finaisPlaca : fallbackData.finaisPlaca,
-    blindagem: Array.isArray(filtersData.blindagem) && filtersData.blindagem.length > 0 ? filtersData.blindagem : fallbackData.blindagem,
-    leilao: Array.isArray(filtersData.leilao) && filtersData.leilao.length > 0 ? filtersData.leilao : fallbackData.leilao
+    combustiveis: (Array.isArray(filtersData.combustiveis) && filtersData.combustiveis.length > 0) ? filtersData.combustiveis : fallbackData.combustiveis,
+    cores: (Array.isArray(filtersData.cores) && filtersData.cores.length > 0) ? filtersData.cores : fallbackData.cores,
+    carrocerias: (Array.isArray(filtersData.carrocerias) && filtersData.carrocerias.length > 0) ? filtersData.carrocerias : fallbackData.carrocerias,
+    opcionais: (Array.isArray(filtersData.opcionais) && filtersData.opcionais.length > 0) ? filtersData.opcionais : fallbackData.opcionais,
+    tiposVendedor: (Array.isArray(filtersData.tiposVendedor) && filtersData.tiposVendedor.length > 0) ? filtersData.tiposVendedor : fallbackData.tiposVendedor,
+    caracteristicas: (Array.isArray(filtersData.caracteristicas) && filtersData.caracteristicas.length > 0) ? filtersData.caracteristicas : fallbackData.caracteristicas,
+    finaisPlaca: (Array.isArray(filtersData.finaisPlaca) && filtersData.finaisPlaca.length > 0) ? filtersData.finaisPlaca : fallbackData.finaisPlaca,
+    blindagem: (Array.isArray(filtersData.blindagem) && filtersData.blindagem.length > 0) ? filtersData.blindagem : fallbackData.blindagem,
+    leilao: (Array.isArray(filtersData.leilao) && filtersData.leilao.length > 0) ? filtersData.leilao : fallbackData.leilao
   };
+
+  console.log('🔍 DataToUse Debug:', {
+    carrocerias: dataToUse.carrocerias.length,
+    tiposVendedor: dataToUse.tiposVendedor.length,
+    caracteristicas: dataToUse.caracteristicas.length,
+    blindagem: dataToUse.blindagem.length,
+    leilao: dataToUse.leilao.length,
+    opcionais: dataToUse.opcionais.length
+  });
 
   // Agrupar opcionais por categoria - usando dados de fallback se necessário
   const opcionaisArray = dataToUse.opcionais;
@@ -164,41 +191,40 @@ export function OpcionaisSelector({
     return acc;
   }, {} as Record<string, typeof opcionaisArray>);
 
+  // Sempre mostrar os dados, mesmo em loading ou erro
   if (loading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Carregando opcionais...</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center py-8">
-            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Usando dados temporários</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-yellow-600 mb-4">
-            ⚠️ Erro ao carregar dados do banco. Usando dados temporários.
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Execute o SQL no Supabase para ativar os dados completos.
-          </p>
-        </CardContent>
-      </Card>
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Carregando opcionais...</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-center py-8">
+              <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
   return (
     <div className="space-y-6">
+      {/* Aviso se estiver usando dados de fallback */}
+      {error && (
+        <Card className="border-yellow-200 bg-yellow-50">
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-2 text-yellow-800">
+              <AlertTriangle className="w-4 h-4" />
+              <span className="text-sm font-medium">
+                Usando dados temporários. Execute o SQL no Supabase para dados completos.
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Carroceria */}
       <Card>
         <CardHeader>
