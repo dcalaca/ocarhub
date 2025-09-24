@@ -45,8 +45,8 @@ export interface CreateVehicleData {
   carroceria?: string
   tipo_vendedor?: string
   caracteristicas?: string[]
-  blindagem?: string
-  leilao?: string
+  blindagem?: boolean
+  leilao?: boolean
   preco: number
   fipe?: number
   placa_parcial?: string
