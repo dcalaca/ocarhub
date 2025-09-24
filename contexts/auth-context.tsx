@@ -747,6 +747,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const novoSaldo = saldoAnterior - valor
 
       // Atualizar saldo no Supabase
+      console.log('🔄 Atualizando saldo no banco...')
       const { error: saldoError } = await supabase
         .from('ocar_usuarios')
         .update({ 
@@ -757,11 +758,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (saldoError) {
         console.error('❌ Erro ao debitar saldo:', saldoError)
+        console.error('❌ Detalhes do erro de saldo:', {
+          code: saldoError.code,
+          message: saldoError.message,
+          details: saldoError.details,
+          hint: saldoError.hint
+        })
         return false
       }
 
+      console.log('✅ Saldo atualizado no banco com sucesso')
+
       // Registrar transação no extrato
       console.log('📝 Tentando registrar transação no extrato...')
+      console.log('📝 Dados da transação:', {
+        usuario_id: user.id,
+        valor: -valor,
+        descricao: descricao,
+        tipo: tipo,
+        metodo_pagamento: 'saldo',
+        status: 'aprovado',
+        referencia_id: referenciaId,
+        saldo_anterior: saldoAnterior,
+        saldo_posterior: novoSaldo
+      })
+      
       const { error: transacaoError } = await supabase
         .from('ocar_transacoes')
         .insert({
