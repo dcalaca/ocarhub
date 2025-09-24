@@ -381,6 +381,16 @@ export default function AnunciarPage() {
     console.log('👤 Usuário:', user)
     console.log('📋 Formulário completo:', formCompleted)
     console.log('📦 Plano selecionado:', planoSelecionado)
+
+    // Mostrar feedback imediato
+    setLoading(true)
+    setSavingStep('Iniciando publicação...')
+    
+    // Toast imediato para feedback
+    toast({
+      title: "Publicando anúncio...",
+      description: "Aguarde enquanto processamos seu anúncio",
+    })
     
     if (!user) {
       console.log('❌ Usuário não logado')
@@ -438,7 +448,6 @@ export default function AnunciarPage() {
       return
     }
 
-    setLoading(true)
     setSavingStep('Preparando dados do veículo...')
 
     try {
@@ -1062,10 +1071,10 @@ export default function AnunciarPage() {
                   <div className="flex flex-col items-center gap-2">
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Publicando...
+                      <span className="font-medium">Publicando...</span>
                     </div>
                     {savingStep && (
-                      <div className="text-xs text-white/80 text-center">
+                      <div className="text-xs text-white/90 text-center bg-white/10 px-2 py-1 rounded">
                         {savingStep}
                       </div>
                     )}
