@@ -49,7 +49,7 @@ import { PlansService, type Plan } from "@/lib/plans-service"
 import { ImageUploadService } from "@/lib/image-upload-service"
 
 export default function AnunciarPage() {
-  const { user, debitSaldo } = useAuth()
+  const { user, debitSaldo, refreshSaldo } = useAuth()
   const { toast } = useToast()
   const [currentTab, setCurrentTab] = useState("info")
   const [planoSelecionado, setPlanoSelecionado] = useState<string>("")
@@ -668,8 +668,28 @@ export default function AnunciarPage() {
           <Alert className="mb-6">
             <Wallet className="h-4 w-4" />
             <AlertDescription>
-              <strong>Saldo disponível:</strong>{" "}
-              {(user.saldo || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+              <div className="flex items-center gap-2">
+                <strong>Saldo disponível:</strong>{" "}
+                <span className="text-green-600 font-semibold">
+                  {(user.saldo || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                </span>
+                <button
+                  onClick={async () => {
+                    console.log('🔄 Atualizando saldo...')
+                    const novoSaldo = await refreshSaldo()
+                    if (novoSaldo !== undefined) {
+                      toast({
+                        title: "Saldo atualizado",
+                        description: `Novo saldo: ${novoSaldo.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`,
+                      })
+                    }
+                  }}
+                  className="text-blue-600 hover:text-blue-800 text-sm underline"
+                  title="Atualizar saldo do banco"
+                >
+                  🔄 Atualizar
+                </button>
+              </div>
               {(user.saldo || 0) < 35 && (
                 <span className="ml-2">
                   <Link href="/conta" className="text-blue-600 hover:underline">

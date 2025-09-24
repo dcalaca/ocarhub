@@ -92,6 +92,7 @@ interface AuthContextType {
   debitSaldo: (valor: number, descricao: string, tipo?: string, referenciaId?: string) => Promise<boolean>
   creditSaldo: (valor: number, descricao: string, tipo?: string, referenciaId?: string) => Promise<boolean>
   getTransacoes: () => Promise<any[]>
+  refreshSaldo: () => Promise<number | undefined>
   isLoading: boolean
   userInteractions: {
     favoritos: string[]
@@ -905,6 +906,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  // Função para forçar atualização do saldo do banco
+  const refreshSaldo = async () => {
+    if (!user) return
+
+    try {
+      console.log('🔄 Atualizando saldo do banco...')
+      const { data, error } = await supabase
+        .from('ocar_usuarios')
+        .select('saldo')
+        .eq('id', user.id)
+        .single()
+
+      if (error) {
+        console.error('❌ Erro ao buscar saldo:', error)
+        return
+      }
+
+      if (data) {
+        const novoSaldo = parseFloat(data.saldo)
+        console.log('💰 Saldo atualizado do banco:', novoSaldo)
+        
+        // Atualizar usuário local
+        const userAtualizado = { ...user, saldo: novoSaldo }
+        setUser(userAtualizado)
+        safeLocalStorage.setItem("ocar-user", JSON.stringify(userAtualizado))
+        
+        return novoSaldo
+      }
+    } catch (error) {
+      console.error('❌ Erro ao atualizar saldo:', error)
+    }
+  }
+
   // Função para atualizar dados do usuário
   const updateUser = async (userData: Partial<User>) => {
     if (!user) return
@@ -950,6 +984,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         debitSaldo,
         creditSaldo,
         getTransacoes,
+        refreshSaldo,
         isLoading,
         userInteractions,
         toggleFavorito,
