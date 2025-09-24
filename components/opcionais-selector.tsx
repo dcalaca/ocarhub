@@ -42,8 +42,8 @@ export function OpcionaisSelector({
   const [selectedBlindagem, setSelectedBlindagem] = useState<string>(initialValues.blindagem || '');
   const [selectedLeilao, setSelectedLeilao] = useState<string>(initialValues.leilao || '');
 
-  // Agrupar opcionais por categoria - com verificação robusta
-  const opcionaisArray = Array.isArray(filtersData.opcionais) ? filtersData.opcionais : [];
+  // Agrupar opcionais por categoria - usando dados de fallback se necessário
+  const opcionaisArray = dataToUse.opcionais;
   const opcionaisPorCategoria = opcionaisArray.reduce((acc, opcional) => {
     const categoria = opcional.categoria || 'geral';
     if (!acc[categoria]) {
@@ -71,6 +71,99 @@ export function OpcionaisSelector({
     onCaracteristicasChange(newCaracteristicas);
   };
 
+  // Dados de fallback caso as APIs não funcionem
+  const fallbackData = {
+    combustiveis: [
+      { id: 1, nome: 'Flex (Gasolina/Álcool)' },
+      { id: 2, nome: 'Gasolina' },
+      { id: 3, nome: 'Álcool/Etanol' },
+      { id: 4, nome: 'Diesel' },
+      { id: 5, nome: 'Elétrico' },
+      { id: 6, nome: 'Híbrido' }
+    ],
+    cores: [
+      { id: 1, nome: 'Branco' },
+      { id: 2, nome: 'Prata' },
+      { id: 3, nome: 'Preto' },
+      { id: 4, nome: 'Cinza' },
+      { id: 5, nome: 'Vermelho' },
+      { id: 6, nome: 'Azul' },
+      { id: 7, nome: 'Verde' }
+    ],
+    carrocerias: [
+      { id: 1, nome: 'Hatch' },
+      { id: 2, nome: 'Sedã' },
+      { id: 3, nome: 'SUV' },
+      { id: 4, nome: 'Picape' },
+      { id: 5, nome: 'Conversível' },
+      { id: 6, nome: 'Cupê' }
+    ],
+    opcionais: [
+      { id: 1, nome: 'Ar Condicionado', categoria: 'conforto' },
+      { id: 2, nome: 'Vidros Elétricos', categoria: 'conforto' },
+      { id: 3, nome: 'Teto Solar', categoria: 'conforto' },
+      { id: 4, nome: 'Travas Elétricas', categoria: 'conforto' },
+      { id: 5, nome: 'Direção Hidráulica', categoria: 'conforto' },
+      { id: 6, nome: 'Direção Elétrica', categoria: 'conforto' },
+      { id: 7, nome: 'Bancos de Couro', categoria: 'conforto' },
+      { id: 8, nome: 'Rodas de Liga Leve', categoria: 'estetica' },
+      { id: 9, nome: 'Airbag', categoria: 'seguranca' },
+      { id: 10, nome: 'ABS', categoria: 'seguranca' },
+      { id: 11, nome: 'Alarme', categoria: 'seguranca' },
+      { id: 12, nome: 'GPS', categoria: 'navegacao' },
+      { id: 13, nome: 'Câmera de Ré', categoria: 'seguranca' },
+      { id: 14, nome: 'Sensor de Estacionamento', categoria: 'seguranca' }
+    ],
+    tiposVendedor: [
+      { id: 1, nome: 'Particular' },
+      { id: 2, nome: 'Loja' },
+      { id: 3, nome: 'Concessionária' },
+      { id: 4, nome: 'Revenda' }
+    ],
+    caracteristicas: [
+      { id: 1, nome: 'Aceita Troca' },
+      { id: 2, nome: 'Alienado' },
+      { id: 3, nome: 'Garantia de Fábrica' },
+      { id: 4, nome: 'IPVA Pago' },
+      { id: 5, nome: 'Licenciado' },
+      { id: 6, nome: 'Revisões na Concessionária' },
+      { id: 7, nome: 'Único Dono' }
+    ],
+    finaisPlaca: [
+      { id: 1, numero: 0 },
+      { id: 2, numero: 1 },
+      { id: 3, numero: 2 },
+      { id: 4, numero: 3 },
+      { id: 5, numero: 4 },
+      { id: 6, numero: 5 },
+      { id: 7, numero: 6 },
+      { id: 8, numero: 7 },
+      { id: 9, numero: 8 },
+      { id: 10, numero: 9 }
+    ],
+    blindagem: [
+      { id: 1, nome: 'Sim' },
+      { id: 2, nome: 'Não' }
+    ],
+    leilao: [
+      { id: 1, nome: 'Sim' },
+      { id: 2, nome: 'Não' }
+    ]
+  };
+
+  // Usar dados do banco se disponíveis, senão usar fallback
+  const dataToUse = {
+    combustiveis: Array.isArray(filtersData.combustiveis) && filtersData.combustiveis.length > 0 ? filtersData.combustiveis : fallbackData.combustiveis,
+    cores: Array.isArray(filtersData.cores) && filtersData.cores.length > 0 ? filtersData.cores : fallbackData.cores,
+    carrocerias: Array.isArray(filtersData.carrocerias) && filtersData.carrocerias.length > 0 ? filtersData.carrocerias : fallbackData.carrocerias,
+    opcionais: Array.isArray(filtersData.opcionais) && filtersData.opcionais.length > 0 ? filtersData.opcionais : fallbackData.opcionais,
+    tiposVendedor: Array.isArray(filtersData.tiposVendedor) && filtersData.tiposVendedor.length > 0 ? filtersData.tiposVendedor : fallbackData.tiposVendedor,
+    caracteristicas: Array.isArray(filtersData.caracteristicas) && filtersData.caracteristicas.length > 0 ? filtersData.caracteristicas : fallbackData.caracteristicas,
+    finaisPlaca: Array.isArray(filtersData.finaisPlaca) && filtersData.finaisPlaca.length > 0 ? filtersData.finaisPlaca : fallbackData.finaisPlaca,
+    blindagem: Array.isArray(filtersData.blindagem) && filtersData.blindagem.length > 0 ? filtersData.blindagem : fallbackData.blindagem,
+    leilao: Array.isArray(filtersData.leilao) && filtersData.leilao.length > 0 ? filtersData.leilao : fallbackData.leilao
+  };
+
   if (loading) {
     return (
       <Card>
@@ -90,10 +183,15 @@ export function OpcionaisSelector({
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Erro ao carregar opcionais</CardTitle>
+          <CardTitle>Usando dados temporários</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-destructive">{error}</p>
+          <p className="text-yellow-600 mb-4">
+            ⚠️ Erro ao carregar dados do banco. Usando dados temporários.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Execute o SQL no Supabase para ativar os dados completos.
+          </p>
         </CardContent>
       </Card>
     );
@@ -108,7 +206,7 @@ export function OpcionaisSelector({
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {(Array.isArray(filtersData.carrocerias) ? filtersData.carrocerias : []).map((carroceria) => (
+            {dataToUse.carrocerias.map((carroceria) => (
               <div key={carroceria.id} className="flex items-center space-x-2">
                 <Checkbox
                   id={`carroceria-${carroceria.id}`}
@@ -135,7 +233,7 @@ export function OpcionaisSelector({
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {(Array.isArray(filtersData.tiposVendedor) ? filtersData.tiposVendedor : []).map((tipo) => (
+            {dataToUse.tiposVendedor.map((tipo) => (
               <div key={tipo.id} className="flex items-center space-x-2">
                 <Checkbox
                   id={`tipo-${tipo.id}`}
@@ -162,7 +260,7 @@ export function OpcionaisSelector({
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {(Array.isArray(filtersData.caracteristicas) ? filtersData.caracteristicas : []).map((caracteristica) => (
+            {dataToUse.caracteristicas.map((caracteristica) => (
               <div key={caracteristica.id} className="flex items-center space-x-2">
                 <Checkbox
                   id={`caracteristica-${caracteristica.id}`}
@@ -185,7 +283,7 @@ export function OpcionaisSelector({
         </CardHeader>
         <CardContent>
           <div className="flex gap-4">
-            {(Array.isArray(filtersData.blindagem) ? filtersData.blindagem : []).map((blindagem) => (
+            {dataToUse.blindagem.map((blindagem) => (
               <div key={blindagem.id} className="flex items-center space-x-2">
                 <Checkbox
                   id={`blindagem-${blindagem.id}`}
@@ -212,7 +310,7 @@ export function OpcionaisSelector({
         </CardHeader>
         <CardContent>
           <div className="flex gap-4">
-            {(Array.isArray(filtersData.leilao) ? filtersData.leilao : []).map((leilao) => (
+            {dataToUse.leilao.map((leilao) => (
               <div key={leilao.id} className="flex items-center space-x-2">
                 <Checkbox
                   id={`leilao-${leilao.id}`}
