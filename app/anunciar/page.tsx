@@ -58,6 +58,12 @@ export default function AnunciarPage() {
   const [formCompleted, setFormCompleted] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [savingStep, setSavingStep] = useState('')
+  const [showLimitModal, setShowLimitModal] = useState(false)
+  const [limitInfo, setLimitInfo] = useState<{
+    limite: number
+    anunciosRestantes: number
+    planoNome: string
+  } | null>(null)
 
   // Dados do veículo
   const [brandId, setBrandId] = useState("")
@@ -452,11 +458,14 @@ export default function AnunciarPage() {
             anunciosRestantes,
             planoNome: plano.nome
           })
-          toast({
-            title: "Limite de anúncios atingido",
-            description: `Você já atingiu o limite de ${plano.limite_anuncios} anúncios gratuitos. Escolha um plano pago para continuar anunciando.`,
-            variant: "destructive",
+          
+          // Mostrar modal com informações do limite
+          setLimitInfo({
+            limite: plano.limite_anuncios,
+            anunciosRestantes,
+            planoNome: plano.nome
           })
+          setShowLimitModal(true)
           setLoading(false)
           return
         }
@@ -679,7 +688,7 @@ export default function AnunciarPage() {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div id="planos-section" className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             {plans.map((plano) => (
               <Card
                 key={plano.id}
@@ -1167,6 +1176,91 @@ export default function AnunciarPage() {
             <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
               <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
               Redirecionando para seus anúncios...
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Limite de Anúncios */}
+      {showLimitModal && limitInfo && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 max-w-lg mx-4">
+            <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertTriangle className="w-8 h-8 text-orange-600" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2 text-center">
+              Limite de Anúncios Atingido
+            </h3>
+            <p className="text-gray-600 mb-6 text-center">
+              Você já atingiu o limite de <strong>{limitInfo.limite} anúncios gratuitos</strong> do plano {limitInfo.planoNome}.
+            </p>
+            
+            <div className="bg-gray-50 rounded-lg p-4 mb-6">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-medium text-gray-700">Anúncios restantes:</span>
+                <span className="text-sm font-bold text-red-600">{limitInfo.anunciosRestantes}</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-red-500 h-2 rounded-full" 
+                  style={{ width: '100%' }}
+                ></div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h4 className="font-semibold text-gray-900">Escolha um plano pago para continuar:</h4>
+              <div className="space-y-3">
+                {plans.filter(p => p.preco > 0).map((plano) => (
+                  <div 
+                    key={plano.id}
+                    className="border rounded-lg p-4 hover:border-blue-500 cursor-pointer transition-colors"
+                    onClick={() => {
+                      setPlanoSelecionado(plano.id)
+                      setShowLimitModal(false)
+                    }}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h5 className="font-semibold text-gray-900">{plano.nome}</h5>
+                        <p className="text-sm text-gray-600">{plano.descricao}</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {plano.limite_anuncios} anúncios • {plano.duracao_dias ? `${plano.duracao_dias} dias` : 'Vitalício'}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-lg font-bold text-blue-600">
+                          {plano.preco.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                        </p>
+                        {plano.destaque && (
+                          <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                            Destaque
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowLimitModal(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  setShowLimitModal(false)
+                  // Scroll para a seção de planos
+                  document.getElementById('planos-section')?.scrollIntoView({ behavior: 'smooth' })
+                }}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Ver Planos
+              </button>
             </div>
           </div>
         </div>
