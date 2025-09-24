@@ -42,17 +42,6 @@ export function OpcionaisSelector({
   const [selectedBlindagem, setSelectedBlindagem] = useState<string>(initialValues.blindagem || '');
   const [selectedLeilao, setSelectedLeilao] = useState<string>(initialValues.leilao || '');
 
-  // Agrupar opcionais por categoria - usando dados de fallback se necessário
-  const opcionaisArray = dataToUse.opcionais;
-  const opcionaisPorCategoria = opcionaisArray.reduce((acc, opcional) => {
-    const categoria = opcional.categoria || 'geral';
-    if (!acc[categoria]) {
-      acc[categoria] = [];
-    }
-    acc[categoria].push(opcional);
-    return acc;
-  }, {} as Record<string, typeof opcionaisArray>);
-
   const handleOpcionalChange = (opcional: string, checked: boolean) => {
     const newOpcionais = checked
       ? [...selectedOpcionais, opcional]
@@ -163,6 +152,17 @@ export function OpcionaisSelector({
     blindagem: Array.isArray(filtersData.blindagem) && filtersData.blindagem.length > 0 ? filtersData.blindagem : fallbackData.blindagem,
     leilao: Array.isArray(filtersData.leilao) && filtersData.leilao.length > 0 ? filtersData.leilao : fallbackData.leilao
   };
+
+  // Agrupar opcionais por categoria - usando dados de fallback se necessário
+  const opcionaisArray = dataToUse.opcionais;
+  const opcionaisPorCategoria = opcionaisArray.reduce((acc, opcional) => {
+    const categoria = opcional.categoria || 'geral';
+    if (!acc[categoria]) {
+      acc[categoria] = [];
+    }
+    acc[categoria].push(opcional);
+    return acc;
+  }, {} as Record<string, typeof opcionaisArray>);
 
   if (loading) {
     return (
