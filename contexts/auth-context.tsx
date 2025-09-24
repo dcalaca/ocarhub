@@ -789,7 +789,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           usuario_id: user.id,
           valor: -valor, // Valor negativo para débito
           descricao: descricao,
-          tipo: tipo,
+          tipo: 'gasto', // Sempre usar 'gasto' para débitos
           metodo_pagamento: 'saldo',
           status: 'aprovado',
           referencia_id: referenciaId,
@@ -870,7 +870,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           usuario_id: user.id,
           valor: valor, // Valor positivo para crédito
           descricao: descricao,
-          tipo: tipo,
+          tipo: 'deposito', // Sempre usar 'deposito' para créditos
           metodo_pagamento: 'pix', // Assumindo PIX para créditos
           status: 'aprovado',
           referencia_id: referenciaId,
