@@ -427,34 +427,61 @@ export default function AnunciarPage() {
 
     // Verificar limite de anúncios gratuitos se for plano gratuito
     if (plano.preco === 0) {
-      const { podeAnunciar, anunciosRestantes } = await verificarLimiteAnunciosGratuitos(user.cpf || "")
+      console.log('🔍 Verificando limite de anúncios gratuitos...')
+      setSavingStep('Verificando limite de anúncios...')
       
-      if (!podeAnunciar) {
+      try {
+        const { podeAnunciar, anunciosRestantes } = await verificarLimiteAnunciosGratuitos(user.cpf || "")
+        console.log('📊 Resultado da verificação:', { podeAnunciar, anunciosRestantes })
+        
+        if (!podeAnunciar) {
+          console.log('❌ Limite de anúncios atingido')
+          toast({
+            title: "Limite de anúncios atingido",
+            description: `Você já atingiu o limite de ${plano.limite_anuncios} anúncios gratuitos por CPF. Anúncios restantes: ${anunciosRestantes}`,
+            variant: "destructive",
+          })
+          setLoading(false)
+          return
+        }
+      } catch (error) {
+        console.error('❌ Erro ao verificar limite de anúncios:', error)
         toast({
-          title: "Limite de anúncios atingido",
-          description: `Você já atingiu o limite de ${plano.limite_anuncios} anúncios gratuitos por CPF. Anúncios restantes: ${anunciosRestantes}`,
+          title: "Erro na verificação",
+          description: "Erro ao verificar limite de anúncios. Tente novamente.",
           variant: "destructive",
         })
+        setLoading(false)
         return
       }
     }
 
     if (plano.preco > 0 && (user.saldo || 0) < plano.preco) {
+      console.log('💰 Saldo insuficiente:', {
+        saldoAtual: user.saldo,
+        precoPlano: plano.preco,
+        diferenca: (user.saldo || 0) - plano.preco
+      })
       toast({
         title: "Saldo insuficiente",
         description: `Você precisa de ${(plano.preco || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} para este plano`,
         variant: "destructive",
       })
+      setLoading(false)
       return
     }
 
     setSavingStep('Preparando dados do veículo...')
+    console.log('📋 Dados do formulário para validação:', {
+      brandId, modelId, year, selectedVersion, price, mileage, color, fuelType, transmission
+    })
 
     try {
       // Primeiro, criar o veículo no Supabase para obter o ID
       let veiculoCriado = null
       if (user?.id) {
         console.log('🚗 Salvando veículo no Supabase...')
+        console.log('👤 User ID:', user.id)
         setSavingStep('Salvando dados do veículo...')
         
         const vehicleData = {
@@ -486,6 +513,7 @@ export default function AnunciarPage() {
 
         try {
           console.log('📝 Dados do veículo a serem salvos:', vehicleData)
+          console.log('🔄 Chamando VehicleService.createVehicle...')
           veiculoCriado = await VehicleService.createVehicle(vehicleData, user.id)
           console.log('✅ Veículo salvo com sucesso:', veiculoCriado)
 
