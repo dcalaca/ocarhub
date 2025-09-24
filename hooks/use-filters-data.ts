@@ -89,6 +89,19 @@ export function useFiltersData() {
         leilaoRes.json()
       ]);
 
+      // Debug: verificar se as respostas são arrays
+      console.log('🔍 Debug - Respostas das APIs:', {
+        combustiveis: Array.isArray(combustiveis) ? combustiveis.length : typeof combustiveis,
+        cores: Array.isArray(cores) ? cores.length : typeof cores,
+        carrocerias: Array.isArray(carrocerias) ? carrocerias.length : typeof carrocerias,
+        opcionais: Array.isArray(opcionais) ? opcionais.length : typeof opcionais,
+        tiposVendedor: Array.isArray(tiposVendedor) ? tiposVendedor.length : typeof tiposVendedor,
+        caracteristicas: Array.isArray(caracteristicas) ? caracteristicas.length : typeof caracteristicas,
+        finaisPlaca: Array.isArray(finaisPlaca) ? finaisPlaca.length : typeof finaisPlaca,
+        blindagem: Array.isArray(blindagem) ? blindagem.length : typeof blindagem,
+        leilao: Array.isArray(leilao) ? leilao.length : typeof leilao
+      });
+
       setFiltersData({
         combustiveis,
         cores,

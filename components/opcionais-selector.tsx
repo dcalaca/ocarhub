@@ -42,15 +42,16 @@ export function OpcionaisSelector({
   const [selectedBlindagem, setSelectedBlindagem] = useState<string>(initialValues.blindagem || '');
   const [selectedLeilao, setSelectedLeilao] = useState<string>(initialValues.leilao || '');
 
-  // Agrupar opcionais por categoria
-  const opcionaisPorCategoria = (filtersData.opcionais || []).reduce((acc, opcional) => {
+  // Agrupar opcionais por categoria - com verificação robusta
+  const opcionaisArray = Array.isArray(filtersData.opcionais) ? filtersData.opcionais : [];
+  const opcionaisPorCategoria = opcionaisArray.reduce((acc, opcional) => {
     const categoria = opcional.categoria || 'geral';
     if (!acc[categoria]) {
       acc[categoria] = [];
     }
     acc[categoria].push(opcional);
     return acc;
-  }, {} as Record<string, typeof filtersData.opcionais>);
+  }, {} as Record<string, typeof opcionaisArray>);
 
   const handleOpcionalChange = (opcional: string, checked: boolean) => {
     const newOpcionais = checked
@@ -107,7 +108,7 @@ export function OpcionaisSelector({
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {(filtersData.carrocerias || []).map((carroceria) => (
+            {(Array.isArray(filtersData.carrocerias) ? filtersData.carrocerias : []).map((carroceria) => (
               <div key={carroceria.id} className="flex items-center space-x-2">
                 <Checkbox
                   id={`carroceria-${carroceria.id}`}
@@ -134,7 +135,7 @@ export function OpcionaisSelector({
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {(filtersData.tiposVendedor || []).map((tipo) => (
+            {(Array.isArray(filtersData.tiposVendedor) ? filtersData.tiposVendedor : []).map((tipo) => (
               <div key={tipo.id} className="flex items-center space-x-2">
                 <Checkbox
                   id={`tipo-${tipo.id}`}
@@ -161,7 +162,7 @@ export function OpcionaisSelector({
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {(filtersData.caracteristicas || []).map((caracteristica) => (
+            {(Array.isArray(filtersData.caracteristicas) ? filtersData.caracteristicas : []).map((caracteristica) => (
               <div key={caracteristica.id} className="flex items-center space-x-2">
                 <Checkbox
                   id={`caracteristica-${caracteristica.id}`}
@@ -184,7 +185,7 @@ export function OpcionaisSelector({
         </CardHeader>
         <CardContent>
           <div className="flex gap-4">
-            {(filtersData.blindagem || []).map((blindagem) => (
+            {(Array.isArray(filtersData.blindagem) ? filtersData.blindagem : []).map((blindagem) => (
               <div key={blindagem.id} className="flex items-center space-x-2">
                 <Checkbox
                   id={`blindagem-${blindagem.id}`}
@@ -211,7 +212,7 @@ export function OpcionaisSelector({
         </CardHeader>
         <CardContent>
           <div className="flex gap-4">
-            {(filtersData.leilao || []).map((leilao) => (
+            {(Array.isArray(filtersData.leilao) ? filtersData.leilao : []).map((leilao) => (
               <div key={leilao.id} className="flex items-center space-x-2">
                 <Checkbox
                   id={`leilao-${leilao.id}`}
