@@ -1185,14 +1185,26 @@ export default function AnunciarPage() {
       {showLimitModal && limitInfo && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-8 max-w-lg mx-4">
-            <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <AlertTriangle className="w-8 h-8 text-orange-600" />
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+              <div className="flex items-center gap-2 mb-2">
+                <AlertTriangle className="w-5 h-5 text-red-600" />
+                <span className="font-semibold text-red-800">Atenção!</span>
+              </div>
+              <p className="text-red-700 text-sm">
+                Você não pode criar mais anúncios gratuitos. Contrate um plano pago para continuar.
+              </p>
+            </div>
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertTriangle className="w-8 h-8 text-red-600" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2 text-center">
-              Limite de Anúncios Atingido
+              🚫 Limite de 3 Anúncios Atingido
             </h3>
-            <p className="text-gray-600 mb-6 text-center">
-              Você já atingiu o limite de <strong>{limitInfo.limite} anúncios gratuitos</strong> do plano {limitInfo.planoNome}.
+            <p className="text-gray-600 mb-4 text-center">
+              Você atingiu o limite de <strong className="text-red-600">{limitInfo.limite} anúncios gratuitos</strong> permitidos.
+            </p>
+            <p className="text-gray-700 mb-6 text-center font-medium">
+              Para continuar anunciando, você precisa <strong className="text-blue-600">contratar um plano pago</strong>.
             </p>
             
             <div className="bg-gray-50 rounded-lg p-4 mb-6">
@@ -1209,7 +1221,7 @@ export default function AnunciarPage() {
             </div>
 
             <div className="space-y-4">
-              <h4 className="font-semibold text-gray-900">Escolha um plano pago para continuar:</h4>
+              <h4 className="font-semibold text-gray-900 text-center">💳 Contrate um plano pago para continuar anunciando:</h4>
               <div className="space-y-3">
                 {plans.filter(p => p.preco > 0).map((plano) => (
                   <div 
@@ -1249,7 +1261,7 @@ export default function AnunciarPage() {
                 onClick={() => setShowLimitModal(false)}
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
               >
-                Cancelar
+                Fechar
               </button>
               <button
                 onClick={() => {
@@ -1257,9 +1269,9 @@ export default function AnunciarPage() {
                   // Scroll para a seção de planos
                   document.getElementById('planos-section')?.scrollIntoView({ behavior: 'smooth' })
                 }}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
               >
-                Ver Planos
+                💳 Ver Planos Pagos
               </button>
             </div>
           </div>
