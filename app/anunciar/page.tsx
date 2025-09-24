@@ -591,6 +591,7 @@ export default function AnunciarPage() {
           plano.preco,
           `Anúncio ${plano.nome} - ${plano.duracao_dias ? `${plano.duracao_dias} dias` : "vitalício"}`,
           `anuncio_${plano.nome.toLowerCase()}`,
+          veiculoCriado?.id // ID de referência do veículo
         )
 
         console.log('💰 Resultado do débito:', sucesso)

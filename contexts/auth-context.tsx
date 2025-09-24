@@ -89,8 +89,9 @@ interface AuthContextType {
   logout: () => Promise<void>
   refreshUserData: () => Promise<void>
   updateUser: (userData: Partial<User>) => Promise<void>
-  debitSaldo: (valor: number, descricao: string, tipo?: string) => Promise<boolean>
-  creditSaldo: (valor: number, descricao: string, tipo?: string) => Promise<boolean>
+  debitSaldo: (valor: number, descricao: string, tipo?: string, referenciaId?: string) => Promise<boolean>
+  creditSaldo: (valor: number, descricao: string, tipo?: string, referenciaId?: string) => Promise<boolean>
+  getTransacoes: () => Promise<any[]>
   isLoading: boolean
   userInteractions: {
     favoritos: string[]
@@ -722,7 +723,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   // Funções de saldo
-  const debitSaldo = async (valor: number, descricao: string, tipo: string = "gasto") => {
+  const debitSaldo = async (valor: number, descricao: string, tipo: string = "gasto", referenciaId?: string) => {
     if (!user) {
       console.error('❌ Usuário não logado')
       return false
@@ -741,27 +742,57 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log('💰 Debitando saldo:', { valor, descricao, tipo, saldoAtual: user.saldo })
       
+      const saldoAnterior = user.saldo || 0
+      const novoSaldo = saldoAnterior - valor
+
       // Atualizar saldo no Supabase
-      const { error } = await supabase
+      const { error: saldoError } = await supabase
         .from('ocar_usuarios')
         .update({ 
-          saldo: (user.saldo || 0) - valor,
+          saldo: novoSaldo,
           updated_at: new Date().toISOString()
         })
         .eq('id', user.id)
 
-      if (error) {
-        console.error('❌ Erro ao debitar saldo:', error)
+      if (saldoError) {
+        console.error('❌ Erro ao debitar saldo:', saldoError)
+        return false
+      }
+
+      // Registrar transação no extrato
+      const { error: transacaoError } = await supabase
+        .from('ocar_transacoes')
+        .insert({
+          usuario_id: user.id,
+          valor: -valor, // Valor negativo para débito
+          descricao: descricao,
+          tipo: tipo,
+          metodo_pagamento: 'saldo',
+          status: 'aprovado',
+          referencia_id: referenciaId,
+          saldo_anterior: saldoAnterior,
+          saldo_posterior: novoSaldo
+        })
+
+      if (transacaoError) {
+        console.error('❌ Erro ao registrar transação:', transacaoError)
+        // Reverter o débito do saldo se falhar ao registrar transação
+        await supabase
+          .from('ocar_usuarios')
+          .update({ 
+            saldo: saldoAnterior,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', user.id)
         return false
       }
 
       // Atualizar usuário local
-      const novoSaldo = (user.saldo || 0) - valor
       const userAtualizado = { ...user, saldo: novoSaldo }
       setUser(userAtualizado)
       safeLocalStorage.setItem("ocar-user", JSON.stringify(userAtualizado))
 
-      console.log('✅ Saldo debitado com sucesso. Novo saldo:', novoSaldo)
+      console.log('✅ Saldo debitado e transação registrada com sucesso. Novo saldo:', novoSaldo)
       return true
     } catch (error) {
       console.error('❌ Erro ao debitar saldo:', error)
@@ -769,7 +800,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const creditSaldo = async (valor: number, descricao: string, tipo: string = "deposito") => {
+  const creditSaldo = async (valor: number, descricao: string, tipo: string = "deposito", referenciaId?: string) => {
     if (!user) {
       console.error('❌ Usuário não logado')
       return false
@@ -783,31 +814,84 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log('💰 Creditando saldo:', { valor, descricao, tipo, saldoAtual: user.saldo })
       
+      const saldoAnterior = user.saldo || 0
+      const novoSaldo = saldoAnterior + valor
+
       // Atualizar saldo no Supabase
-      const { error } = await supabase
+      const { error: saldoError } = await supabase
         .from('ocar_usuarios')
         .update({ 
-          saldo: (user.saldo || 0) + valor,
+          saldo: novoSaldo,
           updated_at: new Date().toISOString()
         })
         .eq('id', user.id)
 
-      if (error) {
-        console.error('❌ Erro ao creditar saldo:', error)
+      if (saldoError) {
+        console.error('❌ Erro ao creditar saldo:', saldoError)
+        return false
+      }
+
+      // Registrar transação no extrato
+      const { error: transacaoError } = await supabase
+        .from('ocar_transacoes')
+        .insert({
+          usuario_id: user.id,
+          valor: valor, // Valor positivo para crédito
+          descricao: descricao,
+          tipo: tipo,
+          metodo_pagamento: 'pix', // Assumindo PIX para créditos
+          status: 'aprovado',
+          referencia_id: referenciaId,
+          saldo_anterior: saldoAnterior,
+          saldo_posterior: novoSaldo
+        })
+
+      if (transacaoError) {
+        console.error('❌ Erro ao registrar transação:', transacaoError)
+        // Reverter o crédito do saldo se falhar ao registrar transação
+        await supabase
+          .from('ocar_usuarios')
+          .update({ 
+            saldo: saldoAnterior,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', user.id)
         return false
       }
 
       // Atualizar usuário local
-      const novoSaldo = (user.saldo || 0) + valor
       const userAtualizado = { ...user, saldo: novoSaldo }
       setUser(userAtualizado)
       safeLocalStorage.setItem("ocar-user", JSON.stringify(userAtualizado))
 
-      console.log('✅ Saldo creditado com sucesso. Novo saldo:', novoSaldo)
+      console.log('✅ Saldo creditado e transação registrada com sucesso. Novo saldo:', novoSaldo)
       return true
     } catch (error) {
       console.error('❌ Erro ao creditar saldo:', error)
       return false
+    }
+  }
+
+  // Função para buscar transações do usuário
+  const getTransacoes = async () => {
+    if (!user) return []
+
+    try {
+      const { data, error } = await supabase
+        .from('ocar_transacoes')
+        .select('*')
+        .eq('usuario_id', user.id)
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error('❌ Erro ao buscar transações:', error)
+        return []
+      }
+
+      return data || []
+    } catch (error) {
+      console.error('❌ Erro ao buscar transações:', error)
+      return []
     }
   }
 
@@ -855,6 +939,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         updateUser,
         debitSaldo,
         creditSaldo,
+        getTransacoes,
         isLoading,
         userInteractions,
         toggleFavorito,
