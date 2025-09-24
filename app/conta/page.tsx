@@ -38,17 +38,13 @@ import {
 import { useToast } from "@/hooks/use-toast"
 
 export default function ContaPage() {
-  const { user, refreshUserData } = useAuth()
+  const { user, refreshUserData, getTransacoes } = useAuth()
   const { toast } = useToast()
   const searchParams = useSearchParams()
 
-  // Dados mock para transações e saques
-  const transactions = [
-    { id: "1", valor: 100, descricao: "Depósito via PIX", data: "2024-01-15", status: "aprovado", createdAt: new Date("2024-01-15"), tipo: "deposito", metodoPagamento: "pix" },
-    { id: "2", valor: -80, descricao: "Anúncio Destaque", data: "2024-01-14", status: "aprovado", createdAt: new Date("2024-01-14"), tipo: "gasto", metodoPagamento: "saldo" },
-    { id: "3", valor: 50, descricao: "Depósito via PIX", data: "2024-01-10", status: "aprovado", createdAt: new Date("2024-01-10"), tipo: "deposito", metodoPagamento: "pix" },
-    { id: "4", valor: -150, descricao: "Anúncio Premium", data: "2024-01-08", status: "aprovado", createdAt: new Date("2024-01-08"), tipo: "gasto", metodoPagamento: "saldo" },
-  ]
+  // Estados para transações reais
+  const [transactions, setTransactions] = useState<any[]>([])
+  const [loadingTransactions, setLoadingTransactions] = useState(true)
 
   const saqueRequests = [
     { id: "1", valor: 200, status: "pendente", data: "2024-01-16", createdAt: new Date("2024-01-16"), chavePix: "usuario@ocar.com" },
@@ -76,6 +72,30 @@ export default function ContaPage() {
   // Estados da interface
   const [mostrarSaldo, setMostrarSaldo] = useState(true)
   const [filtroTransacao, setFiltroTransacao] = useState<"todas" | "entradas" | "saidas">("todas")
+
+  // Carregar transações reais do banco
+  useEffect(() => {
+    const loadTransactions = async () => {
+      if (!user) {
+        setLoadingTransactions(false)
+        return
+      }
+
+      try {
+        console.log('🔍 Carregando transações reais do banco...')
+        const transacoes = await getTransacoes()
+        console.log('📊 Transações carregadas:', transacoes)
+        setTransactions(transacoes)
+      } catch (error) {
+        console.error('❌ Erro ao carregar transações:', error)
+        setTransactions([])
+      } finally {
+        setLoadingTransactions(false)
+      }
+    }
+
+    loadTransactions()
+  }, [user, getTransacoes])
 
   // Usar o hook do Pagarme
   const {
@@ -685,7 +705,15 @@ export default function ContaPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                {transacoesFiltradas.length === 0 ? (
+                {loadingTransactions ? (
+                  <div className="text-center py-8">
+                    <RefreshCw className="w-12 h-12 text-muted-foreground mx-auto mb-4 animate-spin" />
+                    <h3 className="text-lg font-semibold mb-2">Carregando transações...</h3>
+                    <p className="text-muted-foreground">
+                      Buscando suas movimentações no banco de dados.
+                    </p>
+                  </div>
+                ) : transacoesFiltradas.length === 0 ? (
                   <div className="text-center py-8">
                     <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                     <h3 className="text-lg font-semibold mb-2">Nenhuma movimentação</h3>
@@ -706,10 +734,10 @@ export default function ContaPage() {
                           <div>
                             <div className="font-medium">{transaction.descricao}</div>
                             <div className="text-sm text-muted-foreground">
-                              {formatDate(transaction.createdAt)}
-                              {transaction.metodoPagamento && (
+                              {formatDate(transaction.created_at || transaction.createdAt)}
+                              {transaction.metodo_pagamento && (
                                 <span className="ml-2 text-xs bg-gray-100 px-2 py-1 rounded">
-                                  {transaction.metodoPagamento.toUpperCase()}
+                                  {transaction.metodo_pagamento.toUpperCase()}
                                 </span>
                               )}
                             </div>
