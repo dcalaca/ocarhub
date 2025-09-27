@@ -242,17 +242,25 @@ export default function ContaPage() {
     setLoadingSaque(false)
   }
 
-  const formatDate = (date: Date) => {
-    if (!date || isNaN(date.getTime())) {
+  const formatDate = (date: Date | string | null | undefined) => {
+    if (!date) {
       return "Data inválida"
     }
+    
+    // Converter string para Date se necessário
+    const dateObj = typeof date === 'string' ? new Date(date) : date
+    
+    if (!dateObj || isNaN(dateObj.getTime())) {
+      return "Data inválida"
+    }
+    
     return new Intl.DateTimeFormat("pt-BR", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
-    }).format(date)
+    }).format(dateObj)
   }
 
   const getTransactionIcon = (tipo: string) => {

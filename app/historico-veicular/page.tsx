@@ -12,6 +12,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from "@/contexts/auth-context"
+import { InfosimplesService, VehicleHistoryData, MultaData, IPVAData, LicenciamentoData, RestricaoData, GravameData } from "@/lib/infosimples-service"
 import {
   Search,
   Shield,
@@ -30,54 +31,37 @@ import {
   Star,
   Info,
   Wallet,
+  MapPin,
+  Calendar,
+  CreditCard,
+  AlertCircle,
 } from "lucide-react"
 
 interface VehicleReport {
   placa: string
-  chassi: string
-  marca: string
-  modelo: string
-  ano: number
-  cor: string
+  chassi?: string
+  marca?: string
+  modelo?: string
+  ano?: string
+  cor?: string
   status: "limpo" | "alerta" | "problema"
   score: number
 
   // Dados básicos
-  proprietarios: number
-  categoria: string
-  combustivel: string
-  renavam: string
+  proprietarios?: number
+  categoria?: string
+  combustivel?: string
+  renavam?: string
+  municipio?: string
+  uf?: string
+  situacao?: string
 
-  // Histórico de problemas
-  multas: {
-    total: number
-    valor: number
-    pendentes: number
-  }
-
-  sinistros: {
-    total: number
-    tipos: string[]
-    gravidade: "leve" | "moderada" | "grave" | "total"
-  }
-
-  leiloes: {
-    participou: boolean
-    quantidade: number
-    motivos: string[]
-  }
-
-  recalls: {
-    total: number
-    pendentes: number
-    campanhas: string[]
-  }
-
-  financiamento: {
-    ativo: boolean
-    banco: string
-    situacao: string
-  }
+  // Dados da Infosimples
+  multas: MultaData[]
+  ipva: IPVAData[]
+  licenciamento: LicenciamentoData[]
+  restricoes: RestricaoData[]
+  gravames: GravameData[]
 
   // Análise AI
   analiseIA: {
@@ -110,16 +94,23 @@ interface VehicleReport {
       altura: string
     }
   }
+
+  // Metadados da consulta
+  custo_total: number
+  erros: string[]
+  consultado_em: string
 }
 
 export default function HistoricoVehicularPage() {
   const searchParams = useSearchParams()
   const { user, debitSaldo } = useAuth()
   const [placa, setPlaca] = useState("")
+  const [estado, setEstado] = useState("")
   const [loading, setLoading] = useState(false)
   const [report, setReport] = useState<VehicleReport | null>(null)
   const [error, setError] = useState("")
   const [activeTab, setActiveTab] = useState("overview")
+  const [estadosDisponiveis] = useState(InfosimplesService.getEstadosDisponiveis())
 
   useEffect(() => {
     // Verificar se há uma placa na URL
@@ -134,8 +125,10 @@ export default function HistoricoVehicularPage() {
   const handleSearch = async (placaParam?: string) => {
     const placaToSearch = placaParam || placa
 
-    if (!placaToSearch || placaToSearch.length < 7) {
-      setError("Digite uma placa válida")
+    // Validar placa
+    const validacaoPlaca = InfosimplesService.validarPlaca(placaToSearch)
+    if (!validacaoPlaca.valida) {
+      setError(validacaoPlaca.erro || "Digite uma placa válida")
       return
     }
 
@@ -157,109 +150,177 @@ export default function HistoricoVehicularPage() {
     setLoading(true)
     setError("")
 
-    // Se não veio de um card, debitar o saldo
-    if (!placaParam) {
-      const sucesso = await debitSaldo(custoConsulta, `Consulta histórico veicular - ${placaToSearch}`)
-      if (!sucesso) {
-        setError("Erro ao processar pagamento")
+    try {
+      // Consultar dados reais da Infosimples PRIMEIRO
+      const dadosCompletos = await InfosimplesService.consultarHistoricoCompleto(
+        validacaoPlaca.formatada!,
+        estado || undefined
+      )
+
+      // Verificar se é erro de saldo na Infosimples
+      if (dadosCompletos.sem_saldo_infosimples) {
+        setError("Sem saldo na Infosimples para realizar a consulta. Entre em contato com o suporte para adicionar créditos.")
         setLoading(false)
         return
       }
-    }
 
-    // Simular consulta com AI mais realista
-    setTimeout(() => {
-      const mockReport: VehicleReport = {
-        placa: placaToSearch.toUpperCase(),
-        chassi: "9BWZZZ377VT004251",
-        marca: "Volkswagen",
-        modelo: "Golf TSI",
-        ano: 2020,
-        cor: "Branco",
-        status: Math.random() > 0.7 ? "problema" : Math.random() > 0.4 ? "alerta" : "limpo",
-        score: Math.floor(Math.random() * 40) + 60,
+      // Só debitar o saldo APÓS a consulta ser bem-sucedida E se não for erro de saldo
+      if (!placaParam && dadosCompletos.custo_total > 0) {
+        const sucesso = await debitSaldo(custoConsulta, `Consulta histórico veicular - ${placaToSearch}`)
+        if (!sucesso) {
+          setError("Erro ao processar pagamento")
+          setLoading(false)
+          return
+        }
+      }
 
-        proprietarios: Math.floor(Math.random() * 3) + 1,
-        categoria: "Hatch",
-        combustivel: "Flex",
-        renavam: "12345678901",
+      // Verificar se temos dados para processar
+      if (!dadosCompletos.veiculo && dadosCompletos.multas.length === 0 && dadosCompletos.ipva.length === 0) {
+        setError("Nenhum dado encontrado para esta placa. Verifique se a placa está correta ou se há saldo disponível na Infosimples.")
+        setLoading(false)
+        return
+      }
 
-        multas: {
-          total: Math.floor(Math.random() * 5),
-          valor: Math.floor(Math.random() * 1000) + 200,
-          pendentes: Math.floor(Math.random() * 2),
-        },
+      // Calcular score baseado nos dados reais
+      let score = 100
+      let pontosAtencao: string[] = []
+      let pontosFavoraveis: string[] = []
 
-        sinistros: {
-          total: Math.floor(Math.random() * 3),
-          tipos: ["Colisão traseira", "Alagamento"],
-          gravidade: Math.random() > 0.8 ? "grave" : Math.random() > 0.5 ? "moderada" : "leve",
-        },
+      // Penalizar por multas
+      if (dadosCompletos.multas.length > 0) {
+        score -= dadosCompletos.multas.length * 5
+        pontosAtencao.push(`${dadosCompletos.multas.length} multa(s) registrada(s)`)
+      } else {
+        pontosFavoraveis.push("Nenhuma multa registrada")
+      }
 
-        leiloes: {
-          participou: Math.random() > 0.8,
-          quantidade: Math.floor(Math.random() * 2),
-          motivos: ["Recuperação de seguradora"],
-        },
+      // Penalizar por restrições
+      if (dadosCompletos.restricoes.length > 0) {
+        score -= dadosCompletos.restricoes.length * 10
+        pontosAtencao.push(`${dadosCompletos.restricoes.length} restrição(ões) ativa(s)`)
+      } else {
+        pontosFavoraveis.push("Nenhuma restrição ativa")
+      }
 
-        recalls: {
-          total: Math.floor(Math.random() * 3),
-          pendentes: Math.floor(Math.random() * 2),
-          campanhas: ["Airbag Takata", "Sistema de freios"],
-        },
+      // Penalizar por gravames
+      if (dadosCompletos.gravames.length > 0) {
+        score -= dadosCompletos.gravames.length * 8
+        pontosAtencao.push(`${dadosCompletos.gravames.length} gravame(s) ativo(s)`)
+      } else {
+        pontosFavoraveis.push("Nenhum gravame ativo")
+      }
 
-        financiamento: {
-          ativo: Math.random() > 0.6,
-          banco: "Banco do Brasil",
-          situacao: "Regular",
-        },
+      // Verificar IPVA em dia
+      const ipvaVencido = dadosCompletos.ipva.some(ipva => 
+        ipva.situacao && ipva.situacao.toLowerCase().includes('vencido')
+      )
+      if (ipvaVencido) {
+        score -= 15
+        pontosAtencao.push("IPVA vencido")
+      } else if (dadosCompletos.ipva.length > 0) {
+        pontosFavoraveis.push("IPVA em dia")
+      }
+
+      // Verificar licenciamento
+      const licenciamentoVencido = dadosCompletos.licenciamento.some(lic => 
+        lic.situacao && lic.situacao.toLowerCase().includes('vencido')
+      )
+      if (licenciamentoVencido) {
+        score -= 20
+        pontosAtencao.push("Licenciamento vencido")
+      } else if (dadosCompletos.licenciamento.length > 0) {
+        pontosFavoraveis.push("Licenciamento em dia")
+      }
+
+      // Garantir que o score não seja negativo
+      score = Math.max(0, score)
+
+      // Determinar status
+      let status: "limpo" | "alerta" | "problema" = "limpo"
+      if (score < 50) {
+        status = "problema"
+      } else if (score < 80) {
+        status = "alerta"
+      }
+
+      // Determinar recomendação
+      let recomendacao: "comprar" | "negociar" | "evitar" = "comprar"
+      if (score < 30) {
+        recomendacao = "evitar"
+      } else if (score < 70) {
+        recomendacao = "negociar"
+      }
+
+      // Calcular valores estimados
+      const valorMultas = dadosCompletos.multas.reduce((total, multa) => total + (multa.valor || 0), 0)
+      const valorIPVA = dadosCompletos.ipva.reduce((total, ipva) => total + (ipva.valor || 0), 0)
+
+      const report: VehicleReport = {
+        placa: validacaoPlaca.formatada!,
+        chassi: dadosCompletos.veiculo?.chassi,
+        marca: dadosCompletos.veiculo?.marca,
+        modelo: dadosCompletos.veiculo?.modelo,
+        ano: dadosCompletos.veiculo?.ano,
+        cor: dadosCompletos.veiculo?.cor,
+        status,
+        score,
+
+        proprietarios: 1, // Não disponível na API
+        categoria: "Não informado",
+        combustivel: "Não informado",
+        renavam: dadosCompletos.veiculo?.renavam,
+        municipio: dadosCompletos.veiculo?.municipio,
+        uf: dadosCompletos.veiculo?.uf,
+        situacao: dadosCompletos.veiculo?.situacao,
+
+        multas: dadosCompletos.multas,
+        ipva: dadosCompletos.ipva,
+        licenciamento: dadosCompletos.licenciamento,
+        restricoes: dadosCompletos.restricoes,
+        gravames: dadosCompletos.gravames,
 
         analiseIA: {
-          recomendacao: Math.random() > 0.7 ? "comprar" : Math.random() > 0.4 ? "negociar" : "evitar",
-          pontosFavoraveis: [
-            "Baixa quilometragem para o ano",
-            "Manutenções em dia na concessionária",
-            "Único proprietário desde novo",
-            "Sem histórico de sinistros graves",
-            "Modelo com boa valorização no mercado",
-            "Peças de reposição facilmente encontradas",
-          ],
-          pontosAtencao: [
-            "Multas pendentes de trânsito",
-            "Recall não executado do airbag",
-            "Valor 8% acima da tabela FIPE",
-            "Histórico de manutenção irregular nos últimos 6 meses",
-          ],
+          recomendacao,
+          pontosFavoraveis,
+          pontosAtencao,
           precoSugerido: {
-            min: 45000,
-            max: 52000,
+            min: 30000,
+            max: 60000,
           },
-          confiabilidade: Math.floor(Math.random() * 30) + 70,
-          riscoInvestimento: Math.random() > 0.6 ? "baixo" : Math.random() > 0.3 ? "medio" : "alto",
-          valorMercado: 48500,
+          confiabilidade: Math.max(50, score),
+          riscoInvestimento: score < 40 ? "alto" : score < 70 ? "medio" : "baixo",
+          valorMercado: 45000,
           depreciacao: 12.5,
-          custoManutencao: Math.random() > 0.5 ? "baixo" : "medio",
+          custoManutencao: "medio",
         },
 
         especificacoes: {
-          motor: "1.4 TSI Turbo",
-          potencia: "150 cv",
-          torque: "25,5 kgfm",
+          motor: "Não informado",
+          potencia: "Não informado",
+          torque: "Não informado",
           consumo: {
-            cidade: "11,2 km/l",
-            estrada: "14,8 km/l",
+            cidade: "Não informado",
+            estrada: "Não informado",
           },
           dimensoes: {
-            comprimento: "4,25 m",
-            largura: "1,79 m",
-            altura: "1,45 m",
+            comprimento: "Não informado",
+            largura: "Não informado",
+            altura: "Não informado",
           },
         },
+
+        custo_total: dadosCompletos.custo_total,
+        erros: dadosCompletos.erros,
+        consultado_em: new Date().toISOString(),
       }
 
-      setReport(mockReport)
+      setReport(report)
+    } catch (error) {
+      console.error('Erro na consulta:', error)
+      setError("Erro ao consultar dados do veículo. Tente novamente.")
+    } finally {
       setLoading(false)
-    }, 3000)
+    }
   }
 
   const getStatusColor = (status: string) => {
@@ -381,38 +442,58 @@ export default function HistoricoVehicularPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <Label htmlFor="placa" className="text-sm font-medium text-white">
-                  Placa do Veículo
-                </Label>
-                <Input
-                  id="placa"
-                  placeholder="ABC-1234 ou ABC1D23"
-                  value={placa}
-                  onChange={(e) => setPlaca(e.target.value.toUpperCase())}
-                  className="uppercase mt-1"
-                  maxLength={8}
-                />
-              </div>
-              <div className="flex items-end">
-                <Button
-                  onClick={() => handleSearch()}
-                  disabled={loading || user.saldo < 25}
-                  className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
-                >
-                  {loading ? (
-                    <>
-                      <Clock className="w-4 h-4 mr-2 animate-spin" />
-                      Analisando...
-                    </>
-                  ) : (
-                    <>
-                      <Search className="w-4 h-4 mr-2" />
-                      Consultar (R$ 25,00)
-                    </>
-                  )}
-                </Button>
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-1">
+                  <Label htmlFor="placa" className="text-sm font-medium text-white">
+                    Placa do Veículo
+                  </Label>
+                  <Input
+                    id="placa"
+                    placeholder="ABC-1234 ou ABC1D23"
+                    value={placa}
+                    onChange={(e) => setPlaca(e.target.value.toUpperCase())}
+                    className="uppercase mt-1"
+                    maxLength={8}
+                  />
+                </div>
+                <div className="flex-1">
+                  <Label htmlFor="estado" className="text-sm font-medium text-white">
+                    Estado (Opcional)
+                  </Label>
+                  <select
+                    id="estado"
+                    value={estado}
+                    onChange={(e) => setEstado(e.target.value)}
+                    className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900"
+                  >
+                    <option value="">Selecione o estado</option>
+                    {estadosDisponiveis.map((est) => (
+                      <option key={est.sigla} value={est.sigla}>
+                        {est.sigla} - {est.nome}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex items-end">
+                  <Button
+                    onClick={() => handleSearch()}
+                    disabled={loading || user.saldo < 25}
+                    className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
+                  >
+                    {loading ? (
+                      <>
+                        <Clock className="w-4 h-4 mr-2 animate-spin" />
+                        Analisando...
+                      </>
+                    ) : (
+                      <>
+                        <Search className="w-4 h-4 mr-2" />
+                        Consultar (R$ 25,00)
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
             </div>
 
@@ -494,37 +575,42 @@ export default function HistoricoVehicularPage() {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
                   <div className="col-span-2 sm:col-span-1">
                     <h3 className="font-semibold text-base sm:text-lg mb-2">
-                      {report.marca} {report.modelo}
+                      {report.marca || 'Não informado'} {report.modelo || 'Não informado'}
                     </h3>
                     <div className="space-y-1 text-xs sm:text-sm text-muted-foreground">
                       <p>
                         <strong>Placa:</strong> {report.placa}
                       </p>
                       <p>
-                        <strong>Ano:</strong> {report.ano}
+                        <strong>Ano:</strong> {report.ano || 'Não informado'}
                       </p>
                       <p>
-                        <strong>Cor:</strong> {report.cor}
+                        <strong>Cor:</strong> {report.cor || 'Não informado'}
                       </p>
                       <p>
-                        <strong>Proprietários:</strong> {report.proprietarios}
+                        <strong>RENAVAM:</strong> {report.renavam || 'Não informado'}
                       </p>
+                      {report.municipio && (
+                        <p>
+                          <strong>Município:</strong> {report.municipio} - {report.uf}
+                        </p>
+                      )}
                     </div>
                   </div>
 
                   <div className="text-center">
-                    <div className="text-2xl sm:text-3xl font-bold text-yellow-600">{report.multas.total}</div>
+                    <div className="text-2xl sm:text-3xl font-bold text-yellow-600">{report.multas.length}</div>
                     <div className="text-xs sm:text-sm text-muted-foreground">Multas</div>
                   </div>
 
                   <div className="text-center">
-                    <div className="text-2xl sm:text-3xl font-bold text-red-600">{report.sinistros.total}</div>
-                    <div className="text-xs sm:text-sm text-muted-foreground">Sinistros</div>
+                    <div className="text-2xl sm:text-3xl font-bold text-red-600">{report.restricoes.length}</div>
+                    <div className="text-xs sm:text-sm text-muted-foreground">Restrições</div>
                   </div>
 
                   <div className="text-center">
-                    <div className="text-2xl sm:text-3xl font-bold text-blue-600">{report.recalls.total}</div>
-                    <div className="text-xs sm:text-sm text-muted-foreground">Recalls</div>
+                    <div className="text-2xl sm:text-3xl font-bold text-blue-600">{report.gravames.length}</div>
+                    <div className="text-xs sm:text-sm text-muted-foreground">Gravames</div>
                   </div>
                 </div>
               </CardContent>
@@ -671,88 +757,243 @@ export default function HistoricoVehicularPage() {
                     <CardHeader className="pb-3">
                       <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                         <AlertTriangle className="w-4 h-4 text-yellow-600" />
-                        Multas
+                        Multas ({report.multas.length})
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-3">
                         <div className="flex justify-between text-sm">
                           <span>Total de multas</span>
-                          <span className="font-semibold">{report.multas.total}</span>
+                          <span className="font-semibold">{report.multas.length}</span>
                         </div>
                         <div className="flex justify-between text-sm">
                           <span>Valor total</span>
-                          <span className="font-semibold">{formatPrice(report.multas.valor)}</span>
+                          <span className="font-semibold">
+                            {formatPrice(report.multas.reduce((total, multa) => total + (multa.valor || 0), 0))}
+                          </span>
                         </div>
-                        <div className="flex justify-between text-sm">
-                          <span>Pendentes</span>
-                          <span className="font-semibold text-red-600">{report.multas.pendentes}</span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Sinistros */}
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                        <XCircle className="w-4 h-4 text-red-600" />
-                        Sinistros
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        <div className="flex justify-between text-sm">
-                          <span>Total</span>
-                          <span className="font-semibold">{report.sinistros.total}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span>Gravidade</span>
-                          <Badge variant={report.sinistros.gravidade === "grave" ? "destructive" : "secondary"}>
-                            {report.sinistros.gravidade}
-                          </Badge>
-                        </div>
-                        {report.sinistros.tipos.length > 0 && (
-                          <div>
-                            <span className="text-xs text-muted-foreground">Tipos:</span>
-                            <ul className="text-xs mt-1 space-y-1">
-                              {report.sinistros.tipos.map((tipo, i) => (
-                                <li key={i}>• {tipo}</li>
+                        {report.multas.length > 0 && (
+                          <div className="mt-3">
+                            <span className="text-xs text-muted-foreground">Detalhes:</span>
+                            <div className="mt-2 space-y-2 max-h-32 overflow-y-auto">
+                              {report.multas.slice(0, 3).map((multa, i) => (
+                                <div key={i} className="text-xs p-2 bg-yellow-50 rounded">
+                                  <div className="font-medium">{multa.descricao || 'Multa registrada'}</div>
+                                  <div className="text-muted-foreground">
+                                    {multa.data_infracao && `Data: ${multa.data_infracao}`}
+                                    {multa.valor && ` | Valor: ${formatPrice(multa.valor)}`}
+                                  </div>
+                                </div>
                               ))}
-                            </ul>
+                              {report.multas.length > 3 && (
+                                <div className="text-xs text-muted-foreground">
+                                  +{report.multas.length - 3} multa(s) adicional(is)
+                                </div>
+                              )}
+                            </div>
                           </div>
                         )}
                       </div>
                     </CardContent>
                   </Card>
 
-                  {/* Financiamento */}
+                  {/* IPVA */}
                   <Card>
                     <CardHeader className="pb-3">
                       <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                        <DollarSign className="w-4 h-4 text-green-600" />
-                        Financiamento
+                        <CreditCard className="w-4 h-4 text-blue-600" />
+                        IPVA ({report.ipva.length})
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-3">
                         <div className="flex justify-between text-sm">
-                          <span>Status</span>
-                          <Badge variant={report.financiamento.ativo ? "default" : "secondary"}>
-                            {report.financiamento.ativo ? "Ativo" : "Quitado"}
-                          </Badge>
+                          <span>Exercícios</span>
+                          <span className="font-semibold">{report.ipva.length}</span>
                         </div>
-                        {report.financiamento.ativo && (
-                          <>
-                            <div className="flex justify-between text-sm">
-                              <span>Banco</span>
-                              <span className="font-semibold text-xs">{report.financiamento.banco}</span>
+                        <div className="flex justify-between text-sm">
+                          <span>Valor total</span>
+                          <span className="font-semibold">
+                            {formatPrice(report.ipva.reduce((total, ipva) => total + (ipva.valor || 0), 0))}
+                          </span>
+                        </div>
+                        {report.ipva.length > 0 && (
+                          <div className="mt-3">
+                            <span className="text-xs text-muted-foreground">Detalhes:</span>
+                            <div className="mt-2 space-y-2 max-h-32 overflow-y-auto">
+                              {report.ipva.slice(0, 3).map((ipva, i) => (
+                                <div key={i} className="text-xs p-2 bg-blue-50 rounded">
+                                  <div className="font-medium">Ano {ipva.ano || 'N/A'}</div>
+                                  <div className="text-muted-foreground">
+                                    {ipva.situacao && `Status: ${ipva.situacao}`}
+                                    {ipva.valor && ` | Valor: ${formatPrice(ipva.valor)}`}
+                                  </div>
+                                </div>
+                              ))}
+                              {report.ipva.length > 3 && (
+                                <div className="text-xs text-muted-foreground">
+                                  +{report.ipva.length - 3} exercício(s) adicional(is)
+                                </div>
+                              )}
                             </div>
-                            <div className="flex justify-between text-sm">
-                              <span>Situação</span>
-                              <span className="font-semibold text-xs">{report.financiamento.situacao}</span>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Licenciamento */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                        <Calendar className="w-4 h-4 text-green-600" />
+                        Licenciamento ({report.licenciamento.length})
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="flex justify-between text-sm">
+                          <span>Exercícios</span>
+                          <span className="font-semibold">{report.licenciamento.length}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span>Valor total</span>
+                          <span className="font-semibold">
+                            {formatPrice(report.licenciamento.reduce((total, lic) => total + (lic.valor || 0), 0))}
+                          </span>
+                        </div>
+                        {report.licenciamento.length > 0 && (
+                          <div className="mt-3">
+                            <span className="text-xs text-muted-foreground">Detalhes:</span>
+                            <div className="mt-2 space-y-2 max-h-32 overflow-y-auto">
+                              {report.licenciamento.slice(0, 3).map((lic, i) => (
+                                <div key={i} className="text-xs p-2 bg-green-50 rounded">
+                                  <div className="font-medium">Ano {lic.ano || 'N/A'}</div>
+                                  <div className="text-muted-foreground">
+                                    {lic.situacao && `Status: ${lic.situacao}`}
+                                    {lic.valor && ` | Valor: ${formatPrice(lic.valor)}`}
+                                  </div>
+                                </div>
+                              ))}
+                              {report.licenciamento.length > 3 && (
+                                <div className="text-xs text-muted-foreground">
+                                  +{report.licenciamento.length - 3} exercício(s) adicional(is)
+                                </div>
+                              )}
                             </div>
-                          </>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Restrições */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                        <AlertCircle className="w-4 h-4 text-red-600" />
+                        Restrições ({report.restricoes.length})
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="flex justify-between text-sm">
+                          <span>Total</span>
+                          <span className="font-semibold">{report.restricoes.length}</span>
+                        </div>
+                        {report.restricoes.length > 0 && (
+                          <div className="mt-3">
+                            <span className="text-xs text-muted-foreground">Detalhes:</span>
+                            <div className="mt-2 space-y-2 max-h-32 overflow-y-auto">
+                              {report.restricoes.slice(0, 3).map((restricao, i) => (
+                                <div key={i} className="text-xs p-2 bg-red-50 rounded">
+                                  <div className="font-medium">{restricao.tipo || 'Restrição'}</div>
+                                  <div className="text-muted-foreground">
+                                    {restricao.descricao && `Descrição: ${restricao.descricao}`}
+                                    {restricao.orgao && ` | Órgão: ${restricao.orgao}`}
+                                  </div>
+                                </div>
+                              ))}
+                              {report.restricoes.length > 3 && (
+                                <div className="text-xs text-muted-foreground">
+                                  +{report.restricoes.length - 3} restrição(ões) adicional(is)
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Gravames */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                        <MapPin className="w-4 h-4 text-purple-600" />
+                        Gravames ({report.gravames.length})
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="flex justify-between text-sm">
+                          <span>Total</span>
+                          <span className="font-semibold">{report.gravames.length}</span>
+                        </div>
+                        {report.gravames.length > 0 && (
+                          <div className="mt-3">
+                            <span className="text-xs text-muted-foreground">Detalhes:</span>
+                            <div className="mt-2 space-y-2 max-h-32 overflow-y-auto">
+                              {report.gravames.slice(0, 3).map((gravame, i) => (
+                                <div key={i} className="text-xs p-2 bg-purple-50 rounded">
+                                  <div className="font-medium">{gravame.credor || 'Gravame'}</div>
+                                  <div className="text-muted-foreground">
+                                    {gravame.situacao && `Status: ${gravame.situacao}`}
+                                    {gravame.valor && ` | Valor: ${formatPrice(gravame.valor)}`}
+                                  </div>
+                                </div>
+                              ))}
+                              {report.gravames.length > 3 && (
+                                <div className="text-xs text-muted-foreground">
+                                  +{report.gravames.length - 3} gravame(s) adicional(is)
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Informações da Consulta */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                        <Info className="w-4 h-4 text-gray-600" />
+                        Informações da Consulta
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="flex justify-between text-sm">
+                          <span>Custo total</span>
+                          <span className="font-semibold">{formatPrice(report.custo_total)}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span>Consultado em</span>
+                          <span className="font-semibold text-xs">
+                            {new Date(report.consultado_em).toLocaleString('pt-BR')}
+                          </span>
+                        </div>
+                        {report.erros.length > 0 && (
+                          <div className="mt-3">
+                            <span className="text-xs text-red-600">Erros na consulta:</span>
+                            <div className="mt-1 space-y-1">
+                              {report.erros.map((erro, i) => (
+                                <div key={i} className="text-xs text-red-600">• {erro}</div>
+                              ))}
+                            </div>
+                          </div>
                         )}
                       </div>
                     </CardContent>
@@ -885,3 +1126,4 @@ export default function HistoricoVehicularPage() {
     </div>
   )
 }
+

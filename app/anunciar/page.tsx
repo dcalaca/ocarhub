@@ -155,6 +155,14 @@ export default function AnunciarPage() {
     loadPlans()
   }, [toast, planoSelecionado])
 
+  // Atualizar saldo ao carregar a página
+  useEffect(() => {
+    if (user) {
+      console.log('🔄 Atualizando saldo na página de anúncios...')
+      refreshSaldo()
+    }
+  }, [user, refreshSaldo])
+
   // Função para verificar limite de anúncios gratuitos por CPF
   const verificarLimiteAnunciosGratuitos = async (cpf: string): Promise<{ podeAnunciar: boolean; anunciosRestantes: number }> => {
     try {
@@ -481,6 +489,7 @@ export default function AnunciarPage() {
       }
     }
 
+    // Validar saldo ANTES de criar o veículo
     if (plano.preco > 0 && (user.saldo || 0) < plano.preco) {
       console.log('💰 Saldo insuficiente:', {
         saldoAtual: user.saldo,
@@ -489,7 +498,7 @@ export default function AnunciarPage() {
       })
       toast({
         title: "Saldo insuficiente",
-        description: `Você precisa de ${(plano.preco || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} para este plano`,
+        description: `Você precisa de ${(plano.preco || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} para este plano. Seu saldo atual é de ${(user.saldo || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`,
         variant: "destructive",
       })
       setLoading(false)
@@ -578,6 +587,15 @@ export default function AnunciarPage() {
       }
 
       // Só debitar o saldo se o veículo foi criado com sucesso
+      console.log('🔍 Verificando condições para cobrança:', {
+        'plano.preco > 0': plano.preco > 0,
+        'plano.preco': plano.preco,
+        'veiculoCriado': !!veiculoCriado,
+        'veiculoCriado.id': veiculoCriado?.id,
+        'user.saldo': user?.saldo,
+        'user.id': user?.id
+      })
+      
       if (plano.preco > 0 && veiculoCriado) {
         console.log('💰 Tentando debitar saldo:', {
           valor: plano.preco,
@@ -605,6 +623,12 @@ export default function AnunciarPage() {
           setLoading(false)
           return
         }
+      } else {
+        console.log('⚠️ COBRANÇA NÃO REALIZADA:', {
+          motivo: plano.preco <= 0 ? 'Plano gratuito' : 'Veículo não criado',
+          planoPreco: plano.preco,
+          veiculoCriado: !!veiculoCriado
+        })
       }
 
       // Sucesso - mostrar toast e redirecionar
@@ -1204,34 +1228,34 @@ export default function AnunciarPage() {
 
       {/* Modal de Limite de Anúncios */}
       {showLimitModal && limitInfo && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 max-w-lg mx-4">
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-4 sm:p-6 lg:p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
               <div className="flex items-center gap-2 mb-2">
-                <AlertTriangle className="w-5 h-5 text-red-600" />
-                <span className="font-semibold text-red-800">Atenção!</span>
+                <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" />
+                <span className="font-semibold text-red-800 text-sm sm:text-base">Atenção!</span>
               </div>
-              <p className="text-red-700 text-sm">
+              <p className="text-red-700 text-xs sm:text-sm">
                 Você não pode criar mais anúncios gratuitos. Contrate um plano pago para continuar.
               </p>
             </div>
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <AlertTriangle className="w-8 h-8 text-red-600" />
+            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+              <AlertTriangle className="w-6 h-6 sm:w-8 sm:h-8 text-red-600" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2 text-center">
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 text-center">
               🚫 Limite de 3 Anúncios Atingido
             </h3>
-            <p className="text-gray-600 mb-4 text-center">
+            <p className="text-gray-600 mb-3 sm:mb-4 text-center text-sm sm:text-base">
               Você atingiu o limite de <strong className="text-red-600">{limitInfo.limite} anúncios gratuitos</strong> permitidos.
             </p>
-            <p className="text-gray-700 mb-6 text-center font-medium">
+            <p className="text-gray-700 mb-4 sm:mb-6 text-center font-medium text-sm sm:text-base">
               Para continuar anunciando, você precisa <strong className="text-blue-600">contratar um plano pago</strong>.
             </p>
             
-            <div className="bg-gray-50 rounded-lg p-4 mb-6">
+            <div className="bg-gray-50 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
               <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium text-gray-700">Anúncios restantes:</span>
-                <span className="text-sm font-bold text-red-600">{limitInfo.anunciosRestantes}</span>
+                <span className="text-xs sm:text-sm font-medium text-gray-700">Anúncios restantes:</span>
+                <span className="text-xs sm:text-sm font-bold text-red-600">{limitInfo.anunciosRestantes}</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div 
@@ -1241,28 +1265,28 @@ export default function AnunciarPage() {
               </div>
             </div>
 
-            <div className="space-y-4">
-              <h4 className="font-semibold text-gray-900 text-center">💳 Contrate um plano pago para continuar anunciando:</h4>
-              <div className="space-y-3">
+            <div className="space-y-3 sm:space-y-4">
+              <h4 className="font-semibold text-gray-900 text-center text-sm sm:text-base">💳 Contrate um plano pago para continuar anunciando:</h4>
+              <div className="space-y-2 sm:space-y-3">
                 {plans.filter(p => p.preco > 0).map((plano) => (
                   <div 
                     key={plano.id}
-                    className="border rounded-lg p-4 hover:border-blue-500 cursor-pointer transition-colors"
+                    className="border rounded-lg p-3 sm:p-4 hover:border-blue-500 cursor-pointer transition-colors"
                     onClick={() => {
                       setPlanoSelecionado(plano.id)
                       setShowLimitModal(false)
                     }}
                   >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h5 className="font-semibold text-gray-900">{plano.nome}</h5>
-                        <p className="text-sm text-gray-600">{plano.descricao}</p>
+                    <div className="flex justify-between items-start gap-2">
+                      <div className="flex-1 min-w-0">
+                        <h5 className="font-semibold text-gray-900 text-sm sm:text-base">{plano.nome}</h5>
+                        <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">{plano.descricao}</p>
                         <p className="text-xs text-gray-500 mt-1">
                           {plano.limite_anuncios} anúncios • {plano.duracao_dias ? `${plano.duracao_dias} dias` : 'Vitalício'}
                         </p>
                       </div>
-                      <div className="text-right">
-                        <p className="text-lg font-bold text-blue-600">
+                      <div className="text-right flex-shrink-0">
+                        <p className="text-base sm:text-lg font-bold text-blue-600">
                           {plano.preco.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
                         </p>
                         {plano.destaque && (
@@ -1277,10 +1301,10 @@ export default function AnunciarPage() {
               </div>
             </div>
 
-            <div className="flex gap-3 mt-6">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4 sm:mt-6">
               <button
                 onClick={() => setShowLimitModal(false)}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                className="flex-1 px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm sm:text-base"
               >
                 Fechar
               </button>
@@ -1290,7 +1314,7 @@ export default function AnunciarPage() {
                   // Scroll para a seção de planos
                   document.getElementById('planos-section')?.scrollIntoView({ behavior: 'smooth' })
                 }}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                className="flex-1 px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm sm:text-base"
               >
                 💳 Ver Planos Pagos
               </button>

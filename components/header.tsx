@@ -64,7 +64,7 @@ export function Header() {
             <Link href="/conta" className="hidden sm:block">
               <div className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-colors duration-200 font-poppins">
                 <Wallet className="w-4 h-4" />
-                <span>R$ 550,00</span>
+                <span>R$ {(user.saldo || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
             </Link>
           )}
@@ -239,6 +239,12 @@ export function Header() {
                     <Link href="/historico-veicular" className="flex items-center">
                       <History className="mr-2 h-4 w-4" />
                       <span>Histórico Veicular</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin/saldo-teste" className="flex items-center">
+                      <Calculator className="mr-2 h-4 w-4" />
+                      <span>Saldo de Teste</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
