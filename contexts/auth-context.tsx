@@ -68,6 +68,7 @@ interface User {
 interface AuthContextType {
   user: User | null
   login: (email: string, password: string) => Promise<void>
+  loginWithGoogle: () => Promise<void>
   register: (userData: {
     email: string
     password: string
@@ -550,6 +551,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const loginWithGoogle = async () => {
+    setIsLoading(true)
+    try {
+      console.log('🔐 Tentando login com Google...')
+      
+      // Login com Google no Supabase
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`
+        }
+      })
+
+      if (error) {
+        console.error('❌ Erro no login com Google:', error)
+        throw error
+      }
+
+      console.log('✅ Redirecionamento para Google iniciado')
+    } catch (error) {
+      console.error('Erro no login com Google:', error)
+      throw error
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const register = async (userData: {
     email: string
     password: string
@@ -1002,6 +1030,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       value={{
         user,
         login,
+        loginWithGoogle,
         register,
         logout,
         refreshUserData,
