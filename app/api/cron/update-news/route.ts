@@ -1,7 +1,16 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 
-const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+if (!supabaseUrl || !supabaseServiceKey) {
+  console.warn("Supabase não configurado. Algumas funcionalidades podem não funcionar.")
+}
+
+const supabase = supabaseUrl && supabaseServiceKey 
+  ? createClient(supabaseUrl, supabaseServiceKey)
+  : null
 
 interface RSSItem {
   title: string
@@ -145,6 +154,16 @@ function extractSource(link: string): string {
 export async function GET() {
   try {
     console.log("🔄 Iniciando atualização de notícias...")
+
+    if (!supabase) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Supabase não configurado",
+        },
+        { status: 500 },
+      )
+    }
 
     // URLs de RSS feeds reais de fontes brasileiras
     const rssSources = [
