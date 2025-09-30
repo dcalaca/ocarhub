@@ -1,7 +1,16 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 
-const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+if (!supabaseUrl || !supabaseServiceKey) {
+  console.warn("Supabase não configurado. Algumas funcionalidades podem não funcionar.")
+}
+
+const supabase = supabaseUrl && supabaseServiceKey 
+  ? createClient(supabaseUrl, supabaseServiceKey)
+  : null
 
 // Função para gerar imagem baseada no tema do artigo
 function getArticleImage(category: string, title: string): string {
@@ -339,6 +348,16 @@ A aposentadoria confortável é resultado de planejamento e disciplina ao longo 
 export async function GET() {
   try {
     console.log("📚 Iniciando geração de artigos educacionais...")
+
+    if (!supabase) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Supabase não configurado",
+        },
+        { status: 500 },
+      )
+    }
 
     // Limpar artigos antigos (manter apenas os últimos 15)
     const { error: deleteError } = await supabase
