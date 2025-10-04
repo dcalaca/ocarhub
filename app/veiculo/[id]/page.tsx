@@ -134,7 +134,7 @@ export default function VehicleDetailPage() {
     if (!ownerContact.telefone) {
       toast({
         title: "Telefone não disponível",
-        description: "O vendedor não disponibilizou o telefone.",
+        description: "O vendedor não disponibilizou o telefone. Use a opção 'Enviar Mensagem' para entrar em contato.",
         variant: "destructive",
       })
       return
@@ -917,7 +917,7 @@ export default function VehicleDetailPage() {
                     Sua mensagem:
                   </label>
                   <textarea
-                    className="w-full p-3 border rounded-lg resize-none"
+                    className="w-full p-3 border rounded-lg resize-none text-gray-900 bg-white placeholder-gray-500"
                     rows={4}
                     placeholder="Digite sua mensagem aqui..."
                     value={messageText}
