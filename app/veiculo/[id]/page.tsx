@@ -173,7 +173,7 @@ export default function VehicleDetailPage() {
       console.log('📤 Enviando mensagem...')
       
       // Criar chave da conversa
-      const conversationKey = `${ownerContact.id}-${vehicleId}`
+      const conversationKey = `${ownerContact.id}|${vehicleId}`
       
       // Enviar mensagem
       await MessagesService.sendMessage(conversationKey, user.id, messageText)

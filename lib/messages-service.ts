@@ -36,7 +36,7 @@ export class MessagesService {
         
         const otherUserId = message.sender_id === userId ? message.receiver_id : message.sender_id
         const vehicleId = message.vehicle_id
-        const conversationKey = `${otherUserId}-${vehicleId}`
+        const conversationKey = `${otherUserId}|${vehicleId}`
         
         console.log('🔑 Chave da conversa:', conversationKey)
         
@@ -89,8 +89,8 @@ export class MessagesService {
   // Buscar mensagens de uma conversa
   static async getChatMessages(conversationKey: string) {
     try {
-      // conversationKey é no formato "otherUserId-vehicleId"
-      const [otherUserId, vehicleId] = conversationKey.split('-')
+      // conversationKey é no formato "otherUserId|vehicleId"
+      const [otherUserId, vehicleId] = conversationKey.split('|')
       
       const { data, error } = await supabase
         .from('ocar_messages')
@@ -129,8 +129,10 @@ export class MessagesService {
   // Enviar mensagem
   static async sendMessage(conversationKey: string, senderId: string, content: string) {
     try {
-      // conversationKey é no formato "otherUserId-vehicleId"
-      const [otherUserId, vehicleId] = conversationKey.split('-')
+      // conversationKey é no formato "otherUserId|vehicleId" (usar | em vez de -)
+      const [otherUserId, vehicleId] = conversationKey.split('|')
+      
+      console.log('🔍 Enviando mensagem:', { otherUserId, vehicleId, senderId, content })
       
       const { data, error } = await supabase
         .from('ocar_messages')
@@ -144,6 +146,7 @@ export class MessagesService {
         .single()
 
       if (error) {
+        console.error('❌ Erro na query:', error)
         throw error
       }
 
@@ -157,7 +160,7 @@ export class MessagesService {
   // Marcar mensagens como lidas
   static async markMessagesAsRead(conversationKey: string, userId: string) {
     try {
-      const [otherUserId, vehicleId] = conversationKey.split('-')
+      const [otherUserId, vehicleId] = conversationKey.split('|')
       
       const { error } = await supabase
         .from('ocar_messages')
