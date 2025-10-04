@@ -8,7 +8,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Search, Send, Phone, Video, MoreVertical, Car, ArrowLeft, MessageCircle } from "lucide-react"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Search, Send, Phone, MoreVertical, Car, ArrowLeft, MessageCircle, User, Flag, Trash2 } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { MessagesService } from "@/lib/messages-service"
 import type { Chat, Message, User, Vehicle } from "@/types"
@@ -108,6 +109,32 @@ export default function MensagensPage() {
       console.log('✅ Mensagem enviada com sucesso')
     } catch (error) {
       console.error('❌ Erro ao enviar mensagem:', error)
+    }
+  }
+
+  const handleViewProfile = () => {
+    if (!selectedChat) return
+    const otherUser = getOtherUser(selectedChat)
+    if (otherUser) {
+      // Redirecionar para perfil do usuário
+      window.open(`/perfil/${otherUser.id}`, '_blank')
+    }
+  }
+
+  const handleReport = () => {
+    if (!selectedChat) return
+    const otherUser = getOtherUser(selectedChat)
+    if (otherUser) {
+      // Implementar modal de denúncia
+      alert(`Funcionalidade de denúncia será implementada para ${otherUser.nome}`)
+    }
+  }
+
+  const handleArchiveConversation = () => {
+    if (!selectedChat) return
+    if (confirm('Tem certeza que deseja arquivar esta conversa?')) {
+      // Implementar arquivamento
+      alert('Funcionalidade de arquivamento será implementada')
     }
   }
 
@@ -351,15 +378,34 @@ export default function MensagensPage() {
                       </div>
                       
                       <div className="flex gap-2">
-                        <Button variant="ghost" size="sm">
+                        <Button variant="ghost" size="sm" title="Ligar">
                           <Phone className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm">
-                          <Video className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
+                        
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" title="Mais opções">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuItem onClick={handleViewProfile}>
+                              <User className="mr-2 h-4 w-4" />
+                              Ver Perfil
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={handleReport}>
+                              <Flag className="mr-2 h-4 w-4" />
+                              Denunciar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={handleArchiveConversation}
+                              className="text-red-600"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Arquivar Conversa
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </div>
                   </div>
