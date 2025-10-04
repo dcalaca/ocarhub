@@ -113,32 +113,54 @@ export default function MensagensPage() {
 
   const getOtherUser = (chat: Chat): User | null => {
     if (!user) return null
-    const otherUserId = chat.participant1 === user.id ? chat.participant2 : chat.participant1
-    // Por enquanto retorna um usuário mock, mas deveria buscar do banco
-    return {
-      id: otherUserId,
-      nome: "Usuário",
-      email: "usuario@email.com",
-      tipo: "comprador" as const,
-      photoURL: "/placeholder.svg?height=40&width=40",
-      createdAt: new Date(),
-      updatedAt: new Date(),
+    // A estrutura do chat já vem com other_user do MessagesService
+    if (chat.other_user) {
+      return {
+        id: chat.other_user.id,
+        nome: chat.other_user.nome,
+        email: chat.other_user.email || "usuario@email.com",
+        tipo: "comprador" as const,
+        photoURL: chat.other_user.avatar_url || "/placeholder.svg?height=40&width=40",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }
     }
+    return null
   }
 
   const getVehicle = (chat: Chat): Vehicle | null => {
-    // Por enquanto retorna um veículo mock, mas deveria buscar do banco
-    return chat.vehicle_id ? {
-      id: chat.vehicle_id,
-      donoId: chat.participant1,
-      marca: "Toyota",
-      modelo: "Corolla",
-      ano: 2022,
-      preco: 95000,
-      cidade: "São Paulo",
-      status: "ativo",
-      dataCadastro: new Date(),
-    } as Vehicle : null
+    // A estrutura do chat já vem com vehicle do MessagesService
+    if (chat.vehicle) {
+      return {
+        id: chat.vehicle.id,
+        donoId: user?.id || "",
+        marca: chat.vehicle.marca,
+        modelo: chat.vehicle.modelo,
+        versao: "",
+        ano: chat.vehicle.ano,
+        cor: "Cinza",
+        quilometragem: 40000,
+        motor: "Diesel",
+        combustivel: ["Diesel"],
+        cambio: "manual" as const,
+        opcionais: [],
+        preco: chat.vehicle.preco,
+        placa_parcial: "ABC1234",
+        numero_proprietarios: 1,
+        observacoes: "Ótimo estado",
+        fotos: [],
+        plano: "gratuito" as const,
+        verificado: false,
+        favoritos: [],
+        dataCadastro: new Date(),
+        status: "ativo",
+        cidade: chat.vehicle.cidade,
+        views: 0,
+        likes: 0,
+        shares: 0,
+      } as Vehicle
+    }
+    return null
   }
 
   const formatTime = (date: string | Date) => {
@@ -272,7 +294,7 @@ export default function MensagensPage() {
                                 </div>
                                 
                                 <p className="text-sm text-gray-600 truncate">
-                                  {lastMessage?.texto || "Nenhuma mensagem"}
+                                  {lastMessage?.content || "Nenhuma mensagem"}
                                 </p>
                                 
                                 {chat.naoLidas > 0 && (

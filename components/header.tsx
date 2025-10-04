@@ -4,7 +4,7 @@ import { useState } from "react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet"
-import { Car, Heart, MessageCircle, Plus, User, LogOut, Settings, Wallet, Menu, History, Calculator } from "lucide-react"
+import { Car, Heart, MessageCircle, Plus, User, LogOut, Settings, Wallet, Menu, History, Calculator, FileText } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useAuth } from "@/contexts/auth-context"
 import Link from "next/link"
@@ -143,6 +143,14 @@ export function Header() {
                       Minha Conta
                     </Link>
                     <Link
+                      href="/meus-anuncios"
+                      className="flex items-center gap-3 py-2 text-gray-300 hover:text-white"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <FileText className="w-5 h-5" />
+                      Meus Anúncios
+                    </Link>
+                    <Link
                       href="/perfil"
                       className="flex items-center gap-3 py-2 text-gray-300 hover:text-white"
                       onClick={() => setMobileMenuOpen(false)}
@@ -219,7 +227,7 @@ export function Header() {
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href="/meus-anuncios" className="flex items-center">
-                      <Car className="mr-2 h-4 w-4" />
+                      <FileText className="mr-2 h-4 w-4" />
                       <span>Meus anúncios</span>
                     </Link>
                   </DropdownMenuItem>
