@@ -12,6 +12,10 @@ CREATE TABLE IF NOT EXISTS ocar_wishlist_veiculos (
   ano_max INTEGER,
   preco_min DECIMAL(12,2),
   preco_max DECIMAL(12,2),
+  unico_dono BOOLEAN DEFAULT false,
+  km_min INTEGER,
+  km_max INTEGER,
+  estado VARCHAR(2),
   ativo BOOLEAN DEFAULT true,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -22,6 +26,8 @@ CREATE INDEX IF NOT EXISTS idx_ocar_wishlist_user_id ON ocar_wishlist_veiculos(u
 CREATE INDEX IF NOT EXISTS idx_ocar_wishlist_marca ON ocar_wishlist_veiculos(marca);
 CREATE INDEX IF NOT EXISTS idx_ocar_wishlist_ativo ON ocar_wishlist_veiculos(ativo);
 CREATE INDEX IF NOT EXISTS idx_ocar_wishlist_created_at ON ocar_wishlist_veiculos(created_at);
+CREATE INDEX IF NOT EXISTS idx_ocar_wishlist_estado ON ocar_wishlist_veiculos(estado);
+CREATE INDEX IF NOT EXISTS idx_ocar_wishlist_unico_dono ON ocar_wishlist_veiculos(unico_dono);
 
 -- Criar função para atualizar updated_at (CREATE OR REPLACE)
 CREATE OR REPLACE FUNCTION update_ocar_wishlist_updated_at()
@@ -49,6 +55,10 @@ COMMENT ON COLUMN ocar_wishlist_veiculos.ano_min IS 'Ano mínimo do veículo (op
 COMMENT ON COLUMN ocar_wishlist_veiculos.ano_max IS 'Ano máximo do veículo (opcional)';
 COMMENT ON COLUMN ocar_wishlist_veiculos.preco_min IS 'Preço mínimo do veículo (opcional)';
 COMMENT ON COLUMN ocar_wishlist_veiculos.preco_max IS 'Preço máximo do veículo (opcional)';
+COMMENT ON COLUMN ocar_wishlist_veiculos.unico_dono IS 'Se deve ser único dono (opcional)';
+COMMENT ON COLUMN ocar_wishlist_veiculos.km_min IS 'Quilometragem mínima (opcional)';
+COMMENT ON COLUMN ocar_wishlist_veiculos.km_max IS 'Quilometragem máxima (opcional)';
+COMMENT ON COLUMN ocar_wishlist_veiculos.estado IS 'Estado do veículo (opcional)';
 COMMENT ON COLUMN ocar_wishlist_veiculos.ativo IS 'Se o alerta está ativo';
 
 -- Verificar se a tabela foi criada com sucesso

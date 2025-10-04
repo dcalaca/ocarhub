@@ -43,6 +43,10 @@ interface WishlistItem {
   anoMax?: number
   precoMin?: number
   precoMax?: number
+  unicoDono?: boolean
+  kmMin?: number
+  kmMax?: number
+  estado?: string
   ativo: boolean
   created_at: string
 }
@@ -78,6 +82,7 @@ export default function ConfiguracoesPage() {
   const [modelos, setModelos] = useState<Array<{id: string, name: string}>>([])
   const [versoes, setVersoes] = useState<Array<{id: string, name: string}>>([])
   const [anos, setAnos] = useState<Array<{id: string, name: string}>>([])
+  const [estados, setEstados] = useState<Array<{id: string, name: string}>>([])
   const [showAddForm, setShowAddForm] = useState(false)
   const [newWishlistItem, setNewWishlistItem] = useState({
     marca: '',
@@ -87,6 +92,10 @@ export default function ConfiguracoesPage() {
     anoMax: '',
     precoMin: '',
     precoMax: '',
+    unicoDono: false,
+    kmMin: '',
+    kmMax: '',
+    estado: '',
   })
 
   // Carregar configurações do usuário
@@ -106,6 +115,7 @@ export default function ConfiguracoesPage() {
       })
       loadWishlist()
       loadMarcas()
+      loadEstados()
     }
   }, [user])
 
@@ -168,6 +178,43 @@ export default function ConfiguracoesPage() {
     }
   }
 
+  const loadEstados = async () => {
+    try {
+      const estadosData = [
+        { id: 'AC', name: 'Acre' },
+        { id: 'AL', name: 'Alagoas' },
+        { id: 'AP', name: 'Amapá' },
+        { id: 'AM', name: 'Amazonas' },
+        { id: 'BA', name: 'Bahia' },
+        { id: 'CE', name: 'Ceará' },
+        { id: 'DF', name: 'Distrito Federal' },
+        { id: 'ES', name: 'Espírito Santo' },
+        { id: 'GO', name: 'Goiás' },
+        { id: 'MA', name: 'Maranhão' },
+        { id: 'MT', name: 'Mato Grosso' },
+        { id: 'MS', name: 'Mato Grosso do Sul' },
+        { id: 'MG', name: 'Minas Gerais' },
+        { id: 'PA', name: 'Pará' },
+        { id: 'PB', name: 'Paraíba' },
+        { id: 'PR', name: 'Paraná' },
+        { id: 'PE', name: 'Pernambuco' },
+        { id: 'PI', name: 'Piauí' },
+        { id: 'RJ', name: 'Rio de Janeiro' },
+        { id: 'RN', name: 'Rio Grande do Norte' },
+        { id: 'RS', name: 'Rio Grande do Sul' },
+        { id: 'RO', name: 'Rondônia' },
+        { id: 'RR', name: 'Roraima' },
+        { id: 'SC', name: 'Santa Catarina' },
+        { id: 'SP', name: 'São Paulo' },
+        { id: 'SE', name: 'Sergipe' },
+        { id: 'TO', name: 'Tocantins' }
+      ]
+      setEstados(estadosData)
+    } catch (error) {
+      console.error('Erro ao carregar estados:', error)
+    }
+  }
+
   const handleAddWishlist = async () => {
     if (!user || !newWishlistItem.marca) return
 
@@ -183,6 +230,10 @@ export default function ConfiguracoesPage() {
           ano_max: newWishlistItem.anoMax ? parseInt(newWishlistItem.anoMax) : null,
           preco_min: newWishlistItem.precoMin ? parseFloat(newWishlistItem.precoMin) : null,
           preco_max: newWishlistItem.precoMax ? parseFloat(newWishlistItem.precoMax) : null,
+          unico_dono: newWishlistItem.unicoDono,
+          km_min: newWishlistItem.kmMin ? parseInt(newWishlistItem.kmMin) : null,
+          km_max: newWishlistItem.kmMax ? parseInt(newWishlistItem.kmMax) : null,
+          estado: newWishlistItem.estado || null,
           ativo: true
         })
         .select()
@@ -198,6 +249,10 @@ export default function ConfiguracoesPage() {
         anoMax: '',
         precoMin: '',
         precoMax: '',
+        unicoDono: false,
+        kmMin: '',
+        kmMax: '',
+        estado: '',
       })
       setShowAddForm(false)
 
@@ -417,87 +472,170 @@ export default function ConfiguracoesPage() {
                   <div className="space-y-4 p-4 bg-white/5 rounded-lg border border-white/10">
                     <h3 className="text-lg font-semibold text-white">Adicionar à Lista de Desejos</h3>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label className="text-slate-200">Marca *</Label>
-                        <SmartFilterInput
-                          options={marcas}
-                          value={newWishlistItem.marca}
-                          onChange={(value) => {
-                            setNewWishlistItem(prev => ({ ...prev, marca: value }))
-                            loadModelos(value)
-                          }}
-                          placeholder="Digite ou selecione a marca"
-                        />
+                    <div className="space-y-6">
+                      {/* Informações Básicas */}
+                      <div>
+                        <h4 className="text-lg font-semibold text-white mb-4">Informações Básicas</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-slate-200">Marca *</Label>
+                            <SmartFilterInput
+                              options={marcas}
+                              value={newWishlistItem.marca}
+                              onChange={(value) => {
+                                setNewWishlistItem(prev => ({ ...prev, marca: value }))
+                                loadModelos(value)
+                              }}
+                              placeholder="Digite ou selecione a marca"
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label className="text-slate-200">Modelo</Label>
+                            <SmartFilterInput
+                              options={modelos}
+                              value={newWishlistItem.modelo}
+                              onChange={(value) => {
+                                setNewWishlistItem(prev => ({ ...prev, modelo: value }))
+                                loadVersoes(newWishlistItem.marca, value)
+                              }}
+                              placeholder="Digite ou selecione o modelo (opcional)"
+                              disabled={!newWishlistItem.marca}
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label className="text-slate-200">Versão</Label>
+                            <SmartFilterInput
+                              options={versoes}
+                              value={newWishlistItem.versao}
+                              onChange={(value) => setNewWishlistItem(prev => ({ ...prev, versao: value }))}
+                              placeholder="Digite ou selecione a versão (opcional)"
+                              disabled={!newWishlistItem.modelo}
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label className="text-slate-200">Estado (Localização)</Label>
+                            <SmartFilterInput
+                              options={estados}
+                              value={newWishlistItem.estado}
+                              onChange={(value) => setNewWishlistItem(prev => ({ ...prev, estado: value }))}
+                              placeholder="Digite ou selecione o estado (opcional)"
+                            />
+                          </div>
+                        </div>
                       </div>
-                      
-                      <div className="space-y-2">
-                        <Label className="text-slate-200">Modelo</Label>
-                        <SmartFilterInput
-                          options={modelos}
-                          value={newWishlistItem.modelo}
-                          onChange={(value) => {
-                            setNewWishlistItem(prev => ({ ...prev, modelo: value }))
-                            loadVersoes(newWishlistItem.marca, value)
-                          }}
-                          placeholder="Digite ou selecione o modelo (opcional)"
-                          disabled={!newWishlistItem.marca}
-                        />
+
+                      {/* Ano */}
+                      <div>
+                        <h4 className="text-lg font-semibold text-white mb-4">Ano</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-slate-200">Ano Mínimo</Label>
+                            <Input
+                              type="number"
+                              value={newWishlistItem.anoMin}
+                              onChange={(e) => setNewWishlistItem(prev => ({ ...prev, anoMin: e.target.value }))}
+                              placeholder="Ex: 2020"
+                              className="bg-white/10 border-white/20 text-white placeholder:text-slate-400"
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label className="text-slate-200">Ano Máximo</Label>
+                            <Input
+                              type="number"
+                              value={newWishlistItem.anoMax}
+                              onChange={(e) => setNewWishlistItem(prev => ({ ...prev, anoMax: e.target.value }))}
+                              placeholder="Ex: 2024"
+                              className="bg-white/10 border-white/20 text-white placeholder:text-slate-400"
+                            />
+                          </div>
+                        </div>
                       </div>
-                      
-                      <div className="space-y-2">
-                        <Label className="text-slate-200">Versão</Label>
-                        <SmartFilterInput
-                          options={versoes}
-                          value={newWishlistItem.versao}
-                          onChange={(value) => setNewWishlistItem(prev => ({ ...prev, versao: value }))}
-                          placeholder="Digite ou selecione a versão (opcional)"
-                          disabled={!newWishlistItem.modelo}
-                        />
+
+                      {/* Preço */}
+                      <div>
+                        <h4 className="text-lg font-semibold text-white mb-4">Preço</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-slate-200">Preço Mínimo (R$)</Label>
+                            <Input
+                              type="text"
+                              value={newWishlistItem.precoMin}
+                              onChange={(e) => {
+                                const value = e.target.value.replace(/\D/g, '')
+                                setNewWishlistItem(prev => ({ ...prev, precoMin: value }))
+                              }}
+                              placeholder="Ex: 50.000"
+                              className="bg-white/10 border-white/20 text-white placeholder:text-slate-400"
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label className="text-slate-200">Preço Máximo (R$)</Label>
+                            <Input
+                              type="text"
+                              value={newWishlistItem.precoMax}
+                              onChange={(e) => {
+                                const value = e.target.value.replace(/\D/g, '')
+                                setNewWishlistItem(prev => ({ ...prev, precoMax: value }))
+                              }}
+                              placeholder="Ex: 100.000"
+                              className="bg-white/10 border-white/20 text-white placeholder:text-slate-400"
+                            />
+                          </div>
+                        </div>
                       </div>
-                      
-                      <div className="space-y-2">
-                        <Label className="text-slate-200">Ano Mínimo</Label>
-                        <Input
-                          type="number"
-                          value={newWishlistItem.anoMin}
-                          onChange={(e) => setNewWishlistItem(prev => ({ ...prev, anoMin: e.target.value }))}
-                          placeholder="Ex: 2020"
-                          className="bg-white/10 border-white/20 text-white placeholder:text-slate-400"
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label className="text-slate-200">Ano Máximo</Label>
-                        <Input
-                          type="number"
-                          value={newWishlistItem.anoMax}
-                          onChange={(e) => setNewWishlistItem(prev => ({ ...prev, anoMax: e.target.value }))}
-                          placeholder="Ex: 2024"
-                          className="bg-white/10 border-white/20 text-white placeholder:text-slate-400"
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label className="text-slate-200">Preço Mínimo (R$)</Label>
-                        <Input
-                          type="number"
-                          value={newWishlistItem.precoMin}
-                          onChange={(e) => setNewWishlistItem(prev => ({ ...prev, precoMin: e.target.value }))}
-                          placeholder="Ex: 50000"
-                          className="bg-white/10 border-white/20 text-white placeholder:text-slate-400"
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label className="text-slate-200">Preço Máximo (R$)</Label>
-                        <Input
-                          type="number"
-                          value={newWishlistItem.precoMax}
-                          onChange={(e) => setNewWishlistItem(prev => ({ ...prev, precoMax: e.target.value }))}
-                          placeholder="Ex: 100000"
-                          className="bg-white/10 border-white/20 text-white placeholder:text-slate-400"
-                        />
+
+                      {/* Quilometragem e Características */}
+                      <div>
+                        <h4 className="text-lg font-semibold text-white mb-4">Quilometragem e Características</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-slate-200">Km Mínimo</Label>
+                            <Input
+                              type="text"
+                              value={newWishlistItem.kmMin}
+                              onChange={(e) => {
+                                const value = e.target.value.replace(/\D/g, '')
+                                setNewWishlistItem(prev => ({ ...prev, kmMin: value }))
+                              }}
+                              placeholder="Ex: 10.000"
+                              className="bg-white/10 border-white/20 text-white placeholder:text-slate-400"
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label className="text-slate-200">Km Máximo</Label>
+                            <Input
+                              type="text"
+                              value={newWishlistItem.kmMax}
+                              onChange={(e) => {
+                                const value = e.target.value.replace(/\D/g, '')
+                                setNewWishlistItem(prev => ({ ...prev, kmMax: value }))
+                              }}
+                              placeholder="Ex: 50.000"
+                              className="bg-white/10 border-white/20 text-white placeholder:text-slate-400"
+                            />
+                          </div>
+                          
+                          <div className="space-y-2 md:col-span-2">
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                id="unicoDono"
+                                checked={newWishlistItem.unicoDono}
+                                onChange={(e) => setNewWishlistItem(prev => ({ ...prev, unicoDono: e.target.checked }))}
+                                className="w-4 h-4 text-purple-600 bg-white/10 border-white/20 rounded focus:ring-purple-500"
+                              />
+                              <Label htmlFor="unicoDono" className="text-slate-200">
+                                Único Dono
+                              </Label>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                     
@@ -539,24 +677,63 @@ export default function ConfiguracoesPage() {
                               {item.modelo && ` ${item.modelo}`}
                               {item.versao && ` ${item.versao}`}
                             </p>
-                            <div className="flex gap-4 text-sm text-slate-400">
-                              {item.anoMin && item.anoMax && (
-                                <span>{item.anoMin} - {item.anoMax}</span>
+                            <div className="space-y-1 text-sm text-slate-400">
+                              {/* Ano */}
+                              {(item.anoMin || item.anoMax) && (
+                                <div className="flex gap-2">
+                                  <span className="font-medium">Ano:</span>
+                                  {item.anoMin && item.anoMax ? (
+                                    <span>{item.anoMin} - {item.anoMax}</span>
+                                  ) : item.anoMin ? (
+                                    <span>A partir de {item.anoMin}</span>
+                                  ) : (
+                                    <span>Até {item.anoMax}</span>
+                                  )}
+                                </div>
                               )}
-                              {item.anoMin && !item.anoMax && (
-                                <span>A partir de {item.anoMin}</span>
+                              
+                              {/* Preço */}
+                              {(item.precoMin || item.precoMax) && (
+                                <div className="flex gap-2">
+                                  <span className="font-medium">Preço:</span>
+                                  {item.precoMin && item.precoMax ? (
+                                    <span>R$ {parseFloat(item.precoMin).toLocaleString('pt-BR')} - R$ {parseFloat(item.precoMax).toLocaleString('pt-BR')}</span>
+                                  ) : item.precoMin ? (
+                                    <span>A partir de R$ {parseFloat(item.precoMin).toLocaleString('pt-BR')}</span>
+                                  ) : (
+                                    <span>Até R$ {parseFloat(item.precoMax).toLocaleString('pt-BR')}</span>
+                                  )}
+                                </div>
                               )}
-                              {!item.anoMin && item.anoMax && (
-                                <span>Até {item.anoMax}</span>
+                              
+                              {/* Quilometragem */}
+                              {(item.kmMin || item.kmMax) && (
+                                <div className="flex gap-2">
+                                  <span className="font-medium">Km:</span>
+                                  {item.kmMin && item.kmMax ? (
+                                    <span>{parseInt(item.kmMin).toLocaleString('pt-BR')} - {parseInt(item.kmMax).toLocaleString('pt-BR')} km</span>
+                                  ) : item.kmMin ? (
+                                    <span>A partir de {parseInt(item.kmMin).toLocaleString('pt-BR')} km</span>
+                                  ) : (
+                                    <span>Até {parseInt(item.kmMax).toLocaleString('pt-BR')} km</span>
+                                  )}
+                                </div>
                               )}
-                              {item.precoMin && item.precoMax && (
-                                <span>R$ {parseFloat(item.precoMin).toLocaleString()} - R$ {parseFloat(item.precoMax).toLocaleString()}</span>
+                              
+                              {/* Estado */}
+                              {item.estado && (
+                                <div className="flex gap-2">
+                                  <span className="font-medium">Estado:</span>
+                                  <span>{item.estado}</span>
+                                </div>
                               )}
-                              {item.precoMin && !item.precoMax && (
-                                <span>A partir de R$ {parseFloat(item.precoMin).toLocaleString()}</span>
-                              )}
-                              {!item.precoMin && item.precoMax && (
-                                <span>Até R$ {parseFloat(item.precoMax).toLocaleString()}</span>
+                              
+                              {/* Único Dono */}
+                              {item.unicoDono && (
+                                <div className="flex gap-2">
+                                  <span className="font-medium">Único Dono:</span>
+                                  <span className="text-green-400">Sim</span>
+                                </div>
                               )}
                             </div>
                           </div>
