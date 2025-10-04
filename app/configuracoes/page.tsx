@@ -29,6 +29,8 @@ import {
   Plus,
   Trash2,
   Car,
+  BellRing,
+  BellOff,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { SmartFilterInput } from "@/components/smart-filter-input"
@@ -301,6 +303,37 @@ export default function ConfiguracoesPage() {
       toast({
         title: "Erro",
         description: "Não foi possível remover da lista de desejos.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleToggleNotifications = async (id: string, currentStatus: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('ocar_wishlist_veiculos')
+        .update({ ativo: !currentStatus })
+        .eq('id', id)
+
+      if (error) throw error
+
+      setWishlist(prev => 
+        prev.map(item => 
+          item.id === id ? { ...item, ativo: !currentStatus } : item
+        )
+      )
+
+      toast({
+        title: !currentStatus ? "Notificações ativadas" : "Notificações desativadas",
+        description: !currentStatus 
+          ? "Você receberá emails quando veículos compatíveis forem cadastrados."
+          : "Você não receberá mais emails para este veículo.",
+      })
+    } catch (error) {
+      console.error('Erro ao alterar notificações:', error)
+      toast({
+        title: "Erro",
+        description: "Não foi possível alterar as notificações.",
         variant: "destructive",
       })
     }
@@ -746,17 +779,45 @@ export default function ConfiguracoesPage() {
                                   <span className="text-green-400">Sim</span>
                                 </div>
                               )}
+                              
+                              {/* Status das Notificações */}
+                              <div className="flex gap-2">
+                                <span className="font-medium">Notificações:</span>
+                                <span className={`${item.ativo ? 'text-green-400' : 'text-gray-400'}`}>
+                                  {item.ativo ? 'Ativadas' : 'Desativadas'}
+                                </span>
+                              </div>
                             </div>
                           </div>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleRemoveWishlist(item.id)}
-                          className="text-red-400 hover:text-red-300 hover:bg-red-500/20"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleToggleNotifications(item.id, item.ativo)}
+                            className={`${
+                              item.ativo 
+                                ? 'text-green-400 hover:text-green-300 hover:bg-green-500/20' 
+                                : 'text-gray-400 hover:text-gray-300 hover:bg-gray-500/20'
+                            }`}
+                            title={item.ativo ? 'Desativar notificações' : 'Ativar notificações'}
+                          >
+                            {item.ativo ? (
+                              <BellRing className="w-4 h-4" />
+                            ) : (
+                              <BellOff className="w-4 h-4" />
+                            )}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRemoveWishlist(item.id)}
+                            className="text-red-400 hover:text-red-300 hover:bg-red-500/20"
+                            title="Remover da lista"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
                     ))
                   )}
