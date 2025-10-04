@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { useAuth } from "@/contexts/auth-context"
 import { VehicleService } from "@/lib/vehicle-service"
+import { ContactService, ContactInfo } from "@/lib/contact-service"
+import { MessagesService } from "@/lib/messages-service"
 import { Vehicle } from "@/types"
 import { 
   Heart, 
@@ -50,6 +52,11 @@ export default function VehicleDetailPage() {
   const [suggestedVehicles, setSuggestedVehicles] = useState<Vehicle[]>([])
   const [loadingSuggestions, setLoadingSuggestions] = useState(false)
   const [showCharacteristics, setShowCharacteristics] = useState(false)
+  const [ownerContact, setOwnerContact] = useState<ContactInfo | null>(null)
+  const [showPhone, setShowPhone] = useState(false)
+  const [showMessageModal, setShowMessageModal] = useState(false)
+  const [messageText, setMessageText] = useState("")
+  const [sendingMessage, setSendingMessage] = useState(false)
 
   const vehicleId = params.id as string
 
@@ -57,6 +64,7 @@ export default function VehicleDetailPage() {
     if (vehicleId) {
       loadVehicle()
       loadSuggestions()
+      loadOwnerContact()
     }
   }, [vehicleId])
 
@@ -81,6 +89,115 @@ export default function VehicleDetailPage() {
       console.error('❌ Erro ao carregar sugestões:', error)
     } finally {
       setLoadingSuggestions(false)
+    }
+  }
+
+  const loadOwnerContact = async () => {
+    try {
+      console.log('🔍 Carregando informações do proprietário...')
+      const contact = await ContactService.getVehicleOwnerContact(vehicleId)
+      setOwnerContact(contact)
+      console.log('✅ Informações do proprietário carregadas')
+    } catch (error) {
+      console.error('❌ Erro ao carregar informações do proprietário:', error)
+    }
+  }
+
+  const handleShowPhone = () => {
+    if (!user) {
+      toast({
+        title: "Login necessário",
+        description: "Você precisa estar logado para ver o telefone do vendedor.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (!ownerContact) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar as informações de contato.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (!ContactService.canViewPhone(user.id, ownerContact.id)) {
+      toast({
+        title: "Acesso negado",
+        description: "Você não pode ver o telefone deste vendedor.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (!ownerContact.telefone) {
+      toast({
+        title: "Telefone não disponível",
+        description: "O vendedor não disponibilizou o telefone.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setShowPhone(true)
+  }
+
+  const handleSendMessage = () => {
+    if (!user) {
+      toast({
+        title: "Login necessário",
+        description: "Você precisa estar logado para enviar mensagens.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (!ownerContact) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar as informações de contato.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setShowMessageModal(true)
+  }
+
+  const handleSubmitMessage = async () => {
+    if (!messageText.trim() || !user || !ownerContact) return
+
+    setSendingMessage(true)
+    try {
+      console.log('📤 Enviando mensagem...')
+      
+      // Criar chave da conversa
+      const conversationKey = `${ownerContact.id}-${vehicleId}`
+      
+      // Enviar mensagem
+      await MessagesService.sendMessage(conversationKey, user.id, messageText)
+      
+      toast({
+        title: "Mensagem enviada!",
+        description: "Sua mensagem foi enviada com sucesso.",
+      })
+      
+      setMessageText("")
+      setShowMessageModal(false)
+      
+      // Redirecionar para página de mensagens
+      router.push('/mensagens')
+      
+    } catch (error) {
+      console.error('❌ Erro ao enviar mensagem:', error)
+      toast({
+        title: "Erro ao enviar mensagem",
+        description: "Não foi possível enviar a mensagem. Tente novamente.",
+        variant: "destructive",
+      })
+    } finally {
+      setSendingMessage(false)
     }
   }
 
@@ -462,11 +579,11 @@ export default function VehicleDetailPage() {
             {/* Botões de Contato */}
             <div className="space-y-3">
               <div className="flex gap-3">
-                <Button size="lg" className="flex-1">
+                <Button size="lg" className="flex-1" onClick={handleShowPhone}>
                   <Phone className="w-4 h-4 mr-2" />
                   Ver Telefone
                 </Button>
-                <Button size="lg" variant="outline" className="flex-1">
+                <Button size="lg" variant="outline" className="flex-1" onClick={handleSendMessage}>
                   <MessageCircle className="w-4 h-4 mr-2" />
                   Enviar Mensagem
                 </Button>
@@ -739,6 +856,99 @@ export default function VehicleDetailPage() {
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Modal de Telefone */}
+        {showPhone && ownerContact && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <Card className="w-full max-w-md">
+              <CardHeader className="text-center">
+                <h3 className="text-lg font-semibold">Telefone do Vendedor</h3>
+                <p className="text-sm text-muted-foreground">{ownerContact.nome}</p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-purple-600 mb-2">
+                    {ContactService.formatPhone(ownerContact.telefone || '')}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Clique no número para copiar
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    className="flex-1" 
+                    onClick={() => {
+                      navigator.clipboard.writeText(ownerContact.telefone || '')
+                      toast({
+                        title: "Telefone copiado!",
+                        description: "Número copiado para a área de transferência.",
+                      })
+                    }}
+                  >
+                    Copiar Telefone
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowPhone(false)}
+                  >
+                    Fechar
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Modal de Mensagem */}
+        {showMessageModal && ownerContact && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <Card className="w-full max-w-md">
+              <CardHeader>
+                <h3 className="text-lg font-semibold">Enviar Mensagem</h3>
+                <p className="text-sm text-muted-foreground">
+                  Para: {ownerContact.nome}
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium mb-2 block">
+                    Sua mensagem:
+                  </label>
+                  <textarea
+                    className="w-full p-3 border rounded-lg resize-none"
+                    rows={4}
+                    placeholder="Digite sua mensagem aqui..."
+                    value={messageText}
+                    onChange={(e) => setMessageText(e.target.value)}
+                    maxLength={500}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {messageText.length}/500 caracteres
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    className="flex-1" 
+                    onClick={handleSubmitMessage}
+                    disabled={!messageText.trim() || sendingMessage}
+                  >
+                    {sendingMessage ? "Enviando..." : "Enviar Mensagem"}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setShowMessageModal(false)
+                      setMessageText("")
+                    }}
+                    disabled={sendingMessage}
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
       </div>
