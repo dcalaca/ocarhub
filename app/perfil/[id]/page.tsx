@@ -144,6 +144,32 @@ export default function UserProfilePage() {
       .slice(0, 2)
   }
 
+  const getUserType = (profile: UserProfile, stats: UserStats | null) => {
+    // Se tem veículos cadastrados, é vendedor/anunciante
+    if (stats && stats.total_veiculos > 0) {
+      return 'vendedor'
+    }
+    
+    // Se tem CNPJ, provavelmente é empresa/vendedor
+    if (profile.cnpj) {
+      return 'vendedor'
+    }
+    
+    // Caso contrário, usa o tipo do banco de dados
+    return profile.tipo_usuario
+  }
+
+  const getUserTypeLabel = (userType: string) => {
+    switch (userType) {
+      case 'vendedor':
+        return 'Anunciante'
+      case 'comprador':
+        return 'Comprador'
+      default:
+        return userType.charAt(0).toUpperCase() + userType.slice(1)
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -226,8 +252,8 @@ export default function UserProfilePage() {
                       </Badge>
                     )}
                     
-                    <Badge variant={profile.tipo_usuario === 'vendedor' ? 'default' : 'secondary'}>
-                      {profile.tipo_usuario === 'vendedor' ? 'Vendedor' : 'Comprador'}
+                    <Badge variant={getUserType(profile, stats) === 'vendedor' ? 'default' : 'secondary'}>
+                      {getUserTypeLabel(getUserType(profile, stats))}
                     </Badge>
                   </div>
                 </div>
@@ -338,7 +364,7 @@ export default function UserProfilePage() {
                     <label className="text-sm font-medium text-muted-foreground">
                       Tipo de Usuário
                     </label>
-                    <p className="text-sm capitalize">{profile.tipo_usuario}</p>
+                    <p className="text-sm">{getUserTypeLabel(getUserType(profile, stats))}</p>
                   </div>
                   
                   <div>
