@@ -141,11 +141,12 @@ export default function MensagensPage() {
     } as Vehicle : null
   }
 
-  const formatTime = (date: Date) => {
+  const formatTime = (date: string | Date) => {
+    const dateObj = typeof date === 'string' ? new Date(date) : date
     return new Intl.DateTimeFormat("pt-BR", {
       hour: "2-digit",
       minute: "2-digit",
-    }).format(date)
+    }).format(dateObj)
   }
 
   const formatDate = (date: Date) => {
@@ -259,7 +260,7 @@ export default function MensagensPage() {
                                     {otherUser?.nome || "Usuário"}
                                   </h3>
                                   <span className="text-xs text-gray-500">
-                                    {lastMessage ? formatTime(lastMessage.timestamp) : ""}
+                                    {lastMessage ? formatTime(lastMessage.created_at) : ""}
                                   </span>
                                 </div>
                                 
@@ -348,25 +349,25 @@ export default function MensagensPage() {
                         <div
                           key={message.id}
                           className={`flex ${
-                            message.remetenteId === user?.id ? "justify-end" : "justify-start"
+                            message.sender_id === user?.id ? "justify-end" : "justify-start"
                           }`}
                         >
                           <div
                             className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                              message.remetenteId === user?.id
+                              message.sender_id === user?.id
                                 ? "bg-purple-600 text-white"
                                 : "bg-gray-200 text-gray-900"
                             }`}
                           >
-                            <p className="text-sm">{message.texto}</p>
+                            <p className="text-sm">{message.content}</p>
                             <p
                               className={`text-xs mt-1 ${
-                                message.remetenteId === user?.id
+                                message.sender_id === user?.id
                                   ? "text-purple-100"
                                   : "text-gray-500"
                               }`}
                             >
-                              {formatTime(message.timestamp)}
+                              {formatTime(message.created_at)}
                             </p>
                           </div>
                         </div>
