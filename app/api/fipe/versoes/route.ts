@@ -12,26 +12,44 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const marca = searchParams.get('marca');
-    const veiculo = searchParams.get('veiculo');
+    const modelo = searchParams.get('modelo');
 
-    if (!marca || !veiculo) {
-      return NextResponse.json({ error: 'Marca e veículo são obrigatórios' }, { status: 400 });
+    if (!marca || !modelo) {
+      return NextResponse.json({ error: 'Marca e modelo são obrigatórios' }, { status: 400 });
     }
 
-    // Buscar modelos por veículo
-    const { data, error } = await supabase.rpc('listar_modelos_por_veiculo', {
-      p_marca: marca,
-      p_veiculo: veiculo
-    });
+    // Buscar versões por marca e modelo
+    const { data, error } = await supabase
+      .from('ocar_fipe_prices')
+      .select(`
+        fipe_code,
+        ocar_fipe_models!inner(
+          name,
+          ocar_fipe_brands!inner(name)
+        )
+      `)
+      .eq('ocar_fipe_models.ocar_fipe_brands.name', marca)
+      .ilike('ocar_fipe_models.name', `%${modelo}%`)
+      .order('fipe_code');
 
     if (error) {
-      console.error('Erro ao buscar modelos:', error);
-      return NextResponse.json({ error: 'Erro ao buscar modelos' }, { status: 500 });
+      console.error('Erro ao buscar versões:', error);
+      return NextResponse.json({ error: 'Erro ao buscar versões' }, { status: 500 });
     }
 
-    return NextResponse.json(data || []);
+    // Extrair versões únicas
+    const versoesUnicas = [...new Set(data?.map(item => item.fipe_code) || [])]
+      .map(fipeCode => {
+        const item = data?.find(d => d.fipe_code === fipeCode);
+        return {
+          id: fipeCode,
+          name: item?.ocar_fipe_models.name || modelo
+        };
+      });
+
+    return NextResponse.json(versoesUnicas);
   } catch (error) {
-    console.error('Erro na API de modelos:', error);
+    console.error('Erro na API de versões:', error);
     return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 });
   }
 }
