@@ -13,19 +13,19 @@ const supabase = createClient(supabaseUrl, supabaseKey)
 
 async function createWishlistTable() {
   try {
-    console.log('🔧 Criando tabela wishlist_veiculos...')
+    console.log('🔧 Criando tabela ocar_wishlist_veiculos...')
     
     // Primeiro, vamos verificar se a tabela já existe
     const { data: existingTables, error: checkError } = await supabase
       .from('information_schema.tables')
       .select('table_name')
       .eq('table_schema', 'public')
-      .eq('table_name', 'wishlist_veiculos')
+      .eq('table_name', 'ocar_wishlist_veiculos')
 
     if (checkError) {
       console.log('⚠️ Não foi possível verificar tabelas existentes:', checkError.message)
     } else if (existingTables && existingTables.length > 0) {
-      console.log('✅ Tabela wishlist_veiculos já existe!')
+      console.log('✅ Tabela ocar_wishlist_veiculos já existe!')
       return
     }
 
@@ -42,7 +42,7 @@ async function createWishlistTable() {
       },
       body: JSON.stringify({
         sql: `
-          CREATE TABLE IF NOT EXISTS wishlist_veiculos (
+          CREATE TABLE IF NOT EXISTS ocar_wishlist_veiculos (
             id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
             user_id UUID NOT NULL REFERENCES ocar_usuarios(id) ON DELETE CASCADE,
             marca VARCHAR(100) NOT NULL,
@@ -61,7 +61,7 @@ async function createWishlistTable() {
     })
 
     if (response.ok) {
-      console.log('✅ Tabela wishlist_veiculos criada com sucesso!')
+      console.log('✅ Tabela ocar_wishlist_veiculos criada com sucesso!')
     } else {
       const errorText = await response.text()
       console.log('⚠️ Resposta do servidor:', response.status, errorText)
@@ -69,7 +69,7 @@ async function createWishlistTable() {
       // Vamos tentar criar via inserção de teste para ver se a tabela já existe
       console.log('🧪 Testando se a tabela já existe...')
       const { data: testData, error: testError } = await supabase
-        .from('wishlist_veiculos')
+        .from('ocar_wishlist_veiculos')
         .select('id')
         .limit(1)
 
@@ -77,7 +77,7 @@ async function createWishlistTable() {
         console.log('❌ Tabela não existe e não foi possível criar:', testError.message)
         console.log('💡 Execute o SQL manualmente no painel do Supabase:')
         console.log(`
-CREATE TABLE IF NOT EXISTS wishlist_veiculos (
+CREATE TABLE IF NOT EXISTS ocar_wishlist_veiculos (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES ocar_usuarios(id) ON DELETE CASCADE,
   marca VARCHAR(100) NOT NULL,
@@ -92,13 +92,13 @@ CREATE TABLE IF NOT EXISTS wishlist_veiculos (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_wishlist_user_id ON wishlist_veiculos(user_id);
-CREATE INDEX IF NOT EXISTS idx_wishlist_marca ON wishlist_veiculos(marca);
-CREATE INDEX IF NOT EXISTS idx_wishlist_ativo ON wishlist_veiculos(ativo);
-CREATE INDEX IF NOT EXISTS idx_wishlist_created_at ON wishlist_veiculos(created_at);
+CREATE INDEX IF NOT EXISTS idx_wishlist_user_id ON ocar_wishlist_veiculos(user_id);
+CREATE INDEX IF NOT EXISTS idx_wishlist_marca ON ocar_wishlist_veiculos(marca);
+CREATE INDEX IF NOT EXISTS idx_wishlist_ativo ON ocar_wishlist_veiculos(ativo);
+CREATE INDEX IF NOT EXISTS idx_wishlist_created_at ON ocar_wishlist_veiculos(created_at);
         `)
       } else {
-        console.log('✅ Tabela wishlist_veiculos já existe e está funcionando!')
+        console.log('✅ Tabela ocar_wishlist_veiculos já existe e está funcionando!')
       }
     }
 

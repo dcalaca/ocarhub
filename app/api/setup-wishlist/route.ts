@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
     
     // SQL para criar a tabela
     const createTableSQL = `
-      CREATE TABLE IF NOT EXISTS wishlist_veiculos (
+      CREATE TABLE IF NOT EXISTS ocar_wishlist_veiculos (
         id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
         user_id UUID NOT NULL REFERENCES ocar_usuarios(id) ON DELETE CASCADE,
         marca VARCHAR(100) NOT NULL,
@@ -24,14 +24,14 @@ export async function POST(request: NextRequest) {
     `
 
     const createIndexesSQL = `
-      CREATE INDEX IF NOT EXISTS idx_wishlist_user_id ON wishlist_veiculos(user_id);
-      CREATE INDEX IF NOT EXISTS idx_wishlist_marca ON wishlist_veiculos(marca);
-      CREATE INDEX IF NOT EXISTS idx_wishlist_ativo ON wishlist_veiculos(ativo);
-      CREATE INDEX IF NOT EXISTS idx_wishlist_created_at ON wishlist_veiculos(created_at);
+      CREATE INDEX IF NOT EXISTS idx_ocar_wishlist_user_id ON ocar_wishlist_veiculos(user_id);
+      CREATE INDEX IF NOT EXISTS idx_ocar_wishlist_marca ON ocar_wishlist_veiculos(marca);
+      CREATE INDEX IF NOT EXISTS idx_ocar_wishlist_ativo ON ocar_wishlist_veiculos(ativo);
+      CREATE INDEX IF NOT EXISTS idx_ocar_wishlist_created_at ON ocar_wishlist_veiculos(created_at);
     `
 
     const createTriggerSQL = `
-      CREATE OR REPLACE FUNCTION update_wishlist_updated_at()
+      CREATE OR REPLACE FUNCTION update_ocar_wishlist_updated_at()
       RETURNS TRIGGER AS $$
       BEGIN
         NEW.updated_at = NOW();
@@ -39,11 +39,11 @@ export async function POST(request: NextRequest) {
       END;
       $$ LANGUAGE plpgsql;
 
-      DROP TRIGGER IF EXISTS trigger_update_wishlist_updated_at ON wishlist_veiculos;
-      CREATE TRIGGER trigger_update_wishlist_updated_at
-        BEFORE UPDATE ON wishlist_veiculos
+      DROP TRIGGER IF EXISTS trigger_update_ocar_wishlist_updated_at ON ocar_wishlist_veiculos;
+      CREATE TRIGGER trigger_update_ocar_wishlist_updated_at
+        BEFORE UPDATE ON ocar_wishlist_veiculos
         FOR EACH ROW
-        EXECUTE FUNCTION update_wishlist_updated_at();
+        EXECUTE FUNCTION update_ocar_wishlist_updated_at();
     `
 
     // Executar SQL via Supabase

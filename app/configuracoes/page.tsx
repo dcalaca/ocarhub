@@ -122,7 +122,7 @@ export default function ConfiguracoesPage() {
     
     try {
       const { data, error } = await supabase
-        .from('wishlist_veiculos')
+        .from('ocar_wishlist_veiculos')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
@@ -173,7 +173,7 @@ export default function ConfiguracoesPage() {
 
     try {
       const { data, error } = await supabase
-        .from('wishlist_veiculos')
+        .from('ocar_wishlist_veiculos')
         .insert({
           user_id: user.id,
           marca: newWishlistItem.marca,
@@ -218,7 +218,7 @@ export default function ConfiguracoesPage() {
   const handleRemoveWishlist = async (id: string) => {
     try {
       const { error } = await supabase
-        .from('wishlist_veiculos')
+        .from('ocar_wishlist_veiculos')
         .delete()
         .eq('id', id)
 

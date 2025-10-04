@@ -13,12 +13,12 @@ const supabase = createClient(supabaseUrl, supabaseKey)
 
 async function createWishlistTable() {
   try {
-    console.log('🔧 Criando tabela wishlist_veiculos...')
+    console.log('🔧 Criando tabela ocar_wishlist_veiculos...')
     
     const { data, error } = await supabase.rpc('exec_sql', {
       sql: `
         -- Criar tabela para lista de desejos de veículos
-        CREATE TABLE IF NOT EXISTS wishlist_veiculos (
+        CREATE TABLE IF NOT EXISTS ocar_wishlist_veiculos (
           id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
           user_id UUID NOT NULL REFERENCES ocar_usuarios(id) ON DELETE CASCADE,
           marca VARCHAR(100) NOT NULL,
@@ -34,10 +34,10 @@ async function createWishlistTable() {
         );
 
         -- Criar índices para melhor performance
-        CREATE INDEX IF NOT EXISTS idx_wishlist_user_id ON wishlist_veiculos(user_id);
-        CREATE INDEX IF NOT EXISTS idx_wishlist_marca ON wishlist_veiculos(marca);
-        CREATE INDEX IF NOT EXISTS idx_wishlist_ativo ON wishlist_veiculos(ativo);
-        CREATE INDEX IF NOT EXISTS idx_wishlist_created_at ON wishlist_veiculos(created_at);
+        CREATE INDEX IF NOT EXISTS idx_wishlist_user_id ON ocar_wishlist_veiculos(user_id);
+        CREATE INDEX IF NOT EXISTS idx_wishlist_marca ON ocar_wishlist_veiculos(marca);
+        CREATE INDEX IF NOT EXISTS idx_wishlist_ativo ON ocar_wishlist_veiculos(ativo);
+        CREATE INDEX IF NOT EXISTS idx_wishlist_created_at ON ocar_wishlist_veiculos(created_at);
 
         -- Criar trigger para atualizar updated_at
         CREATE OR REPLACE FUNCTION update_wishlist_updated_at()
@@ -49,7 +49,7 @@ async function createWishlistTable() {
         $$ LANGUAGE plpgsql;
 
         CREATE TRIGGER trigger_update_wishlist_updated_at
-          BEFORE UPDATE ON wishlist_veiculos
+          BEFORE UPDATE ON ocar_wishlist_veiculos
           FOR EACH ROW
           EXECUTE FUNCTION update_wishlist_updated_at();
       `
@@ -60,12 +60,12 @@ async function createWishlistTable() {
       return
     }
 
-    console.log('✅ Tabela wishlist_veiculos criada com sucesso!')
+    console.log('✅ Tabela ocar_wishlist_veiculos criada com sucesso!')
     
     // Testar inserção
     console.log('🧪 Testando inserção...')
     const { data: testData, error: testError } = await supabase
-      .from('wishlist_veiculos')
+      .from('ocar_wishlist_veiculos')
       .insert({
         user_id: '00000000-0000-0000-0000-000000000000', // UUID de teste
         marca: 'Teste',
@@ -80,7 +80,7 @@ async function createWishlistTable() {
       console.log('✅ Teste de inserção bem-sucedido!')
       // Limpar dados de teste
       await supabase
-        .from('wishlist_veiculos')
+        .from('ocar_wishlist_veiculos')
         .delete()
         .eq('user_id', '00000000-0000-0000-0000-000000000000')
     }
