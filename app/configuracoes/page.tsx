@@ -219,26 +219,37 @@ export default function ConfiguracoesPage() {
     if (!user || !newWishlistItem.marca) return
 
     try {
+      const insertData = {
+        user_id: user.id,
+        marca: newWishlistItem.marca,
+        modelo: newWishlistItem.modelo || null,
+        versao: newWishlistItem.versao || null,
+        ano_min: newWishlistItem.anoMin ? parseInt(newWishlistItem.anoMin) : null,
+        ano_max: newWishlistItem.anoMax ? parseInt(newWishlistItem.anoMax) : null,
+        preco_min: newWishlistItem.precoMin ? parseFloat(newWishlistItem.precoMin) : null,
+        preco_max: newWishlistItem.precoMax ? parseFloat(newWishlistItem.precoMax) : null,
+        unico_dono: newWishlistItem.unicoDono,
+        km_min: newWishlistItem.kmMin ? parseInt(newWishlistItem.kmMin) : null,
+        km_max: newWishlistItem.kmMax ? parseInt(newWishlistItem.kmMax) : null,
+        estado: newWishlistItem.estado || null,
+        ativo: true
+      }
+
+      console.log('🔍 Dados para inserção:', insertData)
+      console.log('🔍 User ID:', user.id)
+      console.log('🔍 Tipo do User ID:', typeof user.id)
+
       const { data, error } = await supabase
         .from('ocar_wishlist_veiculos')
-        .insert({
-          user_id: user.id,
-          marca: newWishlistItem.marca,
-          modelo: newWishlistItem.modelo || null,
-          versao: newWishlistItem.versao || null,
-          ano_min: newWishlistItem.anoMin ? parseInt(newWishlistItem.anoMin) : null,
-          ano_max: newWishlistItem.anoMax ? parseInt(newWishlistItem.anoMax) : null,
-          preco_min: newWishlistItem.precoMin ? parseFloat(newWishlistItem.precoMin) : null,
-          preco_max: newWishlistItem.precoMax ? parseFloat(newWishlistItem.precoMax) : null,
-          unico_dono: newWishlistItem.unicoDono,
-          km_min: newWishlistItem.kmMin ? parseInt(newWishlistItem.kmMin) : null,
-          km_max: newWishlistItem.kmMax ? parseInt(newWishlistItem.kmMax) : null,
-          estado: newWishlistItem.estado || null,
-          ativo: true
-        })
+        .insert(insertData)
         .select()
 
-      if (error) throw error
+      if (error) {
+        console.error('❌ Erro do Supabase:', error)
+        throw error
+      }
+
+      console.log('✅ Dados inseridos com sucesso:', data)
 
       setWishlist(prev => [data[0], ...prev])
       setNewWishlistItem({
