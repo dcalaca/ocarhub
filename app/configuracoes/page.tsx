@@ -181,33 +181,33 @@ export default function ConfiguracoesPage() {
   const loadEstados = async () => {
     try {
       const estadosData = [
-        { id: 'AC', name: 'Acre' },
-        { id: 'AL', name: 'Alagoas' },
-        { id: 'AP', name: 'Amapá' },
-        { id: 'AM', name: 'Amazonas' },
-        { id: 'BA', name: 'Bahia' },
-        { id: 'CE', name: 'Ceará' },
-        { id: 'DF', name: 'Distrito Federal' },
-        { id: 'ES', name: 'Espírito Santo' },
-        { id: 'GO', name: 'Goiás' },
-        { id: 'MA', name: 'Maranhão' },
-        { id: 'MT', name: 'Mato Grosso' },
-        { id: 'MS', name: 'Mato Grosso do Sul' },
-        { id: 'MG', name: 'Minas Gerais' },
-        { id: 'PA', name: 'Pará' },
-        { id: 'PB', name: 'Paraíba' },
-        { id: 'PR', name: 'Paraná' },
-        { id: 'PE', name: 'Pernambuco' },
-        { id: 'PI', name: 'Piauí' },
-        { id: 'RJ', name: 'Rio de Janeiro' },
-        { id: 'RN', name: 'Rio Grande do Norte' },
-        { id: 'RS', name: 'Rio Grande do Sul' },
-        { id: 'RO', name: 'Rondônia' },
-        { id: 'RR', name: 'Roraima' },
-        { id: 'SC', name: 'Santa Catarina' },
-        { id: 'SP', name: 'São Paulo' },
-        { id: 'SE', name: 'Sergipe' },
-        { id: 'TO', name: 'Tocantins' }
+        { id: 'AC', name: 'Acre (AC)' },
+        { id: 'AL', name: 'Alagoas (AL)' },
+        { id: 'AP', name: 'Amapá (AP)' },
+        { id: 'AM', name: 'Amazonas (AM)' },
+        { id: 'BA', name: 'Bahia (BA)' },
+        { id: 'CE', name: 'Ceará (CE)' },
+        { id: 'DF', name: 'Distrito Federal (DF)' },
+        { id: 'ES', name: 'Espírito Santo (ES)' },
+        { id: 'GO', name: 'Goiás (GO)' },
+        { id: 'MA', name: 'Maranhão (MA)' },
+        { id: 'MT', name: 'Mato Grosso (MT)' },
+        { id: 'MS', name: 'Mato Grosso do Sul (MS)' },
+        { id: 'MG', name: 'Minas Gerais (MG)' },
+        { id: 'PA', name: 'Pará (PA)' },
+        { id: 'PB', name: 'Paraíba (PB)' },
+        { id: 'PR', name: 'Paraná (PR)' },
+        { id: 'PE', name: 'Pernambuco (PE)' },
+        { id: 'PI', name: 'Piauí (PI)' },
+        { id: 'RJ', name: 'Rio de Janeiro (RJ)' },
+        { id: 'RN', name: 'Rio Grande do Norte (RN)' },
+        { id: 'RS', name: 'Rio Grande do Sul (RS)' },
+        { id: 'RO', name: 'Rondônia (RO)' },
+        { id: 'RR', name: 'Roraima (RR)' },
+        { id: 'SC', name: 'Santa Catarina (SC)' },
+        { id: 'SP', name: 'São Paulo (SP)' },
+        { id: 'SE', name: 'Sergipe (SE)' },
+        { id: 'TO', name: 'Tocantins (TO)' }
       ]
       setEstados(estadosData)
     } catch (error) {
@@ -735,7 +735,7 @@ export default function ConfiguracoesPage() {
                               {item.estado && (
                                 <div className="flex gap-2">
                                   <span className="font-medium">Estado:</span>
-                                  <span>{item.estado}</span>
+                                  <span>{estados.find(e => e.id === item.estado)?.name || item.estado}</span>
                                 </div>
                               )}
                               
