@@ -7,11 +7,18 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     console.log('📝 Body recebido:', body)
     
-    const { placa, estado, tipo } = body
+    const { placa, estado, tipo, renavam, login_cpf, login_cnpj, login_senha } = body
 
     if (!placa) {
       return NextResponse.json(
         { error: 'Placa é obrigatória' },
+        { status: 400 }
+      )
+    }
+
+    if (tipo === 'debitos' && !renavam) {
+      return NextResponse.json(
+        { error: 'RENAVAM é obrigatório para consulta de débitos' },
         { status: 400 }
       )
     }
@@ -37,13 +44,20 @@ export async function POST(request: NextRequest) {
         service = estado ? `detran/${estado.toLowerCase()}/licenciamento` : 'detran/sp/licenciamento' // Default SP
         break
       case 'restricoes':
-        service = estado ? `detran/${estado.toLowerCase()}/restricoes` : 'detran/sp/restricoes' // Default SP
+        // Usar API unificada de restrições
+        service = 'detran/restricoes'
+        break
+      case 'debitos':
+        service = estado ? `detran/${estado.toLowerCase()}/debitos` : 'detran/sp/debitos' // Default SP
         break
       case 'gravames':
         service = estado ? `detran/${estado.toLowerCase()}/gravame` : 'detran/sp/gravame' // Default SP
         break
       case 'veiculo':
         service = estado ? `detran/${estado.toLowerCase()}/veiculo` : 'detran/sp/veiculo' // Default SP
+        break
+      case 'multas_sp':
+        service = 'pref/sp/sao-paulo/multas-guias'
         break
       default:
         return NextResponse.json(
@@ -60,6 +74,10 @@ export async function POST(request: NextRequest) {
       timeout: 60,
       ignore_site_receipt: 0,
       placa: placa.toUpperCase().replace(/[^A-Z0-9]/g, ''),
+      ...(renavam && { renavam: renavam.replace(/[^0-9]/g, '') }),
+      ...(login_cpf && { login_cpf: login_cpf.replace(/[^0-9]/g, '') }),
+      ...(login_cnpj && { login_cnpj: login_cnpj.replace(/[^0-9]/g, '') }),
+      ...(login_senha && { login_senha }),
       ...(estado && { estado: estado.toUpperCase() })
     }
     console.log('📤 Dados da requisição:', requestData)

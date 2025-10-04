@@ -18,9 +18,11 @@ interface VehicleCardProps {
   className?: string
   showRemoveFromFavorites?: boolean
   onFavoriteUpdate?: () => void
+  viewMode?: "grid" | "list"
+  onVehicleClick?: () => void
 }
 
-const VehicleCard = React.memo(function VehicleCard({ vehicle, className, showRemoveFromFavorites, onFavoriteUpdate }: VehicleCardProps) {
+const VehicleCard = React.memo(function VehicleCard({ vehicle, className, showRemoveFromFavorites, onFavoriteUpdate, viewMode = "grid", onVehicleClick }: VehicleCardProps) {
   const { user, toggleFavorito, isFavorito, toggleCurtida, isCurtido } = useAuth()
   const { toast } = useToast()
   const router = useRouter()
@@ -151,6 +153,145 @@ const VehicleCard = React.memo(function VehicleCard({ vehicle, className, showRe
     }
   }, [vehicle.id, vehicle.marca, vehicle.modelo, formattedPrice, toast])
 
+  // Função para salvar estado da página antes de navegar
+  const handleVehicleClick = () => {
+    onVehicleClick?.()
+  }
+
+  if (viewMode === "list") {
+    return (
+      <Card
+        className={cn(
+          "overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 bg-card text-card-foreground",
+          className,
+        )}
+      >
+        <Link href={`/veiculo/${vehicle.id}`} passHref legacyBehavior>
+          <a className="block group cursor-pointer" onClick={handleVehicleClick}>
+            <div className="flex">
+              {/* Imagem pequena à esquerda */}
+              <div className="w-32 h-24 flex-shrink-0 relative overflow-hidden">
+                <Image
+                  src={
+                    vehicle.fotos && vehicle.fotos.length > 0 ? vehicle.fotos[0] :
+                    `/placeholder.svg?width=128&height=96&query=${encodeURIComponent(vehicle.marca || "car")}+${encodeURIComponent(vehicle.modelo || "model")}`
+                  }
+                  alt={`${vehicle.marca} ${vehicle.modelo}`}
+                  width={128}
+                  height={96}
+                  className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
+                  loading="lazy"
+                  placeholder="blur"
+                  blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
+                />
+                {vehicle.plano === "destaque" && (
+                  <Badge variant="default" className="absolute top-1 left-1 bg-purple-600 text-white shadow-md text-xs">
+                    <Star className="w-2 h-2 mr-1 fill-white" /> Destaque
+                  </Badge>
+                )}
+                {vehicle.verificado && (
+                  <Badge variant="secondary" className="absolute top-1 right-1 bg-green-600 text-white shadow-md text-xs">
+                    <ShieldCheck className="w-2 h-2 mr-1 fill-white" /> Verificado
+                  </Badge>
+                )}
+              </div>
+
+              {/* Conteúdo principal */}
+              <div className="flex-1 p-3 flex flex-col justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold mb-1 group-hover:text-purple-600">
+                    {vehicle.marca} {vehicle.modelo}
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    {vehicle.versao || "Versão não informada"}
+                  </p>
+                  <p className="text-xl font-bold text-purple-700 mb-2">{formattedPrice}</p>
+                  
+                  <div className="grid grid-cols-3 gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                    <div className="flex items-center">
+                      <Calendar className="w-4 h-4 mr-1 text-purple-500 flex-shrink-0" />
+                      <span>{vehicle.ano}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <Gauge className="w-4 h-4 mr-1 text-purple-500 flex-shrink-0" />
+                      <span className="truncate">{vehicle.quilometragem.toLocaleString("pt-BR")} km</span>
+                    </div>
+                    <div className="flex items-center">
+                      <Tag className="w-4 h-4 mr-1 text-purple-500 flex-shrink-0" />
+                      <span className="truncate">{vehicle.cidade}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Ações na parte inferior */}
+                <div className="flex items-center justify-between mt-3 pt-2 border-t">
+                  <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                    <div className="flex items-center" title={`${vehicle.views || 0} visualizações`}>
+                      <Eye className="w-4 h-4 mr-1 text-gray-500" />
+                      <span>{vehicle.views !== undefined ? vehicle.views : 0}</span>
+                    </div>
+                    <button
+                      onClick={handleToggleLike}
+                      className={cn(
+                        "flex items-center hover:text-purple-600 transition-colors p-1 -m-1 rounded-md",
+                        isCurrentlyLiked && "text-purple-600",
+                      )}
+                      title={isCurrentlyLiked ? "Descurtir" : "Curtir"}
+                      aria-pressed={isCurrentlyLiked}
+                    >
+                      <ThumbsUp
+                        className={cn(
+                          "w-4 h-4 mr-1",
+                          isCurrentlyLiked && "fill-purple-500 text-purple-600",
+                        )}
+                      />
+                      <span>{localLikes}</span>
+                    </button>
+                    <button
+                      onClick={handleShare}
+                      className="flex items-center hover:text-purple-600 transition-colors p-1 -m-1 rounded-md"
+                      title="Compartilhar"
+                    >
+                      <Share2 className="w-4 h-4 mr-1" />
+                      <span>{vehicle.shares !== undefined ? vehicle.shares : 0}</span>
+                    </button>
+                  </div>
+
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleToggleFavorite}
+                    className={cn(
+                      "rounded-full w-8 h-8",
+                      isCurrentlyFavorited
+                        ? "text-red-500 hover:bg-red-100 hover:text-red-600"
+                        : "text-gray-500 hover:bg-gray-100 hover:text-gray-700",
+                    )}
+                    title={
+                      showRemoveFromFavorites
+                        ? "Remover dos Favoritos"
+                        : isCurrentlyFavorited
+                          ? "Remover Favorito"
+                          : "Salvar Favorito"
+                    }
+                    aria-pressed={isCurrentlyFavorited}
+                  >
+                    {showRemoveFromFavorites ? (
+                      <Trash2 className="w-4 h-4" />
+                    ) : (
+                      <Heart className={cn("w-4 h-4", isCurrentlyFavorited && "fill-red-500 text-red-500")} />
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </a>
+        </Link>
+      </Card>
+    )
+  }
+
+  // Modo grid (padrão)
   return (
     <Card
       className={cn(
@@ -159,7 +300,7 @@ const VehicleCard = React.memo(function VehicleCard({ vehicle, className, showRe
       )}
     >
       <Link href={`/veiculo/${vehicle.id}`} passHref legacyBehavior>
-        <a className="block group cursor-pointer">
+        <a className="block group cursor-pointer" onClick={handleVehicleClick}>
           <CardHeader className="p-0 relative">
             <div className="aspect-[16/10] overflow-hidden">
               <Image

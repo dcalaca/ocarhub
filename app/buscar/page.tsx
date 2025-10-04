@@ -68,7 +68,56 @@ function SearchPageContent() {
   useEffect(() => {
     // Remover qualquer flag que possa estar causando redirecionamento
     sessionStorage.removeItem("fromSearch")
+    
+    // Restaurar estado salvo se existir
+    restorePageState()
   }, [])
+
+  // Salvar estado da página no sessionStorage
+  const savePageState = () => {
+    const pageState = {
+      currentPage,
+      itemsPerPage,
+      viewMode,
+      showFilters,
+      currentFilters,
+      scrollPosition: window.scrollY,
+      timestamp: Date.now()
+    }
+    sessionStorage.setItem('searchPageState', JSON.stringify(pageState))
+  }
+
+  // Restaurar estado da página do sessionStorage
+  const restorePageState = () => {
+    try {
+      const savedState = sessionStorage.getItem('searchPageState')
+      if (savedState) {
+        const pageState = JSON.parse(savedState)
+        
+        // Verificar se o estado não é muito antigo (máximo 30 minutos)
+        const maxAge = 30 * 60 * 1000 // 30 minutos
+        if (Date.now() - pageState.timestamp < maxAge) {
+          setCurrentPage(pageState.currentPage || 1)
+          setItemsPerPage(pageState.itemsPerPage || 12)
+          setViewMode(pageState.viewMode || "grid")
+          setShowFilters(pageState.showFilters !== false)
+          
+          if (pageState.currentFilters) {
+            setCurrentFilters(prev => ({ ...prev, ...pageState.currentFilters }))
+          }
+          
+          // Restaurar scroll após um pequeno delay para garantir que o conteúdo foi renderizado
+          setTimeout(() => {
+            if (pageState.scrollPosition) {
+              window.scrollTo(0, pageState.scrollPosition)
+            }
+          }, 100)
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao restaurar estado da página:', error)
+    }
+  }
 
   // Aplica filtros quando mudam
   // Aplicar filtros quando filtros mudarem
@@ -84,6 +133,14 @@ function SearchPageContent() {
       applyFilters()
     }
   }, [vehicles])
+
+  // Salvar estado sempre que ele mudar (exceto na inicialização)
+  useEffect(() => {
+    // Só salvar se não for a primeira carga
+    if (vehicles.length > 0) {
+      savePageState()
+    }
+  }, [currentPage, itemsPerPage, viewMode, showFilters, currentFilters])
 
   const loadVehicles = async () => {
     setLoading(true)
@@ -520,7 +577,12 @@ function SearchPageContent() {
                   }`}
                 >
                   {filteredVehicles.map((vehicle) => (
-                    <VehicleCard key={vehicle.id} vehicle={vehicle} viewMode={viewMode} />
+                    <VehicleCard 
+                      key={vehicle.id} 
+                      vehicle={vehicle} 
+                      viewMode={viewMode}
+                      onVehicleClick={() => savePageState()}
+                    />
                   ))}
                 </div>
 

@@ -41,6 +41,8 @@ export class VehiclesService {
           views,
           likes,
           shares,
+          fotos,
+          verificado,
           created_at,
           updated_at
         `)
