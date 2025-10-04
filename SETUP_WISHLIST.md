@@ -49,6 +49,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trigger_update_ocar_wishlist_updated_at ON ocar_wishlist_veiculos;
 CREATE TRIGGER trigger_update_ocar_wishlist_updated_at
   BEFORE UPDATE ON ocar_wishlist_veiculos
   FOR EACH ROW
