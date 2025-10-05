@@ -34,6 +34,9 @@ function getInitials(user: any): string {
 export function Header() {
   const { user, logout } = useAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  
+  // Verificar se o usuário tem permissão de admin
+  const isAdmin = user?.email === 'dcalaca@gmail.com'
 
   return (
     <header className="bg-black border-b border-gray-800 sticky top-0 z-50">
@@ -249,12 +252,14 @@ export function Header() {
                       <span>Histórico Veicular</span>
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/admin/saldo-teste" className="flex items-center">
-                      <Calculator className="mr-2 h-4 w-4" />
-                      <span>Saldo de Teste</span>
-                    </Link>
-                  </DropdownMenuItem>
+                  {isAdmin && (
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin/saldo-teste" className="flex items-center">
+                        <Calculator className="mr-2 h-4 w-4" />
+                        <span>Saldo de Teste</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem asChild>
                     <Link href="/configuracoes" className="flex items-center">
                       <Settings className="mr-2 h-4 w-4" />
