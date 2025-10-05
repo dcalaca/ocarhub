@@ -119,6 +119,24 @@ export default function AdminPage() {
     router.push("/logout")
   }
 
+  const clearEditModal = () => {
+    setEditModalOpen(false)
+    setEditingPlan(null)
+    setEditFormData({
+      nome: '',
+      tipo: '',
+      preco: '',
+      descricao: '',
+      duracao_dias: '',
+      limite_anuncios: '',
+      limite_consultas: '',
+      beneficios: '',
+      destaque: false,
+      ativo: true
+    })
+    console.log('🧹 Estados do modal limpos completamente')
+  }
+
   const handleEdit = (plan: Plan) => {
     setEditingPlan(plan)
     setEditFormData({
@@ -188,11 +206,8 @@ export default function AdminPage() {
         description: "O plano foi atualizado com sucesso",
       })
 
-      // Limpar estados do modal
-      setEditModalOpen(false)
-      setEditingPlan(null)
-      
-      console.log('✅ Modal fechado e estados limpos')
+      // Limpar estados do modal usando a função dedicada
+      clearEditModal()
       
     } catch (error) {
       console.error('❌ Erro ao atualizar plano:', error)
@@ -203,8 +218,7 @@ export default function AdminPage() {
       })
       
       // Mesmo com erro, fechar o modal para não travar a interface
-      setEditModalOpen(false)
-      setEditingPlan(null)
+      clearEditModal()
     }
   }
 
@@ -482,7 +496,11 @@ export default function AdminPage() {
       </div>
 
       {/* Modal de Edição */}
-      <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
+      <Dialog open={editModalOpen} onOpenChange={(open) => {
+        if (!open) {
+          clearEditModal()
+        }
+      }}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Editar Plano</DialogTitle>
@@ -603,7 +621,7 @@ export default function AdminPage() {
           </div>
           
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditModalOpen(false)}>
+            <Button variant="outline" onClick={clearEditModal}>
               Cancelar
             </Button>
             <Button onClick={handleSaveEdit}>
