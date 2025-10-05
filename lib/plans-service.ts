@@ -37,6 +37,12 @@ export class PlansService {
   private static cache = new Map<string, { data: Plan[], timestamp: number }>()
   private static CACHE_TTL = 5 * 60 * 1000 // 5 minutos
 
+  // Invalidar cache
+  private static invalidateCache() {
+    this.cache.clear()
+    console.log('🗑️ Cache de planos invalidado')
+  }
+
   // Buscar todos os planos ativos (com cache)
   static async getActivePlans(): Promise<Plan[]> {
     const cacheKey = 'active_plans'
@@ -175,10 +181,15 @@ export class PlansService {
       }
 
       // Converter beneficios de jsonb para array de strings
-      return {
+      const newPlan = {
         ...data,
         beneficios: Array.isArray(data.beneficios) ? data.beneficios : []
       }
+
+      // Invalidar cache após criação
+      this.invalidateCache()
+
+      return newPlan
     } catch (error) {
       console.error('❌ Erro no PlansService.createPlan:', error)
       throw error
@@ -206,6 +217,9 @@ export class PlansService {
       }
 
       console.log('✅ Update executado com sucesso')
+
+      // Invalidar cache após atualização
+      this.invalidateCache()
 
       // Como o RLS pode impedir o retorno dos dados, vamos buscar o plano atualizado separadamente
       const { data: updatedPlan, error: fetchError } = await supabase
@@ -259,6 +273,9 @@ export class PlansService {
         throw error
       }
 
+      // Invalidar cache após deleção
+      this.invalidateCache()
+
       return true
     } catch (error) {
       console.error('❌ Erro no PlansService.deletePlan:', error)
@@ -281,6 +298,9 @@ export class PlansService {
         console.error('❌ Erro ao alterar status do plano:', error)
         throw error
       }
+
+      // Invalidar cache após alteração de status
+      this.invalidateCache()
 
       return true
     } catch (error) {
