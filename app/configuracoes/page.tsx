@@ -723,62 +723,66 @@ export default function ConfiguracoesPage() {
                             </p>
                             <div className="space-y-1 text-sm text-slate-400">
                               {/* Ano */}
-                              {(item.anoMin || item.anoMax) && (
-                                <div className="flex gap-2">
-                                  <span className="font-medium">Ano:</span>
-                                  {item.anoMin && item.anoMax ? (
-                                    <span>{item.anoMin} - {item.anoMax}</span>
-                                  ) : item.anoMin ? (
-                                    <span>A partir de {item.anoMin}</span>
-                                  ) : (
-                                    <span>Até {item.anoMax}</span>
-                                  )}
-                                </div>
-                              )}
+                              <div className="flex gap-2">
+                                <span className="font-medium">Ano:</span>
+                                {item.anoMin && item.anoMax ? (
+                                  <span>{item.anoMin} - {item.anoMax}</span>
+                                ) : item.anoMin ? (
+                                  <span>A partir de {item.anoMin}</span>
+                                ) : item.anoMax ? (
+                                  <span>Até {item.anoMax}</span>
+                                ) : (
+                                  <span className="text-gray-500">Qualquer ano</span>
+                                )}
+                              </div>
                               
                               {/* Preço */}
-                              {(item.precoMin || item.precoMax) && (
-                                <div className="flex gap-2">
-                                  <span className="font-medium">Preço:</span>
-                                  {item.precoMin && item.precoMax ? (
-                                    <span>R$ {parseFloat(item.precoMin).toLocaleString('pt-BR')} - R$ {parseFloat(item.precoMax).toLocaleString('pt-BR')}</span>
-                                  ) : item.precoMin ? (
-                                    <span>A partir de R$ {parseFloat(item.precoMin).toLocaleString('pt-BR')}</span>
-                                  ) : (
-                                    <span>Até R$ {parseFloat(item.precoMax).toLocaleString('pt-BR')}</span>
-                                  )}
-                                </div>
-                              )}
+                              <div className="flex gap-2">
+                                <span className="font-medium">Preço:</span>
+                                {item.precoMin && item.precoMax ? (
+                                  <span>R$ {parseFloat(item.precoMin).toLocaleString('pt-BR')} - R$ {parseFloat(item.precoMax).toLocaleString('pt-BR')}</span>
+                                ) : item.precoMin ? (
+                                  <span>A partir de R$ {parseFloat(item.precoMin).toLocaleString('pt-BR')}</span>
+                                ) : item.precoMax ? (
+                                  <span>Até R$ {parseFloat(item.precoMax).toLocaleString('pt-BR')}</span>
+                                ) : (
+                                  <span className="text-gray-500">Qualquer preço</span>
+                                )}
+                              </div>
                               
                               {/* Quilometragem */}
-                              {(item.kmMin || item.kmMax) && (
-                                <div className="flex gap-2">
-                                  <span className="font-medium">Km:</span>
-                                  {item.kmMin && item.kmMax ? (
-                                    <span>{parseInt(item.kmMin).toLocaleString('pt-BR')} - {parseInt(item.kmMax).toLocaleString('pt-BR')} km</span>
-                                  ) : item.kmMin ? (
-                                    <span>A partir de {parseInt(item.kmMin).toLocaleString('pt-BR')} km</span>
-                                  ) : (
-                                    <span>Até {parseInt(item.kmMax).toLocaleString('pt-BR')} km</span>
-                                  )}
-                                </div>
-                              )}
+                              <div className="flex gap-2">
+                                <span className="font-medium">Km:</span>
+                                {item.kmMin && item.kmMax ? (
+                                  <span>{parseInt(item.kmMin).toLocaleString('pt-BR')} - {parseInt(item.kmMax).toLocaleString('pt-BR')} km</span>
+                                ) : item.kmMin ? (
+                                  <span>A partir de {parseInt(item.kmMin).toLocaleString('pt-BR')} km</span>
+                                ) : item.kmMax ? (
+                                  <span>Até {parseInt(item.kmMax).toLocaleString('pt-BR')} km</span>
+                                ) : (
+                                  <span className="text-gray-500">Qualquer quilometragem</span>
+                                )}
+                              </div>
                               
                               {/* Estado */}
-                              {item.estado && (
-                                <div className="flex gap-2">
-                                  <span className="font-medium">Estado:</span>
+                              <div className="flex gap-2">
+                                <span className="font-medium">Estado:</span>
+                                {item.estado ? (
                                   <span>{estados.find(e => e.id === item.estado)?.name || item.estado}</span>
-                                </div>
-                              )}
+                                ) : (
+                                  <span className="text-gray-500">Qualquer estado</span>
+                                )}
+                              </div>
                               
                               {/* Único Dono */}
-                              {item.unicoDono && (
-                                <div className="flex gap-2">
-                                  <span className="font-medium">Único Dono:</span>
+                              <div className="flex gap-2">
+                                <span className="font-medium">Único Dono:</span>
+                                {item.unicoDono ? (
                                   <span className="text-green-400">Sim</span>
-                                </div>
-                              )}
+                                ) : (
+                                  <span className="text-gray-500">Não especificado</span>
+                                )}
+                              </div>
                               
                               {/* Status das Notificações */}
                               <div className="flex gap-2">
