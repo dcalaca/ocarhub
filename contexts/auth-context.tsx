@@ -351,13 +351,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (authUser.user && authUser.user.id === userId) {
               console.log('🔄 Usuário ainda existe no Auth, criando perfil básico...')
               
+              // Extrair dados do Google se disponíveis
+              const userData = authUser.user
+              console.log('🔍 Dados do usuário Auth:', userData)
+              
+              // Extrair nome do usuário (pode vir de user_metadata ou raw_user_meta_data)
+              let nome = 'Usuário'
+              if (userData.user_metadata?.full_name) {
+                nome = userData.user_metadata.full_name
+              } else if (userData.user_metadata?.name) {
+                nome = userData.user_metadata.name
+              } else if (userData.raw_user_meta_data?.full_name) {
+                nome = userData.raw_user_meta_data.full_name
+              } else if (userData.raw_user_meta_data?.name) {
+                nome = userData.raw_user_meta_data.name
+              } else if (userData.email) {
+                // Usar parte do email como nome se não houver nome
+                nome = userData.email.split('@')[0]
+              }
+              
+              // Extrair foto do perfil
+              let foto_perfil = null
+              if (userData.user_metadata?.avatar_url) {
+                foto_perfil = userData.user_metadata.avatar_url
+              } else if (userData.raw_user_meta_data?.avatar_url) {
+                foto_perfil = userData.raw_user_meta_data.avatar_url
+              } else if (userData.user_metadata?.picture) {
+                foto_perfil = userData.user_metadata.picture
+              } else if (userData.raw_user_meta_data?.picture) {
+                foto_perfil = userData.raw_user_meta_data.picture
+              }
+              
+              console.log('📝 Criando perfil com dados:', { nome, email: userData.email, foto_perfil })
+
               const { data: newProfile, error: createError } = await supabase
                 .from('ocar_usuarios')
                 .insert({
                   id: userId,
-                  email: authUser.user.email || '',
-                  nome: 'Usuário',
+                  email: userData.email || '',
+                  nome: nome,
                   tipo_usuario: 'comprador',
+                  foto_perfil: foto_perfil,
                   verificado: false,
                   ativo: true,
                   promocoes_email: true,
