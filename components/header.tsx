@@ -4,7 +4,7 @@ import { useState } from "react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet"
-import { Car, Heart, MessageCircle, Plus, User, LogOut, Settings, Wallet, Menu, History, Calculator, FileText } from "lucide-react"
+import { Car, Heart, MessageCircle, Plus, User, LogOut, Settings, Wallet, Menu, History, Calculator, FileText, Shield } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useAuth } from "@/contexts/auth-context"
 import Link from "next/link"
@@ -253,12 +253,20 @@ export function Header() {
                     </Link>
                   </DropdownMenuItem>
                   {isAdmin && (
-                    <DropdownMenuItem asChild>
-                      <Link href="/admin/saldo-teste" className="flex items-center">
-                        <Calculator className="mr-2 h-4 w-4" />
-                        <span>Saldo de Teste</span>
-                      </Link>
-                    </DropdownMenuItem>
+                    <>
+                      <DropdownMenuItem asChild>
+                        <Link href="/admin" className="flex items-center">
+                          <Shield className="mr-2 h-4 w-4" />
+                          <span>Painel Admin</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/admin/saldo-teste" className="flex items-center">
+                          <Calculator className="mr-2 h-4 w-4" />
+                          <span>Saldo de Teste</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    </>
                   )}
                   <DropdownMenuItem asChild>
                     <Link href="/configuracoes" className="flex items-center">
