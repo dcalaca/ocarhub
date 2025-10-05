@@ -21,6 +21,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Switch } from "@/components/ui/switch"
+import {
   Shield,
   Plus,
   MoreVertical,
@@ -46,6 +58,19 @@ export default function AdminPage() {
   const router = useRouter()
   const { toast } = useToast()
   const { user } = useAuth()
+
+  // Estados para modal de edição
+  const [editModalOpen, setEditModalOpen] = useState(false)
+  const [editingPlan, setEditingPlan] = useState<Plan | null>(null)
+  const [editFormData, setEditFormData] = useState({
+    nome: '',
+    preco: '',
+    duracao_dias: '',
+    limite_anuncios: '',
+    limite_consultas: '',
+    beneficios: '',
+    ativo: true
+  })
 
   // Verificar se o usuário tem permissão de admin
   const isAdmin = user?.email === 'dcalaca@gmail.com'
@@ -88,6 +113,58 @@ export default function AdminPage() {
   const handleLogout = () => {
     // Redirecionar para logout normal
     router.push("/logout")
+  }
+
+  const handleEdit = (plan: Plan) => {
+    setEditingPlan(plan)
+    setEditFormData({
+      nome: plan.nome,
+      preco: plan.preco.toString(),
+      duracao_dias: plan.duracao_dias?.toString() || '',
+      limite_anuncios: plan.limite_anuncios?.toString() || '',
+      limite_consultas: plan.limite_consultas?.toString() || '',
+      beneficios: Array.isArray(plan.beneficios) ? plan.beneficios.join('\n') : plan.beneficios || '',
+      ativo: plan.ativo
+    })
+    setEditModalOpen(true)
+  }
+
+  const handleSaveEdit = async () => {
+    if (!editingPlan) return
+
+    try {
+      const updatedPlan = await PlansService.updatePlan({
+        id: editingPlan.id,
+        nome: editFormData.nome,
+        preco: parseFloat(editFormData.preco),
+        duracao_dias: editFormData.duracao_dias ? parseInt(editFormData.duracao_dias) : undefined,
+        limite_anuncios: editFormData.limite_anuncios ? parseInt(editFormData.limite_anuncios) : 0,
+        limite_consultas: editFormData.limite_consultas ? parseInt(editFormData.limite_consultas) : 0,
+        beneficios: editFormData.beneficios.split('\n').filter(b => b.trim()),
+        ativo: editFormData.ativo
+      })
+      
+      if (updatedPlan) {
+        setPlans(prev => prev.map(plan => 
+          plan.id === editingPlan.id ? updatedPlan : plan
+        ))
+      }
+
+      toast({
+        title: "Plano atualizado",
+        description: "O plano foi atualizado com sucesso",
+      })
+
+      setEditModalOpen(false)
+      setEditingPlan(null)
+    } catch (error) {
+      console.error('Erro ao atualizar plano:', error)
+      toast({
+        title: "Erro ao atualizar plano",
+        description: "Não foi possível atualizar o plano.",
+        variant: "destructive",
+      })
+    }
   }
 
   const handleToggleStatus = async (id: string, currentStatus: boolean) => {
@@ -244,7 +321,7 @@ export default function AdminPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleEdit(plan)}>
                               <Edit className="mr-2 h-4 w-4" />
                               Editar
                             </DropdownMenuItem>
@@ -325,7 +402,7 @@ export default function AdminPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleEdit(plan)}>
                               <Edit className="mr-2 h-4 w-4" />
                               Editar
                             </DropdownMenuItem>
@@ -362,6 +439,103 @@ export default function AdminPage() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Modal de Edição */}
+      <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Editar Plano</DialogTitle>
+            <DialogDescription>
+              Modifique as informações do plano {editingPlan?.nome}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="nome">Nome do Plano</Label>
+                <Input
+                  id="nome"
+                  value={editFormData.nome}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, nome: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="preco">Preço (R$)</Label>
+                <Input
+                  id="preco"
+                  type="number"
+                  step="0.01"
+                  value={editFormData.preco}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, preco: e.target.value }))}
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="duracao">Duração (dias)</Label>
+                <Input
+                  id="duracao"
+                  type="number"
+                  value={editFormData.duracao_dias}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, duracao_dias: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="limite_anuncios">Limite de Anúncios</Label>
+                <Input
+                  id="limite_anuncios"
+                  type="number"
+                  value={editFormData.limite_anuncios}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, limite_anuncios: e.target.value }))}
+                  placeholder="0 = Ilimitado"
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="limite_consultas">Limite de Consultas</Label>
+              <Input
+                id="limite_consultas"
+                type="number"
+                value={editFormData.limite_consultas}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, limite_consultas: e.target.value }))}
+                placeholder="0 = Ilimitado"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="beneficios">Benefícios</Label>
+              <Textarea
+                id="beneficios"
+                value={editFormData.beneficios}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, beneficios: e.target.value }))}
+                placeholder="Descreva os benefícios do plano..."
+                rows={3}
+              />
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="ativo"
+                checked={editFormData.ativo}
+                onCheckedChange={(checked) => setEditFormData(prev => ({ ...prev, ativo: checked }))}
+              />
+              <Label htmlFor="ativo">Plano Ativo</Label>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveEdit}>
+              Salvar Alterações
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
