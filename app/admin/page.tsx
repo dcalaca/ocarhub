@@ -32,6 +32,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
   Shield,
   Plus,
@@ -64,11 +65,14 @@ export default function AdminPage() {
   const [editingPlan, setEditingPlan] = useState<Plan | null>(null)
   const [editFormData, setEditFormData] = useState({
     nome: '',
+    tipo: '',
     preco: '',
+    descricao: '',
     duracao_dias: '',
     limite_anuncios: '',
     limite_consultas: '',
     beneficios: '',
+    destaque: false,
     ativo: true
   })
 
@@ -119,11 +123,14 @@ export default function AdminPage() {
     setEditingPlan(plan)
     setEditFormData({
       nome: plan.nome,
+      tipo: plan.tipo,
       preco: plan.preco.toString(),
+      descricao: plan.descricao,
       duracao_dias: plan.duracao_dias?.toString() || '',
       limite_anuncios: plan.limite_anuncios?.toString() || '',
       limite_consultas: plan.limite_consultas?.toString() || '',
       beneficios: Array.isArray(plan.beneficios) ? plan.beneficios.join('\n') : plan.beneficios || '',
+      destaque: plan.destaque,
       ativo: plan.ativo
     })
     setEditModalOpen(true)
@@ -136,11 +143,14 @@ export default function AdminPage() {
       const updatedPlan = await PlansService.updatePlan({
         id: editingPlan.id,
         nome: editFormData.nome,
+        tipo: editFormData.tipo,
         preco: parseFloat(editFormData.preco),
+        descricao: editFormData.descricao,
         duracao_dias: editFormData.duracao_dias ? parseInt(editFormData.duracao_dias) : undefined,
         limite_anuncios: editFormData.limite_anuncios ? parseInt(editFormData.limite_anuncios) : 0,
         limite_consultas: editFormData.limite_consultas ? parseInt(editFormData.limite_consultas) : 0,
         beneficios: editFormData.beneficios.split('\n').filter(b => b.trim()),
+        destaque: editFormData.destaque,
         ativo: editFormData.ativo
       })
       
@@ -461,6 +471,32 @@ export default function AdminPage() {
                 />
               </div>
               <div className="space-y-2">
+                <Label htmlFor="tipo">Tipo do Plano</Label>
+                <Select value={editFormData.tipo} onValueChange={(value) => setEditFormData(prev => ({ ...prev, tipo: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="anuncio">Anúncio</SelectItem>
+                    <SelectItem value="consulta">Consulta</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="descricao">Descrição</Label>
+              <Textarea
+                id="descricao"
+                value={editFormData.descricao}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, descricao: e.target.value }))}
+                placeholder="Descreva o plano..."
+                rows={2}
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
                 <Label htmlFor="preco">Preço (R$)</Label>
                 <Input
                   id="preco"
@@ -470,9 +506,6 @@ export default function AdminPage() {
                   onChange={(e) => setEditFormData(prev => ({ ...prev, preco: e.target.value }))}
                 />
               </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="duracao">Duração (dias)</Label>
                 <Input
@@ -482,6 +515,9 @@ export default function AdminPage() {
                   onChange={(e) => setEditFormData(prev => ({ ...prev, duracao_dias: e.target.value }))}
                 />
               </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="limite_anuncios">Limite de Anúncios</Label>
                 <Input
@@ -492,17 +528,16 @@ export default function AdminPage() {
                   placeholder="0 = Ilimitado"
                 />
               </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="limite_consultas">Limite de Consultas</Label>
-              <Input
-                id="limite_consultas"
-                type="number"
-                value={editFormData.limite_consultas}
-                onChange={(e) => setEditFormData(prev => ({ ...prev, limite_consultas: e.target.value }))}
-                placeholder="0 = Ilimitado"
-              />
+              <div className="space-y-2">
+                <Label htmlFor="limite_consultas">Limite de Consultas</Label>
+                <Input
+                  id="limite_consultas"
+                  type="number"
+                  value={editFormData.limite_consultas}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, limite_consultas: e.target.value }))}
+                  placeholder="0 = Ilimitado"
+                />
+              </div>
             </div>
             
             <div className="space-y-2">
@@ -516,13 +551,23 @@ export default function AdminPage() {
               />
             </div>
             
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="ativo"
-                checked={editFormData.ativo}
-                onCheckedChange={(checked) => setEditFormData(prev => ({ ...prev, ativo: checked }))}
-              />
-              <Label htmlFor="ativo">Plano Ativo</Label>
+            <div className="flex items-center space-x-6">
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="destaque"
+                  checked={editFormData.destaque}
+                  onCheckedChange={(checked) => setEditFormData(prev => ({ ...prev, destaque: checked }))}
+                />
+                <Label htmlFor="destaque">Plano em Destaque</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="ativo"
+                  checked={editFormData.ativo}
+                  onCheckedChange={(checked) => setEditFormData(prev => ({ ...prev, ativo: checked }))}
+                />
+                <Label htmlFor="ativo">Plano Ativo</Label>
+              </div>
             </div>
           </div>
           
