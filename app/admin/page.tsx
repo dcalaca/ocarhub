@@ -36,6 +36,7 @@ import {
 } from "lucide-react"
 import { AdminAuth } from "@/lib/admin-auth"
 import { PlansService, type Plan } from "@/lib/plans-service"
+import { useAuth } from "@/contexts/auth-context"
 import { useToast } from "@/hooks/use-toast"
 
 export default function AdminPage() {
@@ -44,14 +45,23 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState("anuncios")
   const router = useRouter()
   const { toast } = useToast()
+  const { user } = useAuth()
+
+  // Verificar se o usuário tem permissão de admin
+  const isAdmin = user?.email === 'dcalaca@gmail.com'
 
   // Verificar autenticação
   useEffect(() => {
-    if (!AdminAuth.isAuthenticated()) {
-      router.push("/admin/login")
+    if (!user) {
+      router.push("/login")
       return
     }
-  }, [router])
+    
+    if (!isAdmin) {
+      router.push("/")
+      return
+    }
+  }, [router, user, isAdmin])
 
   // Carregar planos
   useEffect(() => {
@@ -76,8 +86,8 @@ export default function AdminPage() {
   }, [toast])
 
   const handleLogout = () => {
-    AdminAuth.logout()
-    router.push("/admin/login")
+    // Redirecionar para logout normal
+    router.push("/logout")
   }
 
   const handleToggleStatus = async (id: string, currentStatus: boolean) => {

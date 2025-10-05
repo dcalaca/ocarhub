@@ -41,6 +41,9 @@ export default function SaldoTestePage() {
   const [transacoes, setTransacoes] = useState<Transacao[]>([])
   const [loadingTransacoes, setLoadingTransacoes] = useState(false)
 
+  // Verificar se o usuário tem permissão de admin
+  const isAdmin = user?.email === 'dcalaca@gmail.com'
+
   const adicionarSaldo = async () => {
     if (!user) {
       setMessage("Você precisa estar logado")
@@ -134,6 +137,29 @@ export default function SaldoTestePage() {
               </p>
               <Button asChild>
                 <a href="/login">Fazer Login</a>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
+  }
+
+  // Verificar se o usuário tem permissão de admin
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container mx-auto px-4 py-8">
+          <Card>
+            <CardContent className="p-8 text-center">
+              <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold mb-4">Acesso Negado</h2>
+              <p className="text-muted-foreground mb-4">
+                Você não tem permissão para acessar esta página administrativa.
+              </p>
+              <Button asChild>
+                <a href="/">Voltar ao Início</a>
               </Button>
             </CardContent>
           </Card>

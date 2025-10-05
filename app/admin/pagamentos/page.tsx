@@ -96,8 +96,10 @@ export default function AdminPagamentosPage() {
     }).format(new Date(date))
   }
 
-  // Verificar se é admin
-  if (!user || user.tipo !== "admin") {
+  // Verificar se é admin específico
+  const isAdmin = user?.email === 'dcalaca@gmail.com'
+  
+  if (!user || !isAdmin) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
