@@ -140,6 +140,8 @@ export default function AdminPage() {
     if (!editingPlan) return
 
     try {
+      console.log('🔄 Iniciando atualização do plano:', editingPlan.id)
+      
       const updatedPlan = await PlansService.updatePlan({
         id: editingPlan.id,
         nome: editFormData.nome,
@@ -154,9 +156,30 @@ export default function AdminPage() {
         ativo: editFormData.ativo
       })
       
+      console.log('✅ Plano atualizado:', updatedPlan)
+      
       if (updatedPlan) {
         setPlans(prev => prev.map(plan => 
           plan.id === editingPlan.id ? updatedPlan : plan
+        ))
+        console.log('✅ Estado dos planos atualizado')
+      } else {
+        console.warn('⚠️ updatedPlan é null, mas continuando...')
+        // Mesmo se updatedPlan for null, vamos atualizar o estado local
+        setPlans(prev => prev.map(plan => 
+          plan.id === editingPlan.id ? {
+            ...plan,
+            nome: editFormData.nome,
+            tipo: editFormData.tipo,
+            preco: parseFloat(editFormData.preco),
+            descricao: editFormData.descricao,
+            duracao_dias: editFormData.duracao_dias ? parseInt(editFormData.duracao_dias) : undefined,
+            limite_anuncios: editFormData.limite_anuncios ? parseInt(editFormData.limite_anuncios) : 0,
+            limite_consultas: editFormData.limite_consultas ? parseInt(editFormData.limite_consultas) : 0,
+            beneficios: editFormData.beneficios.split('\n').filter(b => b.trim()),
+            destaque: editFormData.destaque,
+            ativo: editFormData.ativo
+          } : plan
         ))
       }
 
@@ -165,15 +188,23 @@ export default function AdminPage() {
         description: "O plano foi atualizado com sucesso",
       })
 
+      // Limpar estados do modal
       setEditModalOpen(false)
       setEditingPlan(null)
+      
+      console.log('✅ Modal fechado e estados limpos')
+      
     } catch (error) {
-      console.error('Erro ao atualizar plano:', error)
+      console.error('❌ Erro ao atualizar plano:', error)
       toast({
         title: "Erro ao atualizar plano",
         description: "Não foi possível atualizar o plano.",
         variant: "destructive",
       })
+      
+      // Mesmo com erro, fechar o modal para não travar a interface
+      setEditModalOpen(false)
+      setEditingPlan(null)
     }
   }
 

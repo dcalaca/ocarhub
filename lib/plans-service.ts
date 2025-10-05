@@ -205,6 +205,8 @@ export class PlansService {
         throw error
       }
 
+      console.log('✅ Update executado com sucesso')
+
       // Como o RLS pode impedir o retorno dos dados, vamos buscar o plano atualizado separadamente
       const { data: updatedPlan, error: fetchError } = await supabase
         .from('ocar_planos')
@@ -215,20 +217,26 @@ export class PlansService {
       if (fetchError) {
         console.error('❌ Erro ao buscar plano atualizado:', fetchError)
         // Se não conseguir buscar, retorna os dados que tentamos atualizar
-        return {
+        const fallbackPlan = {
           id,
           ...updateData,
           beneficios: Array.isArray(updateData.beneficios) ? updateData.beneficios : [],
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         } as Plan
+        
+        console.log('⚠️ Retornando plano fallback:', fallbackPlan)
+        return fallbackPlan
       }
 
       // Converter beneficios de jsonb para array de strings
-      return {
+      const result = {
         ...updatedPlan,
         beneficios: Array.isArray(updatedPlan.beneficios) ? updatedPlan.beneficios : []
       }
+      
+      console.log('✅ Plano atualizado retornado:', result)
+      return result
     } catch (error) {
       console.error('❌ Erro no PlansService.updatePlan:', error)
       throw error
