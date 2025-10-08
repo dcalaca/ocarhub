@@ -11,7 +11,8 @@
     "upload-csv": "node scripts/upload-csv-fipe.js",
     "process-csv": "node scripts/processar-csv-fipe.js",
     "normalize-data": "node scripts/processar-csv-fipe.js --normalize-only",
-    "process-municipios": "node scripts/processar-csv-municipios.js"
+    "process-municipios": "node scripts/processar-csv-municipios.js",
+    "import-fipe": "node import-fipe-data.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.2",

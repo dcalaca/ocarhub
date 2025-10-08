@@ -45,12 +45,14 @@ import {
   Settings,
   BarChart3,
   Users,
-  Package
+  Package,
+  Upload
 } from "lucide-react"
 import { AdminAuth } from "@/lib/admin-auth"
 import { PlansService, type Plan } from "@/lib/plans-service"
 import { useAuth } from "@/contexts/auth-context"
 import { useToast } from "@/hooks/use-toast"
+import FipeUploadComponent from "@/components/admin/fipe-upload"
 
 export default function AdminPage() {
   const [plans, setPlans] = useState<Plan[]>([])
@@ -324,7 +326,7 @@ export default function AdminPage() {
 
       <div className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="anuncios" className="flex items-center gap-2">
               <Package className="w-4 h-4" />
               Planos de Anúncios
@@ -332,6 +334,10 @@ export default function AdminPage() {
             <TabsTrigger value="consultas" className="flex items-center gap-2">
               <Settings className="w-4 h-4" />
               Planos de Consultas
+            </TabsTrigger>
+            <TabsTrigger value="fipe" className="flex items-center gap-2">
+              <Upload className="w-4 h-4" />
+              Importar FIPE
             </TabsTrigger>
           </TabsList>
 
@@ -491,6 +497,14 @@ export default function AdminPage() {
                 </TableBody>
               </Table>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="fipe" className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold">Importar Tabela FIPE</h2>
+            </div>
+            
+            <FipeUploadComponent />
           </TabsContent>
         </Tabs>
       </div>
