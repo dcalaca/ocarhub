@@ -17,6 +17,16 @@ const nextConfig = {
     ],
     unoptimized: true,
   },
+  // Configuração para upload de arquivos grandes
+  experimental: {
+    serverComponentsExternalPackages: ['csv-parser'],
+  },
+  // Configuração de tamanho máximo do corpo da requisição
+  api: {
+    bodyParser: {
+      sizeLimit: '50mb',
+    },
+  },
 }
 
 export default nextConfig

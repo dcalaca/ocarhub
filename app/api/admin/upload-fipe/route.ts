@@ -170,12 +170,3 @@ export async function POST(request: NextRequest) {
     )
   }
 }
-
-// Configurar tamanho máximo do corpo da requisição
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '50mb',
-    },
-  },
-}
