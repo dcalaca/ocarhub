@@ -9,7 +9,7 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 const supabase = createClient(supabaseUrl, supabaseKey)
 
 // Configurações
-const BATCH_SIZE = 1000
+const BATCH_SIZE = 500 // Reduzido para evitar timeout
 const REFERENCE_MONTH = 'outubro de 2025'
 
 // Função para limpar e converter dados
@@ -132,10 +132,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Validar tamanho do arquivo
-    if (file.size > 50 * 1024 * 1024) { // 50MB
+    // Validar tamanho do arquivo (reduzido para evitar erro 413)
+    if (file.size > 10 * 1024 * 1024) { // 10MB
       return NextResponse.json(
-        { error: 'Arquivo muito grande (máximo 50MB)' },
+        { error: 'Arquivo muito grande (máximo 10MB). Use o script de terminal para arquivos maiores.' },
         { status: 400 }
       )
     }

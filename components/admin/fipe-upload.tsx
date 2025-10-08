@@ -40,11 +40,11 @@ export default function FipeUploadComponent() {
       return
     }
 
-    // Validar tamanho do arquivo (máximo 50MB)
-    if (file.size > 50 * 1024 * 1024) {
+    // Validar tamanho do arquivo (máximo 10MB)
+    if (file.size > 10 * 1024 * 1024) {
       toast({
         title: "Arquivo muito grande",
-        description: "O arquivo deve ter no máximo 50MB.",
+        description: "O arquivo deve ter no máximo 10MB. Use o script de terminal para arquivos maiores.",
         variant: "destructive",
       })
       return
@@ -208,7 +208,7 @@ export default function FipeUploadComponent() {
             <li>• Colunas: Brand Value, Model Value, Year Code, Fipe Code, Price</li>
             <li>• Preço no formato: "R$ 14.105,00"</li>
             <li>• Ano no formato: "1991-1" (será convertido para 1991)</li>
-            <li>• Tamanho máximo: 50MB</li>
+            <li>• Tamanho máximo: 10MB (use script de terminal para arquivos maiores)</li>
           </ul>
         </div>
       </CardContent>
