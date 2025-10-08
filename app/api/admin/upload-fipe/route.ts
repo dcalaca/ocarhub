@@ -14,21 +14,48 @@ const REFERENCE_MONTH = 'outubro de 2025'
 
 // Função para limpar e converter dados
 function cleanData(row: any) {
-  // Converter preço de "R$ 14.105,00" para número
-  const priceStr = row.Price.replace('R$ ', '').replace('.', '').replace(',', '.')
-  const price = parseFloat(priceStr)
-  
-  // Extrair ano do formato "1991-1" para apenas "1991"
-  const year = parseInt(row['Year Code'].split('-')[0])
-  
-  return {
-    marca: row['Brand Value'].trim(),
-    modelo: row['Model Value'].trim(),
-    ano: year,
-    codigo_fipe: row['Fipe Code'].trim(),
-    referencia_mes: REFERENCE_MONTH,
-    preco: price,
-    processado: false
+  try {
+    // Verificar se as colunas necessárias existem
+    if (!row['Brand Value'] || !row['Model Value'] || !row['Year Code'] || !row['Fipe Code'] || !row['Price']) {
+      throw new Error('Colunas obrigatórias ausentes')
+    }
+
+    // Converter preço de "R$ 14.105,00" para número
+    let priceStr = row['Price'].toString().trim()
+    if (!priceStr.startsWith('R$')) {
+      throw new Error('Formato de preço inválido')
+    }
+    
+    priceStr = priceStr.replace('R$ ', '').replace('.', '').replace(',', '.')
+    const price = parseFloat(priceStr)
+    
+    if (isNaN(price) || price <= 0) {
+      throw new Error('Preço inválido')
+    }
+    
+    // Extrair ano do formato "1991-1" para apenas "1991"
+    const yearCode = row['Year Code'].toString().trim()
+    if (!yearCode.includes('-')) {
+      throw new Error('Formato de ano inválido')
+    }
+    
+    const year = parseInt(yearCode.split('-')[0])
+    if (isNaN(year) || year < 1900 || year > 2030) {
+      throw new Error('Ano inválido')
+    }
+    
+    return {
+      marca: row['Brand Value'].toString().trim(),
+      modelo: row['Model Value'].toString().trim(),
+      ano: year,
+      codigo_fipe: row['Fipe Code'].toString().trim(),
+      referencia_mes: REFERENCE_MONTH,
+      preco: price,
+      processado: false
+    }
+  } catch (error: any) {
+    console.error('Erro ao limpar dados:', error.message, row)
+    throw error
   }
 }
 
@@ -58,6 +85,7 @@ async function processCsvFile(file: File) {
     let totalProcessed = 0
     let totalInserted = 0
     let errors = 0
+    let errorDetails: string[] = []
 
     const stream = Readable.fromWeb(file.stream() as any)
     
@@ -73,17 +101,20 @@ async function processCsvFile(file: File) {
             const success = await insertBatch([...batch])
             if (success) {
               totalInserted += batch.length
+              console.log(`✅ Lote inserido: ${batch.length} registros`)
             } else {
               errors += batch.length
+              console.log(`❌ Erro no lote: ${batch.length} registros`)
             }
             
             batch = []
           }
           
           totalProcessed++
-        } catch (error) {
-          console.error('Erro ao processar linha:', error, row)
+        } catch (error: any) {
           errors++
+          errorDetails.push(`Linha ${totalProcessed + 1}: ${error.message}`)
+          console.error(`Erro na linha ${totalProcessed + 1}:`, error.message)
         }
       })
       .on('end', async () => {
@@ -92,16 +123,24 @@ async function processCsvFile(file: File) {
           const success = await insertBatch(batch)
           if (success) {
             totalInserted += batch.length
+            console.log(`✅ Último lote inserido: ${batch.length} registros`)
           } else {
             errors += batch.length
+            console.log(`❌ Erro no último lote: ${batch.length} registros`)
           }
         }
+        
+        console.log('🎉 Processamento concluído!')
+        console.log(`📊 Total processado: ${totalProcessed}`)
+        console.log(`✅ Total inserido: ${totalInserted}`)
+        console.log(`❌ Total erros: ${errors}`)
         
         resolve({
           totalProcessed,
           totalInserted,
           errors,
-          successRate: ((totalInserted / totalProcessed) * 100).toFixed(2)
+          successRate: totalProcessed > 0 ? ((totalInserted / totalProcessed) * 100).toFixed(2) : '0',
+          errorDetails: errorDetails.slice(0, 10) // Primeiros 10 erros para debug
         })
       })
       .on('error', (error) => {
@@ -155,7 +194,8 @@ export async function POST(request: NextRequest) {
       totalRecords: result.totalProcessed,
       processedRecords: result.totalInserted,
       errors: result.errors,
-      successRate: result.successRate
+      successRate: result.successRate,
+      errorDetails: result.errorDetails
     })
 
   } catch (error: any) {

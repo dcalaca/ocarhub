@@ -15,6 +15,7 @@ interface UploadProgress {
   totalRecords?: number
   processedRecords?: number
   errors?: number
+  errorDetails?: string[]
 }
 
 export default function FipeUploadComponent() {
@@ -85,7 +86,8 @@ export default function FipeUploadComponent() {
         message: 'Importação concluída!',
         totalRecords: result.totalRecords,
         processedRecords: result.processedRecords,
-        errors: result.errors
+        errors: result.errors,
+        errorDetails: result.errorDetails
       })
 
       toast({
@@ -182,6 +184,20 @@ export default function FipeUploadComponent() {
                 <p>✅ Importados: {uploadProgress.processedRecords?.toLocaleString()}</p>
                 {uploadProgress.errors && uploadProgress.errors > 0 && (
                   <p>❌ Erros: {uploadProgress.errors}</p>
+                )}
+                {uploadProgress.errorDetails && uploadProgress.errorDetails.length > 0 && (
+                  <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                    <p className="font-medium text-red-600 dark:text-red-400 mb-2">
+                      Primeiros erros encontrados:
+                    </p>
+                    <ul className="text-xs space-y-1">
+                      {uploadProgress.errorDetails.map((error, index) => (
+                        <li key={index} className="text-red-600 dark:text-red-400">
+                          • {error}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 )}
               </div>
               <Button onClick={resetUpload} variant="outline" className="mt-4">
