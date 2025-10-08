@@ -79,7 +79,7 @@ export default function HomePage() {
     <div className="min-h-screen bg-background">
       <Header />
 
-      <section className="relative bg-gradient-to-br from-purple-900 via-purple-800 to-purple-600 text-white py-20 md:py-32">
+      <section className="relative bg-gradient-to-br from-purple-900 via-purple-800 to-purple-600 text-white py-20 md:py-32 pt-24 md:pt-32">
         <div className="absolute inset-0 bg-black/20" />
         <div className="relative container mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-6 text-shadow-lg font-poppins">Encontre o carro dos seus sonhos</h1>

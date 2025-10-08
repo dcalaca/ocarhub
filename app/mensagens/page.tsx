@@ -244,7 +244,7 @@ export default function MensagensPage() {
       <div className="min-h-screen bg-background">
       <Header />
       
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 pt-20">
         <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-200px)]">
           {/* Lista de Chats */}
           <div className={`lg:w-1/3 ${showChatList ? 'block' : 'hidden lg:block'}`}>

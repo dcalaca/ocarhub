@@ -39,7 +39,7 @@ export function Header() {
   const isAdmin = user?.email === 'dcalaca@gmail.com'
 
   return (
-    <header className="bg-black border-b border-gray-800 sticky top-0 z-50">
+    <header className="bg-black border-b border-gray-800 fixed top-0 left-0 right-0 z-50">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 group flex-shrink-0">
@@ -57,7 +57,6 @@ export function Header() {
           <Link href="/consulta-fipe">Consulta FIPE</Link>
           <Link href="/favoritos">Favoritos</Link>
           <Link href="/mensagens">Mensagens</Link>
-          <Link href="/historico-veicular">Histórico Veicular</Link>
         </nav>
 
         {/* Right side */}
@@ -170,14 +169,6 @@ export function Header() {
                       Configurações
                     </Link>
                     <Link
-                      href="/historico-veicular"
-                      className="flex items-center gap-3 py-2 text-gray-300 hover:text-white"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <History className="w-5 h-5" />
-                      Histórico Veicular
-                    </Link>
-                    <Link
                       href="/anunciar"
                       className="flex items-center gap-3 py-2 text-gray-300 hover:text-white"
                       onClick={() => setMobileMenuOpen(false)}
@@ -185,6 +176,26 @@ export function Header() {
                       <Plus className="w-5 h-5" />
                       Anunciar
                     </Link>
+                    {isAdmin && (
+                      <>
+                        <Link
+                          href="/admin"
+                          className="flex items-center gap-3 py-2 text-gray-300 hover:text-white"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <Shield className="w-5 h-5" />
+                          Painel Admin
+                        </Link>
+                        <Link
+                          href="/admin/saldo-teste"
+                          className="flex items-center gap-3 py-2 text-gray-300 hover:text-white"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <Calculator className="w-5 h-5" />
+                          Saldo de Teste
+                        </Link>
+                      </>
+                    )}
                     <button
                       onClick={() => {
                         logout()
@@ -244,12 +255,6 @@ export function Header() {
                     <Link href="/mensagens" className="flex items-center">
                       <MessageCircle className="mr-2 h-4 w-4" />
                       <span>Mensagens</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/historico-veicular" className="flex items-center">
-                      <History className="mr-2 h-4 w-4" />
-                      <span>Histórico Veicular</span>
                     </Link>
                   </DropdownMenuItem>
                   {isAdmin && (

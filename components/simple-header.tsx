@@ -5,7 +5,7 @@ import Image from "next/image"
 
 export function SimpleHeader() {
   return (
-    <header className="bg-black border-b border-gray-800 sticky top-0 z-50">
+    <header className="bg-black border-b border-gray-800 fixed top-0 left-0 right-0 z-50">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 group flex-shrink-0">
@@ -27,12 +27,6 @@ export function SimpleHeader() {
           </Link>
           <Link href="/mensagens" className="text-gray-300 hover:text-white transition-colors text-sm sm:text-base">
             Mensagens
-          </Link>
-          <Link
-            href="/historico-veicular"
-            className="text-gray-300 hover:text-white transition-colors text-sm sm:text-base"
-          >
-            Histórico Veicular
           </Link>
         </nav>
       </div>

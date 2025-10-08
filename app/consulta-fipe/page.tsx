@@ -12,7 +12,7 @@ export default function ConsultaFipePage() {
     <div className="min-h-screen bg-background">
       <Header />
       
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 pt-20">
         <ConsultaFipeLivre />
       </div>
     </div>

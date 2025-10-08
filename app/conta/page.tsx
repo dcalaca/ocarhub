@@ -317,7 +317,7 @@ export default function ContaPage() {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8 pt-20">
           <Card>
             <CardContent className="p-8 text-center">
               <h2 className="text-2xl font-bold mb-4">Acesso Restrito</h2>
@@ -336,7 +336,7 @@ export default function ContaPage() {
     <div className="min-h-screen bg-background">
       <Header />
 
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <div className="container mx-auto px-4 py-8 max-w-6xl pt-20">
         {/* Cabeçalho */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-4">
