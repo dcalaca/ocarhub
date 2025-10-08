@@ -5,7 +5,20 @@ import Image from "next/image"
 
 export function SimpleHeader() {
   return (
-    <header className="bg-black border-b border-gray-800 fixed top-0 left-0 right-0 z-50">
+    <header 
+      className="bg-black border-b border-gray-800 fixed top-0 left-0 right-0 z-50 w-full" 
+      style={{ 
+        position: 'fixed', 
+        top: 0, 
+        left: 0, 
+        right: 0, 
+        zIndex: 50,
+        width: '100%',
+        transform: 'translateZ(0)',
+        WebkitTransform: 'translateZ(0)',
+        willChange: 'transform'
+      }}
+    >
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 group flex-shrink-0">
