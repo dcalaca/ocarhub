@@ -161,7 +161,7 @@ export default function AnunciarPage() {
       console.log('🔄 Atualizando saldo na página de anúncios...')
       refreshSaldo()
     }
-  }, [user, refreshSaldo])
+  }, [user]) // Removido refreshSaldo das dependências para evitar loop infinito
 
   // Função para verificar limite de anúncios gratuitos por CPF
   const verificarLimiteAnunciosGratuitos = async (cpf: string): Promise<{ podeAnunciar: boolean; anunciosRestantes: number }> => {

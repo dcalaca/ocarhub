@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useState, useEffect } from "react"
+import { createContext, useContext, useState, useEffect, useCallback } from "react"
 import { supabase } from "@/lib/supabase"
 import type { User as SupabaseUser } from "@supabase/supabase-js"
 
@@ -971,10 +971,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   // Função para buscar transações do usuário
-  const getTransacoes = async () => {
+  const getTransacoes = useCallback(async () => {
     if (!user) return []
 
     try {
+      console.log('🔍 Buscando transações para usuário:', user.id)
       const { data, error } = await supabase
         .from('ocar_transacoes')
         .select('*')
@@ -986,15 +987,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return []
       }
 
+      console.log('📊 Transações encontradas:', data?.length || 0)
       return data || []
     } catch (error) {
       console.error('❌ Erro ao buscar transações:', error)
       return []
     }
-  }
+  }, [user])
 
   // Função para forçar atualização do saldo do banco
-  const refreshSaldo = async () => {
+  const refreshSaldo = useCallback(async () => {
     if (!user) return
 
     try {
@@ -1024,7 +1026,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('❌ Erro ao atualizar saldo:', error)
     }
-  }
+  }, [user])
 
   // Função para atualizar dados do usuário
   const updateUser = async (userData: Partial<User>) => {

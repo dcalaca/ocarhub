@@ -73,6 +73,32 @@ export default function ContaPage() {
   const [mostrarSaldo, setMostrarSaldo] = useState(true)
   const [filtroTransacao, setFiltroTransacao] = useState<"todas" | "entradas" | "saidas">("todas")
 
+  // Função para recarregar transações manualmente
+  const recarregarTransacoes = async () => {
+    if (!user) return
+
+    setLoadingTransactions(true)
+    try {
+      console.log('🔄 Recarregando transações manualmente...')
+      const transacoes = await getTransacoes()
+      console.log('📊 Transações recarregadas:', transacoes)
+      setTransactions(transacoes)
+      toast({
+        title: "Extrato atualizado",
+        description: `${transacoes.length} transações carregadas`,
+      })
+    } catch (error) {
+      console.error('❌ Erro ao recarregar transações:', error)
+      toast({
+        title: "Erro ao atualizar extrato",
+        description: "Tente novamente em alguns instantes",
+        variant: "destructive",
+      })
+    } finally {
+      setLoadingTransactions(false)
+    }
+  }
+
   // Carregar transações reais do banco
   useEffect(() => {
     const loadTransactions = async () => {
@@ -95,7 +121,7 @@ export default function ContaPage() {
     }
 
     loadTransactions()
-  }, [user, getTransacoes])
+  }, [user]) // Removido getTransacoes das dependências para evitar loop infinito
 
   // Usar o hook do Pagarme
   const {
@@ -274,6 +300,7 @@ export default function ContaPage() {
       case "anuncio_destaque":
       case "anuncio_premium":
       case "taxa_anuncio":
+      case "gasto": // Adicionado para transações de débito por anúncios
         return <TrendingUp className="w-4 h-4 text-orange-600" />
       default:
         return <TrendingDown className="w-4 h-4 text-red-600" />
@@ -688,6 +715,16 @@ export default function ContaPage() {
                     Extrato de Movimentações
                   </CardTitle>
                   <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={recarregarTransacoes}
+                      disabled={loadingTransactions}
+                      className="flex items-center gap-2"
+                    >
+                      <RefreshCw className={`w-4 h-4 ${loadingTransactions ? 'animate-spin' : ''}`} />
+                      Atualizar
+                    </Button>
                     <Button
                       variant={filtroTransacao === "todas" ? "default" : "outline"}
                       size="sm"
