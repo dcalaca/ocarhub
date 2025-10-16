@@ -179,9 +179,16 @@ export default function ContaPage() {
   }, [searchParams, toast])
 
   const handleDeposito = async () => {
+    console.log('🔍 DEBUG: handleDeposito chamado')
+    console.log('🔍 DEBUG: valorDeposito =', valorDeposito)
+    console.log('🔍 DEBUG: user =', user)
+    console.log('🔍 DEBUG: processPayment =', processPayment)
+    
     const valor = Number.parseFloat(valorDeposito)
+    console.log('🔍 DEBUG: valor parseado =', valor)
 
     if (!valor || valor <= 0) {
+      console.log('🔍 DEBUG: Valor inválido')
       toast({
         title: "Valor inválido",
         description: "Digite um valor válido para depósito",
@@ -191,6 +198,7 @@ export default function ContaPage() {
     }
 
     if (valor < 10) {
+      console.log('🔍 DEBUG: Valor abaixo do mínimo')
       toast({
         title: "Valor mínimo",
         description: "O valor mínimo para depósito é R$ 10,00",
@@ -200,6 +208,7 @@ export default function ContaPage() {
     }
 
     if (valor > 10000) {
+      console.log('🔍 DEBUG: Valor acima do máximo')
       toast({
         title: "Valor máximo",
         description: "O valor máximo para depósito é R$ 10.000,00",
@@ -213,12 +222,22 @@ export default function ContaPage() {
     
     console.log('🚀 Iniciando pagamento via Mercado Pago:', { valor, descricao })
     
-    const success = await processPayment(valor, descricao)
-    
-    if (success) {
+    try {
+      const success = await processPayment(valor, descricao)
+      console.log('🔍 DEBUG: processPayment retornou:', success)
+      
+      if (success) {
+        toast({
+          title: "Redirecionando para pagamento",
+          description: "Você será redirecionado para o Mercado Pago",
+        })
+      }
+    } catch (error) {
+      console.error('❌ Erro em handleDeposito:', error)
       toast({
-        title: "Redirecionando para pagamento",
-        description: "Você será redirecionado para o Mercado Pago",
+        title: "Erro no pagamento",
+        description: "Ocorreu um erro ao processar o pagamento",
+        variant: "destructive",
       })
     }
   }
