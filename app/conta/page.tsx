@@ -5,35 +5,20 @@ import { useSearchParams } from "next/navigation"
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useAuth } from "@/contexts/auth-context"
-import { usePagarme } from "@/hooks/use-pagarme"
-import { useMercadoPago } from "@/hooks/use-mercadopago"
 import {
   Wallet,
-  Plus,
   TrendingUp,
   TrendingDown,
   Calendar,
-  DollarSign,
   FileText,
   ArrowUpRight,
   ArrowDownLeft,
-  Clock,
-  AlertTriangle,
-  Copy,
-  QrCode,
   Shield,
   Eye,
   EyeOff,
-  CreditCard,
-  Receipt,
-  Download,
-  Printer,
   RefreshCw,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
@@ -46,32 +31,6 @@ export default function ContaPage() {
   // Estados para transações reais
   const [transactions, setTransactions] = useState<any[]>([])
   const [loadingTransactions, setLoadingTransactions] = useState(true)
-
-  // Hook do Mercado Pago
-  const { loading: loadingMercadoPago, processPayment } = useMercadoPago()
-
-  const saqueRequests = [
-    { id: "1", valor: 200, status: "pendente", data: "2024-01-16", createdAt: new Date("2024-01-16"), chavePix: "usuario@ocar.com" },
-    { id: "2", valor: 100, status: "aprovado", data: "2024-01-10", createdAt: new Date("2024-01-10"), chavePix: "usuario@ocar.com" },
-  ]
-
-  // Função mock para solicitar saque
-  const solicitarSaque = async (valor: number, chavePix: string) => {
-    console.log('Mock: Solicitar saque', { valor, chavePix })
-    toast({
-      title: "Saque solicitado!",
-      description: `Solicitação de R$ ${valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} enviada.`,
-    })
-  }
-
-  // Estados para depósito
-  const [valorDeposito, setValorDeposito] = useState("")
-  const [metodoDeposito, setMetodoDeposito] = useState<"pix" | "cartao" | "boleto">("pix")
-
-  // Estados para saque
-  const [valorSaque, setValorSaque] = useState("")
-  const [chavePix, setChavePix] = useState("")
-  const [loadingSaque, setLoadingSaque] = useState(false)
 
   // Estados da interface
   const [mostrarSaldo, setMostrarSaldo] = useState(true)
@@ -127,32 +86,14 @@ export default function ContaPage() {
     loadTransactions()
   }, [user]) // Removido getTransacoes das dependências para evitar loop infinito
 
-  // Usar o hook do Pagarme
-  const {
-    loading: loadingDeposito,
-    pixData,
-    boletoData,
-    createPixPayment,
-    createBoletoPayment,
-    createCardPayment,
-    copyPixCode,
-    copyBoletoLine,
-    clearPixData,
-    clearBoletoData,
-  } = usePagarme({
-    onSuccess: (data) => {
-      setValorDeposito("")
-    },
-  })
-
   // Verificar se há parâmetros de pagamento na URL
   useEffect(() => {
     const status = searchParams.get('status')
-    
+
     if (status) {
       switch (status) {
         case 'success':
-          toast({
+      toast({
             title: "Pagamento realizado!",
             description: "Seu saldo será atualizado em alguns instantes",
           })
@@ -162,146 +103,21 @@ export default function ContaPage() {
           }, 2000)
           break
         case 'failure':
-          toast({
+      toast({
             title: "Pagamento não aprovado",
             description: "Tente novamente ou escolha outro método de pagamento",
-            variant: "destructive",
-          })
-          break
+        variant: "destructive",
+      })
+        break
         case 'pending':
-          toast({
+        toast({
             title: "Pagamento pendente",
             description: "Aguardando confirmação do pagamento",
-          })
-          break
-      }
-    }
-  }, [searchParams, toast])
-
-  const handleDeposito = async () => {
-    console.log('🔍 DEBUG: handleDeposito chamado')
-    console.log('🔍 DEBUG: valorDeposito =', valorDeposito)
-    console.log('🔍 DEBUG: user =', user)
-    console.log('🔍 DEBUG: processPayment =', processPayment)
-    
-    const valor = Number.parseFloat(valorDeposito)
-    console.log('🔍 DEBUG: valor parseado =', valor)
-
-    if (!valor || valor <= 0) {
-      console.log('🔍 DEBUG: Valor inválido')
-      toast({
-        title: "Valor inválido",
-        description: "Digite um valor válido para depósito",
-        variant: "destructive",
-      })
-      return
-    }
-
-    if (valor < 10) {
-      console.log('🔍 DEBUG: Valor abaixo do mínimo')
-      toast({
-        title: "Valor mínimo",
-        description: "O valor mínimo para depósito é R$ 10,00",
-        variant: "destructive",
-      })
-      return
-    }
-
-    if (valor > 10000) {
-      console.log('🔍 DEBUG: Valor acima do máximo')
-      toast({
-        title: "Valor máximo",
-        description: "O valor máximo para depósito é R$ 10.000,00",
-        variant: "destructive",
-      })
-      return
-    }
-
-    // Usar Mercado Pago para processar pagamento
-    const descricao = `Recarga de saldo - R$ ${valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`
-    
-    console.log('🚀 Iniciando pagamento via Mercado Pago:', { valor, descricao })
-    
-    try {
-      const success = await processPayment(valor, descricao)
-      console.log('🔍 DEBUG: processPayment retornou:', success)
-      
-      if (success) {
-        toast({
-          title: "Redirecionando para pagamento",
-          description: "Você será redirecionado para o Mercado Pago",
         })
-      }
-    } catch (error) {
-      console.error('❌ Erro em handleDeposito:', error)
-      toast({
-        title: "Erro no pagamento",
-        description: "Ocorreu um erro ao processar o pagamento",
-        variant: "destructive",
-      })
+        break
     }
   }
-
-  const handleSaque = async () => {
-    const valor = Number.parseFloat(valorSaque)
-
-    if (!valor || valor <= 0) {
-      toast({
-        title: "Valor inválido",
-        description: "Digite um valor válido para saque",
-        variant: "destructive",
-      })
-      return
-    }
-
-    if (valor < 10) {
-      toast({
-        title: "Valor mínimo",
-        description: "O valor mínimo para saque é R$ 10,00",
-        variant: "destructive",
-      })
-      return
-    }
-
-    if (valor > user!.saldo) {
-      toast({
-        title: "Saldo insuficiente",
-        description: "Você não tem saldo suficiente para este saque",
-        variant: "destructive",
-      })
-      return
-    }
-
-    if (!chavePix) {
-      toast({
-        title: "Chave PIX obrigatória",
-        description: "Digite sua chave PIX para receber o saque",
-        variant: "destructive",
-      })
-      return
-    }
-
-    setLoadingSaque(true)
-
-    const sucesso = await solicitarSaque(valor, chavePix)
-
-    if (sucesso) {
-      setValorSaque("")
-      setChavePix("")
-      toast({
-        title: "Saque solicitado!",
-        description: `Saque de ${valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} será processado em até 2 horas úteis`,
-      })
-    } else {
-      toast({
-        title: "Erro no saque",
-        description: "Não foi possível processar sua solicitação",
-        variant: "destructive",
-      })
-    }
-
-    setLoadingSaque(false)
-  }
+  }, [searchParams, toast])
 
   const formatDate = (date: Date | string | null | undefined) => {
     if (!date) {
@@ -367,13 +183,6 @@ export default function ContaPage() {
     return true
   })
 
-  const copiarChavePix = () => {
-    navigator.clipboard.writeText("usuario@ocar.com.br")
-    toast({
-      title: "Chave PIX copiada!",
-      description: "Cole no seu app de pagamentos",
-    })
-  }
 
   if (!user) {
     return (
@@ -470,296 +279,25 @@ export default function ContaPage() {
           </AlertDescription>
         </Alert>
 
-        <Tabs defaultValue="movimentar" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 bg-white/10 backdrop-blur-sm border">
-            <TabsTrigger value="movimentar" className="flex items-center gap-2 data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/60 hover:text-white">
-              <DollarSign className="w-4 h-4" />
-              Movimentar
-            </TabsTrigger>
-            <TabsTrigger value="extrato" className="flex items-center gap-2 data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/60 hover:text-white">
-              <Calendar className="w-4 h-4" />
-              Extrato
-            </TabsTrigger>
-            <TabsTrigger value="saques" className="flex items-center gap-2 data-[state=active]:bg-white/20 data-[state=active]:text-white text-white/60 hover:text-white">
-              <Clock className="w-4 h-4" />
-              Saques
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Aba Movimentar */}
-          <TabsContent value="movimentar">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Depósito */}
-                <Card className="border bg-card">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-green-600">
-                    <ArrowDownLeft className="w-5 h-5" />
-                    Adicionar Saldo
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label htmlFor="valor-deposito">Valor do Depósito</Label>
-                    <Input
-                      id="valor-deposito"
-                      type="number"
-                      placeholder="0,00"
-                      value={valorDeposito}
-                      onChange={(e) => setValorDeposito(e.target.value)}
-                      min="10"
-                      max="10000"
-                      step="0.01"
-                    />
-                    <p className="text-sm text-muted-foreground mt-1">Mín: R$ 10,00 | Máx: R$ 10.000,00</p>
-                  </div>
-
-                  <div>
-                    <Label>Método de Pagamento</Label>
-                    <div className="grid grid-cols-3 gap-2 mt-2">
-                      <Button
-                        variant={metodoDeposito === "pix" ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setMetodoDeposito("pix")}
-                        className={`flex items-center gap-1 ${
-                          metodoDeposito === "pix" 
-                            ? "bg-purple-600 text-white hover:bg-purple-700" 
-                            : "bg-white/10 text-white border-white/20 hover:bg-white/20"
-                        }`}
-                      >
-                        <QrCode className="w-3 h-3" /> PIX
-                      </Button>
-                      <Button
-                        variant={metodoDeposito === "cartao" ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setMetodoDeposito("cartao")}
-                        className={`flex items-center gap-1 ${
-                          metodoDeposito === "cartao" 
-                            ? "bg-purple-600 text-white hover:bg-purple-700" 
-                            : "bg-white/10 text-white border-white/20 hover:bg-white/20"
-                        }`}
-                      >
-                        <CreditCard className="w-3 h-3" /> Cartão
-                      </Button>
-                      <Button
-                        variant={metodoDeposito === "boleto" ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setMetodoDeposito("boleto")}
-                        className={`flex items-center gap-1 ${
-                          metodoDeposito === "boleto" 
-                            ? "bg-purple-600 text-white hover:bg-purple-700" 
-                            : "bg-white/10 text-white border-white/20 hover:bg-white/20"
-                        }`}
-                      >
-                        <Receipt className="w-3 h-3" /> Boleto
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => setValorDeposito("25")}
-                      className="bg-white/10 text-white border-white/20 hover:bg-white/20"
-                    >
-                      R$ 25
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => setValorDeposito("100")}
-                      className="bg-white/10 text-white border-white/20 hover:bg-white/20"
-                    >
-                      R$ 100
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => setValorDeposito("500")}
-                      className="bg-white/10 text-white border-white/20 hover:bg-white/20"
-                    >
-                      R$ 500
-                    </Button>
-                  </div>
-
-                  <Button
-                    onClick={handleDeposito}
-                    disabled={loadingMercadoPago || !valorDeposito}
-                    className="w-full bg-green-600 hover:bg-green-700"
-                  >
-                    {loadingMercadoPago ? (
-                      "Processando..."
-                    ) : (
-                      <>
-                        <Plus className="w-4 h-4 mr-2" />
-                        Adicionar Saldo
-                      </>
-                    )}
-                  </Button>
-
-                  {pixData && (
-                    <div className="p-4 bg-blue-50 rounded-lg border">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <QrCode className="w-5 h-5 text-blue-600" />
-                          <span className="font-medium text-blue-800">PIX Gerado</span>
-                        </div>
-                        <Button variant="ghost" size="sm" onClick={clearPixData}>
-                          ✕
-                        </Button>
-                      </div>
-
-                      <div className="space-y-3">
-                        <div className="text-center">
-                          <div className="w-32 h-32 border-2 border rounded-lg mx-auto mb-2 flex items-center justify-center bg-card">
-                            <QrCode className="w-16 h-16 text-blue-400" />
-                          </div>
-                          <p className="text-sm text-blue-700">Escaneie o QR Code</p>
-                        </div>
-
-                        <div>
-                          <Label className="text-xs text-blue-700">Código PIX:</Label>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Input value={pixData.pix.qr_code} readOnly className="text-xs bg-card" />
-                            <Button size="sm" onClick={copyPixCode}>
-                              <Copy className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        </div>
-
-                        <div className="text-xs text-blue-600 text-center">
-                          Expira em: {new Date(pixData.pix.expires_at).toLocaleString("pt-BR")}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {boletoData && (
-                    <div className="p-4 bg-orange-50 rounded-lg border">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <Receipt className="w-5 h-5 text-orange-600" />
-                          <span className="font-medium text-orange-800">Boleto Gerado</span>
-                        </div>
-                        <Button variant="ghost" size="sm" onClick={clearBoletoData}>
-                          ✕
-                        </Button>
-                      </div>
-
-                      <div className="space-y-3">
-                        <div>
-                          <Label className="text-xs text-orange-700">Linha digitável:</Label>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Input value={boletoData.boleto.line} readOnly className="text-xs font-mono bg-card" />
-                            <Button size="sm" onClick={copyBoletoLine}>
-                              <Copy className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        </div>
-
-                        <div className="flex gap-2">
-                          <Button size="sm" variant="outline" asChild className="flex-1">
-                            <a href={boletoData.boleto.url} target="_blank" rel="noopener noreferrer">
-                              <Download className="w-3 h-3 mr-1" />
-                              Baixar PDF
-                            </a>
-                          </Button>
-                          <Button size="sm" variant="outline" className="flex-1">
-                            <Printer className="w-3 h-3 mr-1" />
-                            Imprimir
-                          </Button>
-                        </div>
-
-                        <div className="text-xs text-orange-600 text-center">
-                          Vencimento: {new Date(boletoData.boleto.expires_at).toLocaleDateString("pt-BR")}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Saque */}
-                <Card className="border bg-card">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-blue-600">
-                    <ArrowUpRight className="w-5 h-5" />
-                    Sacar Saldo
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label htmlFor="valor-saque">Valor do Saque</Label>
-                    <Input
-                      id="valor-saque"
-                      type="number"
-                      placeholder="0,00"
-                      value={valorSaque}
-                      onChange={(e) => setValorSaque(e.target.value)}
-                      min="10"
-                      max={user.saldo || 0}
-                      step="0.01"
-                    />
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Disponível: {(user.saldo || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-                    </p>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="chave-pix">Chave PIX (CPF, E-mail ou Telefone)</Label>
-                    <Input
-                      id="chave-pix"
-                      placeholder="Digite sua chave PIX"
-                      value={chavePix}
-                      onChange={(e) => setChavePix(e.target.value)}
-                    />
-                    <p className="text-sm text-muted-foreground mt-1">Deve ser do mesmo CPF da conta</p>
-                  </div>
-
-                  <Alert>
-                    <AlertTriangle className="h-4 w-4" />
-                    <AlertDescription>Saques são processados em até 2 horas úteis. Taxa: R$ 2,00</AlertDescription>
-                  </Alert>
-
-                  <Button
-                    onClick={handleSaque}
-                    disabled={loadingSaque || !valorSaque || !chavePix}
-                    className="w-full bg-blue-600 hover:bg-blue-700"
-                  >
-                    {loadingSaque ? (
-                      "Processando..."
-                    ) : (
-                      <>
-                        <ArrowUpRight className="w-4 h-4 mr-2" />
-                        Solicitar Saque
-                      </>
-                    )}
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          {/* Aba Extrato */}
-          <TabsContent value="extrato">
+        {/* Histórico de Compras */}
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2">
                     <Calendar className="w-5 h-5" />
-                    Extrato de Movimentações
+                Histórico de Compras
                   </CardTitle>
                   <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={recarregarTransacoes}
-                      disabled={loadingTransactions}
-                      className="flex items-center gap-2"
-                    >
-                      <RefreshCw className={`w-4 h-4 ${loadingTransactions ? 'animate-spin' : ''}`} />
-                      Atualizar
-                    </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={recarregarTransacoes}
+                  disabled={loadingTransactions}
+                  className="flex items-center gap-2"
+                >
+                  <RefreshCw className={`w-4 h-4 ${loadingTransactions ? 'animate-spin' : ''}`} />
+                  Atualizar
+                </Button>
                     <Button
                       variant={filtroTransacao === "todas" ? "default" : "outline"}
                       size="sm"
@@ -806,8 +344,7 @@ export default function ContaPage() {
                     {transacoesFiltradas.map((transaction) => (
                       <div
                         key={transaction.id}
-                        className="flex items-center justify-between p-4 border rounded-lg hover:opacity-80"
-                        className="bg-card"
+                    className="flex items-center justify-between p-4 border rounded-lg hover:opacity-80 bg-card"
                       >
                         <div className="flex items-center gap-3">
                           {getTransactionIcon(transaction.tipo)}
@@ -839,54 +376,7 @@ export default function ContaPage() {
                 )}
               </CardContent>
             </Card>
-          </TabsContent>
 
-          {/* Aba Saques */}
-          <TabsContent value="saques">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Clock className="w-5 h-5" />
-                  Solicitações de Saque
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {saqueRequests.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Clock className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">Nenhuma solicitação</h3>
-                    <p className="text-muted-foreground">Suas solicitações de saque aparecerão aqui.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {saqueRequests.map((saque) => (
-                      <div key={saque.id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <ArrowUpRight className="w-4 h-4 text-blue-600" />
-                          <div>
-                            <div className="font-medium">
-                              Saque via PIX -{" "}
-                              {saque.valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-                            </div>
-                            <div className="text-sm text-muted-foreground">
-                              {formatDate(saque.createdAt)} • {saque.chavePix}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          {getStatusBadge(saque.status)}
-                          {saque.motivoRejeicao && (
-                            <div className="text-xs text-red-600 mt-1">{saque.motivoRejeicao}</div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
       </div>
     </div>
   )

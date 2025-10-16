@@ -216,6 +216,42 @@ export async function POST(request: NextRequest) {
           )
         }
 
+        // Verificar se há um anúncio pendente para ativar
+        if (externalReference) {
+          console.log('🔍 Verificando anúncio pendente para ativar...')
+          
+          // Buscar veículo com status pendente_pagamento para este usuário
+          const { data: pendingVehicle, error: vehicleError } = await supabase
+            .from('ocar_vehicles')
+            .select('id, marca, modelo, preco, plano')
+            .eq('usuario_id', userId)
+            .eq('status', 'pendente_pagamento')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single()
+
+          if (pendingVehicle && !vehicleError) {
+            console.log('🚗 Anúncio pendente encontrado:', pendingVehicle)
+            
+            // Ativar o anúncio
+            const { error: activateError } = await supabase
+              .from('ocar_vehicles')
+              .update({ 
+                status: 'ativo',
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', pendingVehicle.id)
+
+            if (activateError) {
+              console.error('❌ Erro ao ativar anúncio:', activateError)
+            } else {
+              console.log('✅ Anúncio ativado com sucesso:', pendingVehicle.id)
+            }
+          } else {
+            console.log('ℹ️ Nenhum anúncio pendente encontrado para ativar')
+          }
+        }
+
         console.log('✅ Saldo atualizado com sucesso:', {
           userId,
           valor,

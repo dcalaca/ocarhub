@@ -18,6 +18,7 @@ import { PhotoUpload } from "@/components/photo-upload"
 import { CacheDebug } from "@/components/cache-debug"
 import { useAuth } from "@/contexts/auth-context"
 import { useToast } from "@/hooks/use-toast"
+import { useMercadoPago } from "@/hooks/use-mercadopago"
 import {
   Car,
   Star,
@@ -51,6 +52,7 @@ import { ImageUploadService } from "@/lib/image-upload-service"
 export default function AnunciarPage() {
   const { user, debitSaldo, refreshSaldo } = useAuth()
   const { toast } = useToast()
+  const { loading: loadingMercadoPago, processPayment } = useMercadoPago()
   const [currentTab, setCurrentTab] = useState("info")
   const [planoSelecionado, setPlanoSelecionado] = useState<string>("")
   const [loading, setLoading] = useState(false)
@@ -489,39 +491,23 @@ export default function AnunciarPage() {
       }
     }
 
-    // Validar saldo ANTES de criar o veículo
-    if (plano.preco > 0 && (user.saldo || 0) < plano.preco) {
-      console.log('💰 Saldo insuficiente:', {
-        saldoAtual: user.saldo,
+    // Para planos pagos, usar Mercado Pago em vez de validar saldo
+    if (plano.preco > 0) {
+      console.log('💳 Plano pago detectado, iniciando pagamento via Mercado Pago:', {
         precoPlano: plano.preco,
-        diferenca: (user.saldo || 0) - plano.preco
+        planoNome: plano.nome
       })
-      toast({
-        title: "Saldo insuficiente",
-        description: `Você precisa de ${(plano.preco || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} para este plano. Seu saldo atual é de ${(user.saldo || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`,
-        variant: "destructive",
-      })
-      setLoading(false)
-      return
-    }
-
-    setSavingStep('Preparando dados do veículo...')
-    console.log('📋 Dados do formulário para validação:', {
-      brandId, modelId, year, selectedVersion, price, mileage, color, fuelType, transmission
-    })
-
-    try {
-      // Primeiro, criar o veículo no Supabase para obter o ID
+      
+      // Criar o veículo primeiro (sem cobrança ainda)
       let veiculoCriado = null
       if (user?.id) {
         console.log('🚗 Salvando veículo no Supabase...')
-        console.log('👤 User ID:', user.id)
         setSavingStep('Salvando dados do veículo...')
         
         const vehicleData = {
           marca: brands.find(b => b.value === brandId)?.label || '',
           modelo: models.find(m => m.value === modelId)?.label || '',
-          versao: selectedVersion || 'Não informado', // Campo obrigatório
+          versao: selectedVersion || 'Não informado',
           ano: parseInt(year),
           cor: color,
           quilometragem: parseInt(mileage),
@@ -539,15 +525,15 @@ export default function AnunciarPage() {
           placa_parcial: licensePlate,
           numero_proprietarios: parseInt(owners),
           observacoes: description,
-          fotos: [], // Inicialmente vazio, será preenchido após upload
+          fotos: [],
           plano: plano.nome.toLowerCase() as 'gratuito' | 'destaque' | 'premium',
           cidade: location.split(',')[0]?.trim() || 'São Paulo',
           estado: location.split(',')[1]?.trim() || 'SP',
+          status: 'pendente_pagamento', // Status inicial para planos pagos
         }
 
         try {
           console.log('📝 Dados do veículo a serem salvos:', vehicleData)
-          console.log('🔄 Chamando VehicleService.createVehicle...')
           veiculoCriado = await VehicleService.createVehicle(vehicleData, user.id)
           console.log('✅ Veículo salvo com sucesso:', veiculoCriado)
 
@@ -575,7 +561,6 @@ export default function AnunciarPage() {
           }
         } catch (error) {
           console.error('❌ Erro ao salvar veículo:', error)
-          console.error('❌ Detalhes do erro:', error.message)
           toast({
             title: "Erro ao salvar anúncio",
             description: `Erro: ${error.message}`,
@@ -586,77 +571,150 @@ export default function AnunciarPage() {
         }
       }
 
-      // Só debitar o saldo se o veículo foi criado com sucesso
-      console.log('🔍 Verificando condições para cobrança:', {
-        'plano.preco > 0': plano.preco > 0,
-        'plano.preco': plano.preco,
-        'veiculoCriado': !!veiculoCriado,
-        'veiculoCriado.id': veiculoCriado?.id,
-        'user.saldo': user?.saldo,
-        'user.id': user?.id
-      })
-      
-      if (plano.preco > 0 && veiculoCriado) {
-        console.log('💰 Tentando debitar saldo:', {
-          valor: plano.preco,
-          plano: plano.nome,
-          saldoAtual: user?.saldo,
-          usuario: user?.id
-        })
-        
+      // Processar pagamento via Mercado Pago
+      if (veiculoCriado?.id) {
+        console.log('💳 Iniciando pagamento via Mercado Pago...')
         setSavingStep('Processando pagamento...')
-        const sucesso = await debitSaldo(
-          plano.preco,
-          `Anúncio ${plano.nome} - ${plano.duracao_dias ? `${plano.duracao_dias} dias` : "vitalício"}`,
-          `anuncio_${plano.nome.toLowerCase()}`,
-          veiculoCriado?.id // ID de referência do veículo
-        )
-
-        console.log('💰 Resultado do débito:', sucesso)
-
-        if (!sucesso) {
+        
+        const descricao = `Anúncio ${plano.nome} - ${plano.duracao_dias ? `${plano.duracao_dias} dias` : "vitalício"}`
+        
+        try {
+          const success = await processPayment(plano.preco, descricao)
+          
+          if (success) {
+            toast({
+              title: "Redirecionando para pagamento",
+              description: "Você será redirecionado para o Mercado Pago",
+            })
+            
+            // Salvar dados do veículo e plano no localStorage para recuperar após pagamento
+            localStorage.setItem('pendingVehicle', JSON.stringify({
+              vehicleId: veiculoCriado.id,
+              planId: plano.id,
+              planName: plano.nome,
+              planPrice: plano.preco
+            }))
+            
+            setLoading(false)
+            return
+          } else {
+            toast({
+              title: "Erro no pagamento",
+              description: "Não foi possível processar o pagamento",
+              variant: "destructive",
+            })
+            setLoading(false)
+            return
+          }
+        } catch (error) {
+          console.error('❌ Erro no pagamento:', error)
           toast({
             title: "Erro no pagamento",
-            description: "Não foi possível processar o pagamento",
+            description: "Ocorreu um erro ao processar o pagamento",
             variant: "destructive",
           })
           setLoading(false)
           return
         }
-      } else {
-        console.log('⚠️ COBRANÇA NÃO REALIZADA:', {
-          motivo: plano.preco <= 0 ? 'Plano gratuito' : 'Veículo não criado',
-          planoPreco: plano.preco,
-          veiculoCriado: !!veiculoCriado
-        })
       }
+    }
 
-      // Sucesso - mostrar toast e redirecionar
-      const mensagemDuracao = plano.duracao_dias 
-        ? `${plano.duracao_dias} dias` 
-        : "vitalício até vender"
+    // Para planos gratuitos, processar normalmente
+    if (plano.preco === 0) {
+      console.log('🆓 Plano gratuito detectado, processando normalmente')
       
-      setSavingStep('Finalizando...')
-      setShowSuccessModal(true)
+      setSavingStep('Preparando dados do veículo...')
       
-      toast({
-        title: "Anúncio publicado com sucesso!",
-        description: `Seu anúncio ${plano.nome} está ativo por ${mensagemDuracao}`,
-      })
+      try {
+        // Criar o veículo no Supabase
+        let veiculoCriado = null
+        if (user?.id) {
+          console.log('🚗 Salvando veículo no Supabase...')
+          setSavingStep('Salvando dados do veículo...')
+          
+          const vehicleData = {
+            marca: brands.find(b => b.value === brandId)?.label || '',
+            modelo: models.find(m => m.value === modelId)?.label || '',
+            versao: selectedVersion || 'Não informado',
+            ano: parseInt(year),
+            cor: color,
+            quilometragem: parseInt(mileage),
+            motor: `${fuelType} ${transmission}`,
+            combustivel: [fuelType],
+            cambio: transmission,
+            opcionais: selectedOpcionais,
+            carroceria: selectedCarroceria,
+            tipo_vendedor: selectedTipoVendedor,
+            caracteristicas: selectedCaracteristicas,
+            blindagem: selectedBlindagem === 'Sim',
+            leilao: selectedLeilao === 'Sim',
+            preco: parseFloat(price),
+            fipe: fipeData?.price,
+            placa_parcial: licensePlate,
+            numero_proprietarios: parseInt(owners),
+            observacoes: description,
+            fotos: [],
+            plano: plano.nome.toLowerCase() as 'gratuito' | 'destaque' | 'premium',
+            cidade: location.split(',')[0]?.trim() || 'São Paulo',
+            estado: location.split(',')[1]?.trim() || 'SP',
+            status: 'ativo', // Status ativo para planos gratuitos
+          }
 
-      // Redirecionar para meus anúncios após 3 segundos
-      setTimeout(() => {
-        window.location.href = "/meus-anuncios"
-      }, 3000)
-    } catch (error) {
-      console.error("Erro ao publicar anúncio:", error)
-      toast({
-        title: "Erro ao publicar",
-        description: "Ocorreu um erro inesperado. Tente novamente.",
-        variant: "destructive",
-      })
-    } finally {
-      setLoading(false)
+          veiculoCriado = await VehicleService.createVehicle(vehicleData, user.id)
+          console.log('✅ Veículo salvo com sucesso:', veiculoCriado)
+
+          // Upload das fotos se houver
+          if (photos.length > 0 && veiculoCriado?.id) {
+            console.log('📤 Fazendo upload das fotos...')
+            setSavingStep('Fazendo upload das fotos...')
+            try {
+              const photoUrls = await ImageUploadService.uploadImages(photos, veiculoCriado.id)
+              console.log('✅ Fotos enviadas com sucesso:', photoUrls)
+              
+              // Atualizar o veículo com as URLs das fotos
+              setSavingStep('Atualizando veículo com fotos...')
+              await VehicleService.updateVehicle(veiculoCriado.id, { fotos: photoUrls })
+              console.log('✅ Veículo atualizado com as fotos')
+              
+            } catch (photoError) {
+              console.error('❌ Erro no upload das fotos:', photoError)
+              toast({
+                title: "Aviso",
+                description: "Anúncio criado, mas houve erro no upload das fotos. Você pode editá-las depois.",
+                variant: "destructive",
+              })
+            }
+          }
+        }
+
+        // Sucesso - mostrar toast e redirecionar
+        const mensagemDuracao = plano.duracao_dias 
+          ? `${plano.duracao_dias} dias` 
+          : "vitalício até vender"
+        
+        setSavingStep('Finalizando...')
+        setShowSuccessModal(true)
+        
+        toast({
+          title: "Anúncio publicado com sucesso!",
+          description: `Seu anúncio ${plano.nome} está ativo por ${mensagemDuracao}`,
+        })
+
+        // Redirecionar para meus anúncios após 3 segundos
+        setTimeout(() => {
+          window.location.href = "/meus-anuncios"
+        }, 3000)
+        
+      } catch (error) {
+        console.error("Erro ao publicar anúncio:", error)
+        toast({
+          title: "Erro ao publicar",
+          description: "Ocorreu um erro inesperado. Tente novamente.",
+          variant: "destructive",
+        })
+      } finally {
+        setLoading(false)
+      }
     }
   }
 
@@ -788,12 +846,11 @@ export default function AnunciarPage() {
                     </div>
                   )}
 
-                  {user && plano.preco > (user.saldo || 0) && plano.preco > 0 && (
+                  {plano.preco > 0 && (
                     <Alert className="mt-4">
                       <AlertTriangle className="h-4 w-4" />
                       <AlertDescription className="text-xs">
-                        Saldo insuficiente. Adicione{" "}
-                        {((plano.preco || 0) - (user.saldo || 0)).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                        Pagamento via Mercado Pago (PIX, cartão, boleto)
                       </AlertDescription>
                     </Alert>
                   )}
@@ -1157,19 +1214,18 @@ export default function AnunciarPage() {
                 onClick={handlePublicarAnuncio}
                 disabled={
                   loading ||
-                  !formCompleted ||
-                  (() => {
-                    const planoSelecionadoData = plans.find(p => p.id === planoSelecionado)
-                    return user && planoSelecionadoData && planoSelecionadoData.preco > user.saldo && planoSelecionadoData.preco > 0
-                  })()
+                  loadingMercadoPago ||
+                  !formCompleted
                 }
                 className="px-8 min-w-[200px]"
               >
-                {loading ? (
+                {loading || loadingMercadoPago ? (
                   <div className="flex flex-col items-center gap-2">
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span className="font-medium">Publicando...</span>
+                      <span className="font-medium">
+                        {loadingMercadoPago ? "Processando pagamento..." : "Publicando..."}
+                      </span>
                     </div>
                     {savingStep && (
                       <div className="text-xs text-white/90 text-center bg-white/10 px-2 py-1 rounded">
@@ -1184,7 +1240,7 @@ export default function AnunciarPage() {
                       const planoSelecionadoData = plans.find(p => p.id === planoSelecionado)
                       return (
                         <>
-                          Publicar Anúncio {planoSelecionadoData?.nome}
+                          {planoSelecionadoData?.preco === 0 ? "Publicar Anúncio" : "Finalizar Anúncio"} {planoSelecionadoData?.nome}
                           {planoSelecionadoData && planoSelecionadoData.preco > 0 && (
                             <span className="ml-2">
                               (
