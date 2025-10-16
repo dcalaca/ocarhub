@@ -17,8 +17,6 @@ import {
   ArrowUpRight,
   ArrowDownLeft,
   Shield,
-  Eye,
-  EyeOff,
   RefreshCw,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
@@ -33,7 +31,6 @@ export default function ContaPage() {
   const [loadingTransactions, setLoadingTransactions] = useState(true)
 
   // Estados da interface
-  const [mostrarSaldo, setMostrarSaldo] = useState(true)
   const [filtroTransacao, setFiltroTransacao] = useState<"todas" | "entradas" | "saidas">("todas")
 
   // Função para recarregar transações manualmente
@@ -216,47 +213,14 @@ export default function ContaPage() {
             </div>
             <div>
               <h1 className="text-3xl font-bold text-white">Minha Conta</h1>
-              <p className="text-slate-300">Gerencie seu saldo e movimentações financeiras</p>
+              <p className="text-slate-300">Visualize seu histórico de compras e gastos</p>
             </div>
           </div>
         </div>
 
-        {/* Cards de Resumo */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {/* Saldo Atual */}
-                <Card className="border bg-card">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-gray-700">Saldo Disponível</h3>
-                <div className="flex gap-1">
-                  <Button variant="ghost" size="sm" onClick={() => setMostrarSaldo(!mostrarSaldo)}>
-                    {mostrarSaldo ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={refreshUserData} title="Atualizar saldo">
-                    <RefreshCw className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-              <div className="text-2xl font-bold text-green-600">
-                {mostrarSaldo ? (user.saldo || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "••••••"}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Total de Entradas */}
-                <Card className="border bg-card">
-            <CardContent className="p-6">
-              <h3 className="text-sm font-medium text-gray-700 mb-2">Total Recebido</h3>
-              <div className="text-2xl font-bold text-blue-600">
-                {(transactions || [])
-                  .filter((t) => t.valor > 0)
-                  .reduce((acc, t) => acc + t.valor, 0)
-                  .toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Total de Saídas */}
+        {/* Card de Resumo */}
+        <div className="grid grid-cols-1 md:grid-cols-1 gap-6 mb-8">
+          {/* Total Gasto */}
                 <Card className="border bg-card">
             <CardContent className="p-6">
               <h3 className="text-sm font-medium text-gray-700 mb-2">Total Gasto</h3>

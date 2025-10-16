@@ -74,16 +74,6 @@ export function Header() {
 
         {/* Right side */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Botão Verde - Saldo */}
-          {user && (
-            <Link href="/conta" className="hidden sm:block">
-              <div className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium cursor-pointer transition-colors duration-200 font-poppins">
-                <Wallet className="w-4 h-4" />
-                <span>R$ {(user.saldo || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-              </div>
-            </Link>
-          )}
-
           {/* Botão Cinza - Anunciar */}
           <Link
             href="/anunciar"
@@ -106,16 +96,6 @@ export function Header() {
                 <SheetContent side="right" className="w-[280px] bg-black text-white border-gray-800">
                   <SheetTitle className="sr-only">Menu de navegação</SheetTitle>
                   <div className="flex flex-col space-y-4 mt-8">
-                    {/* Saldo no mobile */}
-                    <Link href="/conta" onClick={() => setMobileMenuOpen(false)}>
-                      <div className="flex items-center gap-2 bg-green-600 text-white px-3 py-2 rounded-lg">
-                        <Wallet className="w-4 h-4" />
-                        <span className="font-semibold">
-                          {(user.saldo || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-                        </span>
-                      </div>
-                    </Link>
-
                     {/* Menu items */}
                     <Link
                       href="/buscar"
