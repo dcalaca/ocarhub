@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useAuth } from "@/contexts/auth-context"
 import { usePagarme } from "@/hooks/use-pagarme"
+import { useMercadoPago } from "@/hooks/use-mercadopago"
 import {
   Wallet,
   Plus,
@@ -45,6 +46,9 @@ export default function ContaPage() {
   // Estados para transações reais
   const [transactions, setTransactions] = useState<any[]>([])
   const [loadingTransactions, setLoadingTransactions] = useState(true)
+
+  // Hook do Mercado Pago
+  const { loading: loadingMercadoPago, processPayment } = useMercadoPago()
 
   const saqueRequests = [
     { id: "1", valor: 200, status: "pendente", data: "2024-01-16", createdAt: new Date("2024-01-16"), chavePix: "usuario@ocar.com" },
@@ -143,20 +147,34 @@ export default function ContaPage() {
 
   // Verificar se há parâmetros de pagamento na URL
   useEffect(() => {
-    const paymentStatus = searchParams.get("payment")
-    const amount = searchParams.get("amount")
-
-    if (paymentStatus === "success" && amount) {
-      toast({
-        title: "Pagamento confirmado!",
-        description: `${Number.parseFloat(amount).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} adicionado à sua conta`,
-      })
-    } else if (paymentStatus === "canceled") {
-      toast({
-        title: "Pagamento cancelado",
-        description: "O pagamento foi cancelado ou não foi concluído",
-        variant: "destructive",
-      })
+    const status = searchParams.get('status')
+    
+    if (status) {
+      switch (status) {
+        case 'success':
+          toast({
+            title: "Pagamento realizado!",
+            description: "Seu saldo será atualizado em alguns instantes",
+          })
+          // Recarregar transações após pagamento
+          setTimeout(() => {
+            recarregarTransacoes()
+          }, 2000)
+          break
+        case 'failure':
+          toast({
+            title: "Pagamento não aprovado",
+            description: "Tente novamente ou escolha outro método de pagamento",
+            variant: "destructive",
+          })
+          break
+        case 'pending':
+          toast({
+            title: "Pagamento pendente",
+            description: "Aguardando confirmação do pagamento",
+          })
+          break
+      }
     }
   }, [searchParams, toast])
 
@@ -190,20 +208,18 @@ export default function ContaPage() {
       return
     }
 
-    switch (metodoDeposito) {
-      case "pix":
-        await createPixPayment(valor)
-        break
-      case "boleto":
-        await createBoletoPayment(valor)
-        break
-      case "cartao":
-        // Para cartão, você pode implementar um modal com formulário
-        toast({
-          title: "Em breve",
-          description: "Pagamento com cartão será implementado em breve",
-        })
-        break
+    // Usar Mercado Pago para processar pagamento
+    const descricao = `Recarga de saldo - R$ ${valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`
+    
+    console.log('🚀 Iniciando pagamento via Mercado Pago:', { valor, descricao })
+    
+    const success = await processPayment(valor, descricao)
+    
+    if (success) {
+      toast({
+        title: "Redirecionando para pagamento",
+        description: "Você será redirecionado para o Mercado Pago",
+      })
     }
   }
 
@@ -549,10 +565,10 @@ export default function ContaPage() {
 
                   <Button
                     onClick={handleDeposito}
-                    disabled={loadingDeposito || !valorDeposito}
+                    disabled={loadingMercadoPago || !valorDeposito}
                     className="w-full bg-green-600 hover:bg-green-700"
                   >
-                    {loadingDeposito ? (
+                    {loadingMercadoPago ? (
                       "Processando..."
                     ) : (
                       <>
