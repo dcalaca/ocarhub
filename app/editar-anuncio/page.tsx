@@ -59,11 +59,28 @@ export default function EditarAnuncioPage() {
 
   // Funções de formatação
   const formatCurrency = (value: string) => {
-    // Remove tudo que não é número
-    const numericValue = value.replace(/\D/g, '')
+    // Remove tudo que não é número ou vírgula
+    const numericValue = value.replace(/[^\d,]/g, '')
     if (!numericValue) return ''
     
-    // Converte para número e formata como moeda brasileira
+    // Se tem vírgula, trata como decimal
+    if (numericValue.includes(',')) {
+      const parts = numericValue.split(',')
+      const integerPart = parts[0].replace(/\D/g, '')
+      const decimalPart = parts[1] ? parts[1].slice(0, 2) : ''
+      
+      if (!integerPart) return ''
+      
+      const number = parseFloat(`${integerPart}.${decimalPart}`)
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+        minimumFractionDigits: decimalPart ? decimalPart.length : 0,
+        maximumFractionDigits: 2
+      }).format(number)
+    }
+    
+    // Sem vírgula, trata como inteiro
     const number = parseInt(numericValue)
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -84,8 +101,8 @@ export default function EditarAnuncioPage() {
   }
 
   const parseCurrency = (formattedValue: string) => {
-    // Remove símbolos de moeda e espaços, mantém apenas números
-    return formattedValue.replace(/[^\d]/g, '')
+    // Remove símbolos de moeda e espaços, mantém números e vírgulas
+    return formattedValue.replace(/[^\d,]/g, '')
   }
 
   const parseMileage = (formattedValue: string) => {
@@ -290,7 +307,7 @@ export default function EditarAnuncioPage() {
                     const rawValue = parseCurrency(e.target.value)
                     setPrice(rawValue)
                   }}
-                  placeholder="Ex: R$ 45.000"
+                  placeholder="Ex: R$ 45.000 ou R$ 45.000,50"
                 />
               </div>
 
@@ -419,8 +436,15 @@ export default function EditarAnuncioPage() {
               <div>
                 <Label>Opcionais</Label>
                 <OpcionaisSelector
-                  selected={opcionais}
-                  onSelectionChange={setOpcionais}
+                  onOpcionaisChange={setOpcionais}
+                  onCarroceriaChange={() => {}}
+                  onTipoVendedorChange={() => {}}
+                  onCaracteristicasChange={() => {}}
+                  onBlindagemChange={() => {}}
+                  onLeilaoChange={() => {}}
+                  initialValues={{
+                    opcionais: opcionais
+                  }}
                 />
               </div>
 

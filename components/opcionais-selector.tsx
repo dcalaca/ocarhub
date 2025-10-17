@@ -258,7 +258,7 @@ export function OpcionaisSelector({
           <CardTitle>Tipo de Vendedor</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             {dataToUse.tiposVendedor.map((tipo) => (
               <div key={tipo.id} className="flex items-start space-x-3 py-2 min-h-[2.5rem]">
                 <Checkbox
