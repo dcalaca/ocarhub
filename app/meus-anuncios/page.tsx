@@ -263,7 +263,7 @@ export default function MeusAnunciosPage() {
                           </>
                         )}
                         <DropdownMenuItem asChild>
-                          <Link href={`/anunciar?edit=${anuncio.id}`}>
+                          <Link href={`/editar-anuncio?id=${anuncio.id}`}>
                             <Edit className="mr-2 h-4 w-4" />
                             Editar anúncio
                           </Link>
