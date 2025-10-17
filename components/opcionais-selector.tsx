@@ -372,7 +372,7 @@ export function OpcionaisSelector({
                   <h4 className="font-medium text-sm mb-4 capitalize text-primary">
                     {categoria === 'geral' ? 'Geral' : categoria}
                   </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                     {opcionais.map((opcional) => (
                       <div key={opcional.id} className="flex items-start space-x-3 py-2">
                         <Checkbox
@@ -383,7 +383,7 @@ export function OpcionaisSelector({
                         />
                         <Label 
                           htmlFor={`opcional-${opcional.id}`} 
-                          className="text-sm leading-relaxed cursor-pointer flex-1"
+                          className="text-sm leading-relaxed cursor-pointer flex-1 break-words"
                         >
                           {opcional.nome}
                         </Label>
