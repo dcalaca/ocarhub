@@ -93,6 +93,8 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-poppins), system-ui, -apple-system, sans-serif;
+    margin-top: 5rem !important; /* 80px - empurrar toda a página para baixo */
+    overflow-x: hidden !important;
   }
   
   /* Garantir que o header fique fixo no mobile */
@@ -110,31 +112,8 @@
     background-color: black !important;
     border-bottom: 1px solid #374151 !important;
   }
-  
-  /* Garantir que o body não tenha scroll horizontal */
-  body {
-    overflow-x: hidden !important;
-  }
-  
-  /* Aplicar padding-top diretamente no main para compensar o header fixo */
-  main {
-    padding-top: 5rem !important; /* 80px - altura do header + margem */
-  }
-  
-  /* Aplicar padding-top em containers principais que não usam main */
-  .min-h-screen {
-    padding-top: 5rem !important; /* 80px - altura do header + margem */
-  }
 }
 
 @layer utilities {
-  /* Classe utilitária para compensar o header fixo */
-  .content-with-header {
-    padding-top: 6rem; /* 96px - altura do header + margem extra generosa */
-  }
-  
-  /* Para páginas que precisam de mais espaço no topo */
-  .content-with-header-lg {
-    padding-top: 7rem; /* 112px - para páginas com mais conteúdo no topo */
-  }
+  /* Classes utilitárias removidas - margin-top no body resolve tudo */
 }
