@@ -107,17 +107,24 @@
     transform: translateZ(0) !important;
     -webkit-transform: translateZ(0) !important;
     will-change: transform !important;
+    background-color: black !important;
+    border-bottom: 1px solid #374151 !important;
+  }
+  
+  /* Garantir que o body não tenha scroll horizontal */
+  body {
+    overflow-x: hidden !important;
   }
 }
 
 @layer utilities {
   /* Classe utilitária para compensar o header fixo */
   .content-with-header {
-    padding-top: 5rem; /* 80px - altura do header + margem extra */
+    padding-top: 6rem; /* 96px - altura do header + margem extra generosa */
   }
   
   /* Para páginas que precisam de mais espaço no topo */
   .content-with-header-lg {
-    padding-top: 6rem; /* 96px - para páginas com mais conteúdo no topo */
+    padding-top: 7rem; /* 112px - para páginas com mais conteúdo no topo */
   }
 }
