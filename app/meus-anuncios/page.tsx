@@ -122,7 +122,7 @@ export default function MeusAnunciosPage() {
       console.error("Erro ao atualizar status:", error)
       toast({
         title: "Erro",
-        description: "Não foi possível atualizar o status do anúncio.",
+        description: `Não foi possível atualizar o status do anúncio. ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
         variant: "destructive",
       })
     }

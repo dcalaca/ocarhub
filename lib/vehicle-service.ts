@@ -142,6 +142,8 @@ export class VehicleService {
   // Atualizar veículo
   static async updateVehicle(vehicleId: string, updates: Partial<Vehicle>): Promise<Vehicle | null> {
     try {
+      console.log('🔄 Atualizando veículo:', vehicleId, 'com dados:', updates)
+      
       const { data, error } = await supabase
         .from('ocar_vehicles')
         .update({
@@ -153,10 +155,18 @@ export class VehicleService {
         .single()
 
       if (error) {
-        console.error('❌ Erro ao atualizar veículo:', error)
-        throw error
+        console.error('❌ Erro ao atualizar veículo:', {
+          vehicleId,
+          updates,
+          error: error.message || error,
+          details: error.details || 'Sem detalhes',
+          hint: error.hint || 'Sem dica',
+          code: error.code || 'Sem código'
+        })
+        throw new Error(`Erro ao atualizar veículo: ${error.message || 'Erro desconhecido'}`)
       }
 
+      console.log('✅ Veículo atualizado com sucesso:', data)
       return data
     } catch (error) {
       console.error('❌ Erro no VehicleService.updateVehicle:', error)
