@@ -258,9 +258,9 @@ export function OpcionaisSelector({
           <CardTitle>Tipo de Vendedor</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {dataToUse.tiposVendedor.map((tipo) => (
-              <div key={tipo.id} className="flex items-center space-x-2">
+              <div key={tipo.id} className="flex items-start space-x-3 py-2 min-h-[2.5rem]">
                 <Checkbox
                   id={`tipo-${tipo.id}`}
                   checked={selectedTipoVendedor === tipo.nome}
@@ -269,8 +269,9 @@ export function OpcionaisSelector({
                     setSelectedTipoVendedor(newValue);
                     onTipoVendedorChange(newValue);
                   }}
+                  className="mt-0.5 flex-shrink-0"
                 />
-                <Label htmlFor={`tipo-${tipo.id}`} className="text-sm">
+                <Label htmlFor={`tipo-${tipo.id}`} className="text-sm leading-relaxed cursor-pointer flex-1 break-words">
                   {tipo.nome}
                 </Label>
               </div>
@@ -285,15 +286,16 @@ export function OpcionaisSelector({
           <CardTitle>Características do Veículo</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {dataToUse.caracteristicas.map((caracteristica) => (
-              <div key={caracteristica.id} className="flex items-center space-x-2">
+              <div key={caracteristica.id} className="flex items-start space-x-3 py-2 min-h-[2.5rem]">
                 <Checkbox
                   id={`caracteristica-${caracteristica.id}`}
                   checked={selectedCaracteristicas.includes(caracteristica.nome)}
                   onCheckedChange={(checked) => handleCaracteristicaChange(caracteristica.nome, checked as boolean)}
+                  className="mt-0.5 flex-shrink-0"
                 />
-                <Label htmlFor={`caracteristica-${caracteristica.id}`} className="text-sm">
+                <Label htmlFor={`caracteristica-${caracteristica.id}`} className="text-sm leading-relaxed cursor-pointer flex-1 break-words hyphens-auto">
                   {caracteristica.nome}
                 </Label>
               </div>
@@ -372,18 +374,18 @@ export function OpcionaisSelector({
                   <h4 className="font-medium text-sm mb-4 capitalize text-primary">
                     {categoria === 'geral' ? 'Geral' : categoria}
                   </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {opcionais.map((opcional) => (
-                      <div key={opcional.id} className="flex items-start space-x-3 py-2">
+                      <div key={opcional.id} className="flex items-start space-x-3 py-2 min-h-[2.5rem]">
                         <Checkbox
                           id={`opcional-${opcional.id}`}
                           checked={selectedOpcionais.includes(opcional.nome)}
                           onCheckedChange={(checked) => handleOpcionalChange(opcional.nome, checked as boolean)}
-                          className="mt-0.5"
+                          className="mt-0.5 flex-shrink-0"
                         />
                         <Label 
                           htmlFor={`opcional-${opcional.id}`} 
-                          className="text-sm leading-relaxed cursor-pointer flex-1 break-words"
+                          className="text-sm leading-relaxed cursor-pointer flex-1 break-words hyphens-auto"
                         >
                           {opcional.nome}
                         </Label>

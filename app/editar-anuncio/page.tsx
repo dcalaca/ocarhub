@@ -57,6 +57,42 @@ export default function EditarAnuncioPage() {
   const [observations, setObservations] = useState("")
   const [photos, setPhotos] = useState<string[]>([])
 
+  // Funções de formatação
+  const formatCurrency = (value: string) => {
+    // Remove tudo que não é número
+    const numericValue = value.replace(/\D/g, '')
+    if (!numericValue) return ''
+    
+    // Converte para número e formata como moeda brasileira
+    const number = parseInt(numericValue)
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(number)
+  }
+
+  const formatMileage = (value: string) => {
+    // Remove tudo que não é número
+    const numericValue = value.replace(/\D/g, '')
+    if (!numericValue) return ''
+    
+    // Formata com pontos como separadores de milhares
+    const number = parseInt(numericValue)
+    return new Intl.NumberFormat('pt-BR').format(number)
+  }
+
+  const parseCurrency = (formattedValue: string) => {
+    // Remove símbolos de moeda e espaços, mantém apenas números
+    return formattedValue.replace(/[^\d]/g, '')
+  }
+
+  const parseMileage = (formattedValue: string) => {
+    // Remove pontos, mantém apenas números
+    return formattedValue.replace(/[^\d]/g, '')
+  }
+
   // Carregar dados do veículo
   useEffect(() => {
     const vehicleId = searchParams.get('id')
@@ -248,10 +284,13 @@ export default function EditarAnuncioPage() {
                 </Label>
                 <Input
                   id="price"
-                  type="number"
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                  placeholder="Ex: 45000"
+                  type="text"
+                  value={formatCurrency(price)}
+                  onChange={(e) => {
+                    const rawValue = parseCurrency(e.target.value)
+                    setPrice(rawValue)
+                  }}
+                  placeholder="Ex: R$ 45.000"
                 />
               </div>
 
@@ -263,10 +302,13 @@ export default function EditarAnuncioPage() {
                 </Label>
                 <Input
                   id="mileage"
-                  type="number"
-                  value={mileage}
-                  onChange={(e) => setMileage(e.target.value)}
-                  placeholder="Ex: 50000"
+                  type="text"
+                  value={formatMileage(mileage)}
+                  onChange={(e) => {
+                    const rawValue = parseMileage(e.target.value)
+                    setMileage(rawValue)
+                  }}
+                  placeholder="Ex: 50.000"
                 />
               </div>
 
