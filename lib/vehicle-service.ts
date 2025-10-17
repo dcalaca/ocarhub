@@ -177,6 +177,8 @@ export class VehicleService {
   // Buscar veículo por ID
   static async getVehicleById(vehicleId: string): Promise<Vehicle | null> {
     try {
+      console.log('🔍 VehicleService.getVehicleById - Buscando veículo:', vehicleId)
+      
       const { data, error } = await supabase
         .from('ocar_vehicles')
         .select('*')
@@ -184,10 +186,17 @@ export class VehicleService {
         .single()
 
       if (error) {
-        console.error('❌ Erro ao buscar veículo:', error)
+        console.error('❌ Erro ao buscar veículo:', {
+          vehicleId,
+          error: error.message || error,
+          details: error.details || 'Sem detalhes',
+          hint: error.hint || 'Sem dica',
+          code: error.code || 'Sem código'
+        })
         throw error
       }
 
+      console.log('✅ Veículo encontrado:', data)
       return data
     } catch (error) {
       console.error('❌ Erro no VehicleService.getVehicleById:', error)

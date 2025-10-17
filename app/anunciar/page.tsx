@@ -140,20 +140,29 @@ export default function AnunciarPage() {
   // Detectar modo de edição e carregar dados do veículo
   useEffect(() => {
     const editId = searchParams.get('edit')
+    console.log('🔍 Verificando parâmetros de edição:', { editId, searchParams: searchParams.toString() })
+    
     if (editId) {
+      console.log('✅ Modo de edição detectado, ID:', editId)
       setIsEditMode(true)
       setEditingVehicleId(editId)
       loadVehicleData(editId)
+    } else {
+      console.log('ℹ️ Modo de criação detectado')
     }
   }, [searchParams])
 
   // Função para carregar dados do veículo para edição
   const loadVehicleData = async (vehicleId: string) => {
     try {
+      console.log('🔄 Carregando dados do veículo para edição:', vehicleId)
       setLoadingVehicleData(true)
       const vehicle = await VehicleService.getVehicleById(vehicleId)
       
+      console.log('📋 Dados do veículo carregados:', vehicle)
+      
       if (vehicle) {
+        console.log('✅ Preenchendo campos com dados existentes...')
         // Preencher todos os campos com os dados existentes
         setBrandId(vehicle.marca || "")
         setModelId(vehicle.modelo || "")
@@ -172,11 +181,14 @@ export default function AnunciarPage() {
         setPhotos(vehicle.fotos || [])
         setPlanoSelecionado(vehicle.plano || "")
         
+        console.log('✅ Campos preenchidos com sucesso')
+        
         toast({
           title: "Dados carregados",
           description: "Os dados do veículo foram carregados para edição.",
         })
       } else {
+        console.log('❌ Veículo não encontrado')
         toast({
           title: "Erro",
           description: "Veículo não encontrado.",
@@ -184,7 +196,7 @@ export default function AnunciarPage() {
         })
       }
     } catch (error) {
-      console.error("Erro ao carregar dados do veículo:", error)
+      console.error("❌ Erro ao carregar dados do veículo:", error)
       toast({
         title: "Erro",
         description: "Não foi possível carregar os dados do veículo.",
