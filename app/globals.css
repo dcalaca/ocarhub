@@ -115,6 +115,16 @@
   body {
     overflow-x: hidden !important;
   }
+  
+  /* Aplicar padding-top diretamente no main para compensar o header fixo */
+  main {
+    padding-top: 5rem !important; /* 80px - altura do header + margem */
+  }
+  
+  /* Aplicar padding-top em containers principais que não usam main */
+  .min-h-screen {
+    padding-top: 5rem !important; /* 80px - altura do header + margem */
+  }
 }
 
 @layer utilities {

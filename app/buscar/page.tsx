@@ -376,7 +376,7 @@ function SearchPageContent() {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <div className="container mx-auto px-4 py-8 content-with-header">
+        <div className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center">
               <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-white" />
@@ -393,7 +393,7 @@ function SearchPageContent() {
       <Header />
 
       {/* Hero Section da Busca */}
-      <div className="relative bg-gradient-to-r from-purple-900/90 to-purple-600/90 text-white py-8 pb-4 content-with-header">
+      <div className="relative bg-gradient-to-r from-purple-900/90 to-purple-600/90 text-white py-8 pb-4">
         <div className="absolute inset-0 bg-black/20" />
         <div className="relative container mx-auto px-4">
           <div className="text-center mb-6">
@@ -676,7 +676,7 @@ export default function SearchPage() {
       fallback={
         <div className="min-h-screen bg-background">
           <Header />
-          <div className="container mx-auto px-4 py-8 content-with-header">
+          <div className="container mx-auto px-4 py-8">
             <div className="flex items-center justify-center min-h-[400px]">
               <Loader2 className="w-8 h-8 animate-spin text-white" />
             </div>
