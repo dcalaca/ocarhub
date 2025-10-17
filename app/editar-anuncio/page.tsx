@@ -92,7 +92,7 @@ export default function EditarAnuncioPage() {
         setLocation(vehicle.cidade || "")
         setState(vehicle.estado || "")
         setObservations(vehicle.observacoes || "")
-        setPhotos(vehicle.fotos || [])
+        setPhotos(Array.isArray(vehicle.fotos) ? vehicle.fotos : [])
         
         console.log('✅ Dados carregados com sucesso')
       } else {
@@ -407,7 +407,7 @@ export default function EditarAnuncioPage() {
           </CardHeader>
           <CardContent>
             <PhotoUpload
-              photos={photos}
+              photos={photos || []}
               onPhotosChange={setPhotos}
               maxPhotos={10}
             />
