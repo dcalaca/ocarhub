@@ -102,6 +102,14 @@ export default function MeusAnunciosPage() {
     }).format(new Date(dateString))
   }
 
+  // Função para verificar se pode reativar (máximo 30 dias)
+  const canReactivate = (createdAt: string) => {
+    const createdDate = new Date(createdAt)
+    const now = new Date()
+    const daysDiff = Math.floor((now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24))
+    return daysDiff <= 30
+  }
+
   // Funções de gerenciamento de anúncios
   const updateAnuncioStatus = async (anuncioId: string, newStatus: string) => {
     try {
@@ -236,10 +244,19 @@ export default function MeusAnunciosPage() {
                           </>
                         )}
                         {anuncio.status === "pausado" && (
-                          <DropdownMenuItem onClick={() => updateAnuncioStatus(anuncio.id, "ativo")}>
-                            <Play className="mr-2 h-4 w-4" />
-                            Reativar anúncio
-                          </DropdownMenuItem>
+                          <>
+                            {canReactivate(anuncio.created_at) ? (
+                              <DropdownMenuItem onClick={() => updateAnuncioStatus(anuncio.id, "ativo")}>
+                                <Play className="mr-2 h-4 w-4" />
+                                Reativar anúncio
+                              </DropdownMenuItem>
+                            ) : (
+                              <DropdownMenuItem disabled>
+                                <Clock className="mr-2 h-4 w-4" />
+                                Reativação expirada (30 dias)
+                              </DropdownMenuItem>
+                            )}
+                          </>
                         )}
                         <DropdownMenuItem asChild>
                           <Link href={`/anunciar?edit=${anuncio.id}`}>

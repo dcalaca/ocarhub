@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -53,6 +54,12 @@ export default function AnunciarPage() {
   const { user, debitSaldo, refreshSaldo } = useAuth()
   const { toast } = useToast()
   const { loading: loadingMercadoPago, processPayment } = useMercadoPago()
+  const searchParams = useSearchParams()
+  
+  // Estados de modo de edição
+  const [isEditMode, setIsEditMode] = useState(false)
+  const [editingVehicleId, setEditingVehicleId] = useState<string | null>(null)
+  const [loadingVehicleData, setLoadingVehicleData] = useState(false)
   const [currentTab, setCurrentTab] = useState("info")
   const [planoSelecionado, setPlanoSelecionado] = useState<string>("")
   const [loading, setLoading] = useState(false)
@@ -129,6 +136,64 @@ export default function AnunciarPage() {
   const { models: processedModels, loading: processedModelsLoading } = useFipeProcessedModels(selectedBrandCode)
   const { years: uniqueYears, loading: uniqueYearsLoading } = useFipeUniqueYears(selectedBrandCode, selectedModelCode, modelId)
   const { versions: versionsByYear, loading: versionsLoading } = useFipeVersionsByYear(selectedBrandCode, selectedModelCode, modelId, year ? parseInt(year) : null)
+
+  // Detectar modo de edição e carregar dados do veículo
+  useEffect(() => {
+    const editId = searchParams.get('edit')
+    if (editId) {
+      setIsEditMode(true)
+      setEditingVehicleId(editId)
+      loadVehicleData(editId)
+    }
+  }, [searchParams])
+
+  // Função para carregar dados do veículo para edição
+  const loadVehicleData = async (vehicleId: string) => {
+    try {
+      setLoadingVehicleData(true)
+      const vehicle = await VehicleService.getVehicleById(vehicleId)
+      
+      if (vehicle) {
+        // Preencher todos os campos com os dados existentes
+        setBrandId(vehicle.marca || "")
+        setModelId(vehicle.modelo || "")
+        setYear(vehicle.ano?.toString() || "")
+        setSelectedVersion(vehicle.versao || "")
+        setPrice(vehicle.preco?.toString() || "")
+        setMileage(vehicle.quilometragem?.toString() || "")
+        setColor(vehicle.cor || "")
+        setFuelType(vehicle.combustivel?.[0] || "")
+        setTransmission(vehicle.cambio || "")
+        setMotor(vehicle.motor || "")
+        setOpcionais(vehicle.opcionais || [])
+        setLocation(vehicle.cidade || "")
+        setState(vehicle.estado || "")
+        setObservations(vehicle.observacoes || "")
+        setPhotos(vehicle.fotos || [])
+        setPlanoSelecionado(vehicle.plano || "")
+        
+        toast({
+          title: "Dados carregados",
+          description: "Os dados do veículo foram carregados para edição.",
+        })
+      } else {
+        toast({
+          title: "Erro",
+          description: "Veículo não encontrado.",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error("Erro ao carregar dados do veículo:", error)
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar os dados do veículo.",
+        variant: "destructive",
+      })
+    } finally {
+      setLoadingVehicleData(false)
+    }
+  }
 
   // Carregar planos do banco de dados
   useEffect(() => {
@@ -729,8 +794,12 @@ export default function AnunciarPage() {
               <Car className="w-6 h-6 text-blue-600" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold">Anunciar Veículo</h1>
-              <p className="text-muted-foreground">Escolha o plano ideal e preencha os dados do seu veículo</p>
+              <h1 className="text-3xl font-bold">
+                {isEditMode ? "Editar Anúncio" : "Anunciar Veículo"}
+              </h1>
+              <p className="text-muted-foreground">
+                {isEditMode ? "Atualize os dados do seu veículo" : "Escolha o plano ideal e preencha os dados do seu veículo"}
+              </p>
             </div>
           </div>
 
