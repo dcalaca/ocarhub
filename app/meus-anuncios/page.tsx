@@ -237,7 +237,7 @@ export default function MeusAnunciosPage() {
                               <Pause className="mr-2 h-4 w-4" />
                               Pausar anúncio
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => updateAnuncioStatus(anuncio.id, "vendido")}>
+                            <DropdownMenuItem onClick={() => updateAnuncioStatus(anuncio.id, "expirado")}>
                               <CheckCircle className="mr-2 h-4 w-4" />
                               Marcar como vendido
                             </DropdownMenuItem>
