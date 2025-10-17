@@ -191,7 +191,7 @@ export function Header() {
               </Sheet>
 
               {/* Desktop User Menu */}
-              <DropdownMenu>
+              <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild className="hidden lg:flex">
                   <Button variant="ghost" size="sm" className="relative text-white hover:bg-gray-800">
                     <Avatar className="h-8 w-8">
@@ -200,7 +200,7 @@ export function Header() {
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuContent className="w-56" align="end" forceMount side="bottom" sideOffset={5}>
                   <DropdownMenuItem asChild>
                     <Link href="/conta" className="flex items-center">
                       <Wallet className="mr-2 h-4 w-4" />
@@ -253,12 +253,6 @@ export function Header() {
                       </DropdownMenuItem>
                     </>
                   )}
-                  <DropdownMenuItem asChild>
-                    <Link href="/configuracoes" className="flex items-center">
-                      <Settings className="mr-2 h-4 w-4" />
-                      <span>Configurações</span>
-                    </Link>
-                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={logout}>
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Sair</span>
