@@ -210,7 +210,7 @@ export function OpcionaisSelector({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Aviso se estiver usando dados de fallback */}
       {error && (
         <Card className="border-yellow-200 bg-yellow-50">
@@ -233,7 +233,7 @@ export function OpcionaisSelector({
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {dataToUse.carrocerias.map((carroceria) => (
-              <div key={carroceria.id} className="flex items-center space-x-2">
+              <div key={carroceria.id} className="flex items-start space-x-3 py-1 min-h-[2rem]">
                 <Checkbox
                   id={`carroceria-${carroceria.id}`}
                   checked={selectedCarroceria === carroceria.nome}
@@ -242,8 +242,9 @@ export function OpcionaisSelector({
                     setSelectedCarroceria(newValue);
                     onCarroceriaChange(newValue);
                   }}
+                  className="mt-0.5 flex-shrink-0"
                 />
-                <Label htmlFor={`carroceria-${carroceria.id}`} className="text-sm">
+                <Label htmlFor={`carroceria-${carroceria.id}`} className="text-sm leading-relaxed cursor-pointer flex-1 break-words">
                   {carroceria.nome}
                 </Label>
               </div>
@@ -260,7 +261,7 @@ export function OpcionaisSelector({
         <CardContent>
           <div className="grid grid-cols-1 gap-4">
             {dataToUse.tiposVendedor.map((tipo) => (
-              <div key={tipo.id} className="flex items-start space-x-3 py-2 min-h-[2.5rem]">
+              <div key={tipo.id} className="flex items-start space-x-3 py-1 min-h-[2rem]">
                 <Checkbox
                   id={`tipo-${tipo.id}`}
                   checked={selectedTipoVendedor === tipo.nome}
@@ -288,7 +289,7 @@ export function OpcionaisSelector({
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {dataToUse.caracteristicas.map((caracteristica) => (
-              <div key={caracteristica.id} className="flex items-start space-x-3 py-2 min-h-[2.5rem]">
+              <div key={caracteristica.id} className="flex items-start space-x-3 py-1 min-h-[2rem]">
                 <Checkbox
                   id={`caracteristica-${caracteristica.id}`}
                   checked={selectedCaracteristicas.includes(caracteristica.nome)}
@@ -368,15 +369,15 @@ export function OpcionaisSelector({
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-64">
-            <div className="space-y-6">
+            <div className="space-y-4">
               {Object.entries(opcionaisPorCategoria).map(([categoria, opcionais]) => (
-                <div key={categoria} className="mb-6">
-                  <h4 className="font-medium text-sm mb-4 capitalize text-primary">
+                <div key={categoria} className="mb-4">
+                  <h4 className="font-medium text-sm mb-3 capitalize text-primary">
                     {categoria === 'geral' ? 'Geral' : categoria}
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {opcionais.map((opcional) => (
-                      <div key={opcional.id} className="flex items-start space-x-3 py-2 min-h-[2.5rem]">
+                      <div key={opcional.id} className="flex items-start space-x-3 py-1 min-h-[2rem]">
                         <Checkbox
                           id={`opcional-${opcional.id}`}
                           checked={selectedOpcionais.includes(opcional.nome)}
