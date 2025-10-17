@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { PhotoUpload } from "@/components/photo-upload"
+import Image from "next/image"
 import { OpcionaisSelector } from "@/components/opcionais-selector"
 import { useAuth } from "@/contexts/auth-context"
 import { useToast } from "@/hooks/use-toast"
@@ -406,11 +406,37 @@ export default function EditarAnuncioPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <PhotoUpload
-              photos={photos || []}
-              onPhotosChange={setPhotos}
-              maxPhotos={10}
-            />
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-medium">Fotos do veículo</h3>
+                  <p className="text-xs text-muted-foreground">Fotos atuais do anúncio</p>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {photos.length} fotos
+                </div>
+              </div>
+              
+              {photos.length > 0 ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                  {photos.map((photo, index) => (
+                    <div key={index} className="relative aspect-square overflow-hidden rounded-md">
+                      <Image
+                        src={photo}
+                        alt={`Foto ${index + 1}`}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Camera className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p>Nenhuma foto disponível</p>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
 
