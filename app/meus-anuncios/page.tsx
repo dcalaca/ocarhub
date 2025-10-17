@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import {
   Car,
   Eye,
@@ -28,6 +29,9 @@ import {
   RefreshCw,
   Star,
   AlertTriangle,
+  CheckCircle,
+  XCircle,
+  MoreHorizontal,
 } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { useToast } from "@/hooks/use-toast"
@@ -98,6 +102,53 @@ export default function MeusAnunciosPage() {
     }).format(new Date(dateString))
   }
 
+  // Funções de gerenciamento de anúncios
+  const updateAnuncioStatus = async (anuncioId: string, newStatus: string) => {
+    try {
+      await VehicleService.updateVehicle(anuncioId, { status: newStatus })
+      
+      // Atualizar o estado local
+      setAnuncios(prev => prev.map(anuncio => 
+        anuncio.id === anuncioId 
+          ? { ...anuncio, status: newStatus as any }
+          : anuncio
+      ))
+      
+      toast({
+        title: "Status atualizado",
+        description: `Anúncio ${newStatus === "ativo" ? "ativado" : newStatus === "pausado" ? "pausado" : "marcado como vendido"} com sucesso!`,
+      })
+    } catch (error) {
+      console.error("Erro ao atualizar status:", error)
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o status do anúncio.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const deleteAnuncio = async (anuncioId: string) => {
+    try {
+      await VehicleService.deleteVehicle(anuncioId)
+      
+      // Remover do estado local
+      setAnuncios(prev => prev.filter(anuncio => anuncio.id !== anuncioId))
+      
+      toast({
+        title: "Anúncio excluído",
+        description: "O anúncio foi excluído permanentemente.",
+      })
+    } catch (error) {
+      console.error("Erro ao excluir anúncio:", error)
+      toast({
+        title: "Erro",
+        description: "Não foi possível excluir o anúncio.",
+        variant: "destructive",
+      })
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -145,22 +196,86 @@ export default function MeusAnunciosPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {anunciosFiltrados.map((anuncio) => (
-              <Card key={anuncio.id} className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow">
-                <Link href={`/veiculo/${anuncio.id}`}>
-                  <div className="relative aspect-video">
-                    <Image
-                      src={anuncio.fotos && anuncio.fotos.length > 0 ? anuncio.fotos[0] : "/placeholder.svg?height=200&width=300"}
-                      alt={`${anuncio.marca} ${anuncio.modelo}`}
-                      fill
-                      className="object-cover"
-                    />
-                    <div className="absolute top-2 left-2 flex gap-2 flex-wrap">
-                      <Badge variant={anuncio.status === "ativo" ? "default" : "secondary"}>
-                        {anuncio.status}
-                      </Badge>
+              <Card key={anuncio.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                <div className="relative">
+                  <Link href={`/veiculo/${anuncio.id}`}>
+                    <div className="relative aspect-video">
+                      <Image
+                        src={anuncio.fotos && anuncio.fotos.length > 0 ? anuncio.fotos[0] : "/placeholder.svg?height=200&width=300"}
+                        alt={`${anuncio.marca} ${anuncio.modelo}`}
+                        fill
+                        className="object-cover"
+                      />
+                      <div className="absolute top-2 left-2 flex gap-2 flex-wrap">
+                        <Badge variant={anuncio.status === "ativo" ? "default" : "secondary"}>
+                          {anuncio.status}
+                        </Badge>
+                      </div>
                     </div>
+                  </Link>
+                  
+                  {/* Botão de gerenciamento */}
+                  <div className="absolute top-2 right-2">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 bg-black/50 hover:bg-black/70 text-white">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        {anuncio.status === "ativo" && (
+                          <>
+                            <DropdownMenuItem onClick={() => updateAnuncioStatus(anuncio.id, "pausado")}>
+                              <Pause className="mr-2 h-4 w-4" />
+                              Pausar anúncio
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => updateAnuncioStatus(anuncio.id, "vendido")}>
+                              <CheckCircle className="mr-2 h-4 w-4" />
+                              Marcar como vendido
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                        {anuncio.status === "pausado" && (
+                          <DropdownMenuItem onClick={() => updateAnuncioStatus(anuncio.id, "ativo")}>
+                            <Play className="mr-2 h-4 w-4" />
+                            Reativar anúncio
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem asChild>
+                          <Link href={`/anunciar?edit=${anuncio.id}`}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Editar anúncio
+                          </Link>
+                        </DropdownMenuItem>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Excluir anúncio
+                            </DropdownMenuItem>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Tem certeza que deseja excluir este anúncio? Esta ação não pode ser desfeita e você perderá todos os dados do anúncio permanentemente.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction 
+                                onClick={() => deleteAnuncio(anuncio.id)}
+                                className="bg-red-600 hover:bg-red-700"
+                              >
+                                Excluir permanentemente
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
-                </Link>
+                </div>
                 <CardContent className="p-4">
                   <div className="space-y-2">
                     <h3 className="font-semibold text-lg">
