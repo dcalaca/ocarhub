@@ -219,7 +219,7 @@ export default function PerfilPage() {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8 content-with-header">
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center">
               <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -235,7 +235,7 @@ export default function PerfilPage() {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8 content-with-header">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-white mb-4">Acesso Negado</h1>
             <p className="text-purple-100">Você precisa estar logado para acessar esta página.</p>
@@ -249,7 +249,7 @@ export default function PerfilPage() {
     <div className="min-h-screen bg-background">
       <Header />
       
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 content-with-header">
         {/* Header do Perfil */}
         <div className="bg-card backdrop-blur-sm rounded-xl p-6 mb-8 border shadow-xl">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-6">

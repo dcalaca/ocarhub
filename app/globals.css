@@ -103,6 +103,7 @@
     right: 0 !important;
     z-index: 50 !important;
     width: 100% !important;
+    height: 4rem !important; /* 64px fixo */
     transform: translateZ(0) !important;
     -webkit-transform: translateZ(0) !important;
     will-change: transform !important;
@@ -112,11 +113,11 @@
 @layer utilities {
   /* Classe utilitária para compensar o header fixo */
   .content-with-header {
-    padding-top: 4rem; /* 64px - altura do header */
+    padding-top: 5rem; /* 80px - altura do header + margem extra */
   }
   
   /* Para páginas que precisam de mais espaço no topo */
   .content-with-header-lg {
-    padding-top: 5rem; /* 80px - para páginas com mais conteúdo no topo */
+    padding-top: 6rem; /* 96px - para páginas com mais conteúdo no topo */
   }
 }
