@@ -366,21 +366,25 @@ export function OpcionaisSelector({
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-64">
-            <div className="space-y-4">
+            <div className="space-y-6">
               {Object.entries(opcionaisPorCategoria).map(([categoria, opcionais]) => (
-                <div key={categoria}>
-                  <h4 className="font-medium text-sm mb-2 capitalize">
+                <div key={categoria} className="mb-6">
+                  <h4 className="font-medium text-sm mb-4 capitalize text-primary">
                     {categoria === 'geral' ? 'Geral' : categoria}
                   </h4>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {opcionais.map((opcional) => (
-                      <div key={opcional.id} className="flex items-center space-x-2">
+                      <div key={opcional.id} className="flex items-start space-x-3 py-2">
                         <Checkbox
                           id={`opcional-${opcional.id}`}
                           checked={selectedOpcionais.includes(opcional.nome)}
                           onCheckedChange={(checked) => handleOpcionalChange(opcional.nome, checked as boolean)}
+                          className="mt-0.5"
                         />
-                        <Label htmlFor={`opcional-${opcional.id}`} className="text-sm">
+                        <Label 
+                          htmlFor={`opcional-${opcional.id}`} 
+                          className="text-sm leading-relaxed cursor-pointer flex-1"
+                        >
                           {opcional.nome}
                         </Label>
                       </div>
