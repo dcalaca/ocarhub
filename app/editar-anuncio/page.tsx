@@ -100,9 +100,54 @@ export default function EditarAnuncioPage() {
     return new Intl.NumberFormat('pt-BR').format(number)
   }
 
-  const parseCurrency = (formattedValue: string) => {
-    // Remove símbolos de moeda e espaços, mantém números e vírgulas
-    return formattedValue.replace(/[^\d,]/g, '')
+  const formatPriceForDisplay = (value: string) => {
+    if (!value) return ''
+    
+    // Se já tem formatação, retorna como está
+    if (value.includes('R$')) return value
+    
+    // Se tem vírgula, formata como decimal
+    if (value.includes(',')) {
+      const parts = value.split(',')
+      const integerPart = parts[0].replace(/\D/g, '')
+      const decimalPart = parts[1] ? parts[1].slice(0, 2) : ''
+      
+      if (!integerPart) return value
+      
+      const number = parseFloat(`${integerPart}.${decimalPart}`)
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+        minimumFractionDigits: decimalPart ? decimalPart.length : 0,
+        maximumFractionDigits: 2
+      }).format(number)
+    }
+    
+    // Se é só número, formata como inteiro
+    const numericValue = value.replace(/\D/g, '')
+    if (!numericValue) return value
+    
+    const number = parseInt(numericValue)
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(number)
+  }
+
+  const parsePriceForSave = (value: string) => {
+    if (!value) return ''
+    
+    // Remove formatação e mantém apenas números e vírgula
+    const cleanValue = value.replace(/[^\d,]/g, '')
+    
+    // Se tem vírgula, converte para ponto para salvar no banco
+    if (cleanValue.includes(',')) {
+      return cleanValue.replace(',', '.')
+    }
+    
+    return cleanValue
   }
 
   const parseMileage = (formattedValue: string) => {
@@ -135,7 +180,7 @@ export default function EditarAnuncioPage() {
       if (vehicle) {
         setVehicleData(vehicle)
         // Preencher apenas campos editáveis
-        setPrice(vehicle.preco?.toString() || "")
+        setPrice(vehicle.preco ? formatPriceForDisplay(vehicle.preco.toString()) : "")
         setMileage(vehicle.quilometragem?.toString() || "")
         setColor(vehicle.cor || "")
         setFuelType(vehicle.combustivel?.[0] || "")
@@ -184,7 +229,7 @@ export default function EditarAnuncioPage() {
 
       // Atualizar apenas campos editáveis
       const updates = {
-        preco: parseFloat(price),
+        preco: parseFloat(parsePriceForSave(price)),
         quilometragem: parseInt(mileage),
         cor: color,
         combustivel: [fuelType],
@@ -292,9 +337,9 @@ export default function EditarAnuncioPage() {
                 Informações Básicas
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               {/* Preço */}
-              <div>
+              <div className="space-y-2">
                 <Label htmlFor="price" className="flex items-center gap-2">
                   <DollarSign className="h-4 w-4" />
                   Preço *
@@ -302,17 +347,16 @@ export default function EditarAnuncioPage() {
                 <Input
                   id="price"
                   type="text"
-                  value={formatCurrency(price)}
+                  value={price}
                   onChange={(e) => {
-                    const rawValue = parseCurrency(e.target.value)
-                    setPrice(rawValue)
+                    setPrice(e.target.value)
                   }}
                   placeholder="Ex: R$ 45.000 ou R$ 45.000,50"
                 />
               </div>
 
               {/* Quilometragem */}
-              <div>
+              <div className="space-y-2">
                 <Label htmlFor="mileage" className="flex items-center gap-2">
                   <Gauge className="h-4 w-4" />
                   Quilometragem *
