@@ -215,9 +215,13 @@ export default function MeusAnunciosPage() {
                         className="object-cover"
                       />
                       <div className="absolute top-2 left-2 flex gap-2 flex-wrap">
-                        <Badge variant={anuncio.status === "ativo" ? "default" : "secondary"}>
-                          {anuncio.status}
-                        </Badge>
+                      <Badge variant={
+                        anuncio.status === "ativo" ? "default" : 
+                        anuncio.status === "vendido" ? "destructive" : 
+                        "secondary"
+                      }>
+                        {anuncio.status === "vendido" ? "vendido" : anuncio.status}
+                      </Badge>
                       </div>
                     </div>
                   </Link>
@@ -237,7 +241,7 @@ export default function MeusAnunciosPage() {
                               <Pause className="mr-2 h-4 w-4" />
                               Pausar anúncio
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => updateAnuncioStatus(anuncio.id, "expirado")}>
+                            <DropdownMenuItem onClick={() => updateAnuncioStatus(anuncio.id, "vendido")}>
                               <CheckCircle className="mr-2 h-4 w-4" />
                               Marcar como vendido
                             </DropdownMenuItem>
