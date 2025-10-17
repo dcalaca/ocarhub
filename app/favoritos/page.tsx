@@ -242,7 +242,7 @@ export default function FavoritesPage() {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <div className="container mx-auto px-4 py-16 pt-24">
+        <div className="container mx-auto px-4 py-16 content-with-header">
           <div className="text-center max-w-md mx-auto">
             <Heart className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
             <h1 className="text-2xl font-bold mb-2">Faça login para ver seus favoritos</h1>
@@ -262,7 +262,7 @@ export default function FavoritesPage() {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <div className="container mx-auto px-4 py-8 pt-24">
+        <div className="container mx-auto px-4 py-8 content-with-header">
           <div className="animate-pulse space-y-6">
             <div className="h-8 bg-muted rounded w-48" />
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -280,7 +280,7 @@ export default function FavoritesPage() {
     <div className="min-h-screen bg-background">
       <Header />
 
-      <div className="container mx-auto px-4 py-8 pt-24">
+      <div className="container mx-auto px-4 py-8 content-with-header">
         {/* Cabeçalho */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-4">

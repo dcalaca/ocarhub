@@ -108,3 +108,15 @@
     will-change: transform !important;
   }
 }
+
+@layer utilities {
+  /* Classe utilitária para compensar o header fixo */
+  .content-with-header {
+    padding-top: 4rem; /* 64px - altura do header */
+  }
+  
+  /* Para páginas que precisam de mais espaço no topo */
+  .content-with-header-lg {
+    padding-top: 5rem; /* 80px - para páginas com mais conteúdo no topo */
+  }
+}
