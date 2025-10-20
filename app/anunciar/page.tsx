@@ -14,7 +14,6 @@ import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { VehicleSelector } from "@/components/vehicle-selector"
 import { PhotoUpload } from "@/components/photo-upload"
 import { CacheDebug } from "@/components/cache-debug"
 import { useAuth } from "@/contexts/auth-context"
@@ -34,13 +33,6 @@ import {
   Save,
 } from "lucide-react"
 import Link from "next/link"
-import {
-  getAllBrands,
-  getModelsByBrand,
-  getYearsByModel,
-  getVersionsByModel,
-  getTransmissionsByModel,
-} from "@/lib/data/car-brands"
 import { useFipeBrands, useFipeModels, useFipeYears } from "@/hooks/use-fipe-data"
 import { useFipeProcessedModels, useFipeProcessedVersions, useFipeUniqueYears, useFipeVersionsByYear } from "@/hooks/use-fipe-intelligence"
 import { FipeVehicleSelector } from "@/components/fipe-vehicle-selector"
@@ -92,15 +84,8 @@ export default function AnunciarPage() {
   const [location, setLocation] = useState("")
 
   // Opções dinâmicas
-  const [brands, setBrands] = useState<{ value: string; label: string; image: string }[]>([])
-  const [models, setModels] = useState<{ value: string; label: string }[]>([])
-  const [years, setYears] = useState<{ value: string; label: string }[]>([])
-  const [versions, setVersions] = useState<{ value: string; label: string }[]>([])
-  const [fuelTypes, setFuelTypes] = useState<{ value: string; label: string }[]>([])
-  const [transmissions, setTransmissions] = useState<{ value: string; label: string }[]>([])
   const [plans, setPlans] = useState<Plan[]>([])
   const [plansLoading, setPlansLoading] = useState(true)
-  const [useDynamicFilters, setUseDynamicFilters] = useState(true)
 
   // Estados para opcionais
   const [selectedOpcionais, setSelectedOpcionais] = useState<string[]>([])
@@ -138,7 +123,6 @@ export default function AnunciarPage() {
       selectedBlindagem,
       selectedLeilao,
       planoSelecionado,
-      useDynamicFilters,
       timestamp: Date.now()
     }
     
@@ -189,7 +173,6 @@ export default function AnunciarPage() {
         setSelectedBlindagem(tempData.selectedBlindagem || "")
         setSelectedLeilao(tempData.selectedLeilao || "")
         setPlanoSelecionado(tempData.planoSelecionado || "")
-        setUseDynamicFilters(tempData.useDynamicFilters !== undefined ? tempData.useDynamicFilters : true)
         
         console.log('📂 Dados temporários carregados')
         
@@ -378,173 +361,6 @@ export default function AnunciarPage() {
       return { podeAnunciar: false, anunciosRestantes: 0 }
     }
   }
-
-  // Carregar marcas da FIPE
-  useEffect(() => {
-    if (fipeBrands.length > 0) {
-      setBrands(
-        fipeBrands.map((brand) => ({
-          value: brand.name, // Usar nome em vez de código
-          label: brand.name,
-          image: `/brands/${brand.id}.svg`, // Assumindo que temos logos para as marcas
-        })),
-      )
-    } else {
-      // Fallback para dados estáticos
-      const allBrands = getAllBrands()
-      setBrands(
-        allBrands.map((brand) => ({
-          value: brand.id,
-          label: brand.name,
-          image: brand.logo,
-        })),
-      )
-    }
-
-    // Carregar combustíveis (lista fixa)
-    setFuelTypes(
-      combustiveis.map((fuel) => ({
-        value: fuel,
-        label: fuel,
-      })),
-    )
-  }, [fipeBrands])
-
-  // Carregar modelos quando a marca mudar
-  useEffect(() => {
-    if (brandId) {
-      // Encontrar o código da marca selecionada
-      const selectedBrand = fipeBrands.find(brand => brand.name === brandId)
-      if (selectedBrand) {
-        setSelectedBrandCode(selectedBrand.code)
-      }
-
-      // Usar modelos processados com inteligência se disponíveis
-      if (processedModels.length > 0) {
-        setModels(
-          processedModels.map((model) => ({
-            value: model.name, // Nome limpo do modelo
-            label: model.name,
-          })),
-        )
-      } else if (fipeModels.length > 0) {
-        setModels(
-          fipeModels.map((model) => ({
-            value: model.name, // Usar nome em vez de código
-            label: model.name,
-          })),
-        )
-      } else {
-        // Fallback para dados estáticos
-        const brandModels = getModelsByBrand(brandId)
-        setModels(
-          brandModels.map((model) => ({
-            value: model.id,
-            label: model.name,
-          })),
-        )
-      }
-      setModelId("")
-      setYear("")
-      setSelectedVersion("")
-    } else {
-      setModels([])
-    }
-  }, [brandId, processedModels, fipeModels, fipeBrands])
-
-  // Carregar anos quando o modelo mudar
-  useEffect(() => {
-    if (brandId && modelId) {
-      // Encontrar o código do modelo selecionado
-      const selectedModel = fipeModels.find(model => model.name === modelId)
-      if (selectedModel) {
-        setSelectedModelCode(selectedModel.code)
-      }
-
-      // Usar anos únicos processados com inteligência se disponíveis
-      if (uniqueYears.length > 0) {
-        setYears(
-          uniqueYears.map((year) => ({
-            value: year.toString(),
-            label: year.toString(),
-          })),
-        )
-      } else if (fipeYears.length > 0) {
-        setYears(
-          fipeYears.map((year) => ({
-            value: year.name, // Usar nome em vez de código
-            label: year.name,
-          })),
-        )
-      } else {
-        // Fallback para dados estáticos
-        const modelYears = getYearsByModel(brandId, modelId)
-        setYears(
-          modelYears.map((year) => ({
-            value: year.toString(),
-            label: year.toString(),
-          })),
-        )
-      }
-
-      // Carregar tipos de combustível (lista fixa)
-      setFuelTypes(
-        combustiveis.map((fuel) => ({
-          value: fuel,
-          label: fuel,
-        })),
-      )
-
-      // Carregar transmissões (usar dados estáticos por enquanto)
-      const modelTransmissions = getTransmissionsByModel(brandId, modelId)
-      console.log('🔧 Carregando transmissões para:', { brandId, modelId, modelTransmissions })
-      
-      // Se não houver transmissões específicas do modelo, usar lista padrão
-      const transmissionsList = modelTransmissions.length > 0 ? modelTransmissions : ['Manual', 'Automático', 'CVT', 'Semi-automático']
-      console.log('🔧 Lista de transmissões final:', transmissionsList)
-      
-      setTransmissions(
-        transmissionsList.map((transmission) => ({
-          value: transmission,
-          label: transmission,
-        })),
-      )
-
-      setYear("")
-      setSelectedVersion("")
-    } else {
-      setYears([])
-      setFuelTypes([])
-      setTransmissions([])
-    }
-  }, [brandId, modelId, uniqueYears, fipeYears, fipeModels])
-
-  // Carregar versões quando o ano mudar
-  useEffect(() => {
-    if (brandId && modelId && year) {
-      // Usar versões processadas com inteligência se disponíveis
-      if (versionsByYear.length > 0) {
-        setVersions(
-          versionsByYear.map((version) => ({
-            value: version.name, // Nome limpo da versão
-            label: version.name,
-          })),
-        )
-      } else {
-        // Fallback para dados estáticos
-        const modelVersions = getVersionsByModel(brandId, modelId)
-        setVersions(
-          modelVersions.map((version) => ({
-            value: version.id,
-            label: version.name,
-          })),
-        )
-      }
-      setSelectedVersion("")
-    } else {
-      setVersions([])
-    }
-  }, [brandId, modelId, year, versionsByYear])
 
   // Calcular progresso do formulário
   useEffect(() => {
@@ -1098,94 +914,11 @@ export default function AnunciarPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Toggle para escolher entre filtros dinâmicos ou tradicionais */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Label htmlFor="dynamic-filters">Filtros Dinâmicos (Webmotors)</Label>
-                    <input
-                      id="dynamic-filters"
-                      type="checkbox"
-                      checked={useDynamicFilters}
-                      onChange={(e) => setUseDynamicFilters(e.target.checked)}
-                      className="rounded"
-                    />
-                  </div>
-                  <div className="text-xs text-muted-500">
-                    {useDynamicFilters ? "Filtros atualizam automaticamente" : "Filtros tradicionais"}
-                  </div>
-                </div>
-
-                {useDynamicFilters ? (
-                  /* Filtros Dinâmicos FIPE */
-                  <FipeVehicleSelector
-                    onSelectionChange={handleDynamicSelection}
-                    initialValues={{}}
-                  />
-                ) : (
-                  /* Filtros Tradicionais */
-                  <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <Label htmlFor="brand">
-                          Marca <span className="text-red-500">*</span>
-                          {brandsLoading && <span className="text-xs text-blue-600 ml-2">Carregando...</span>}
-                        </Label>
-                        <VehicleSelector
-                          options={brands}
-                          value={brandId}
-                          onChange={setBrandId}
-                          placeholder={brandsLoading ? "Carregando marcas..." : "Selecione a marca"}
-                          showImages={true}
-                          disabled={brandsLoading}
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="model">
-                          Modelo <span className="text-red-500">*</span>
-                          {(modelsLoading || processedModelsLoading) && <span className="text-xs text-blue-600 ml-2">Carregando...</span>}
-                        </Label>
-                        <VehicleSelector
-                          options={models}
-                          value={modelId}
-                          onChange={setModelId}
-                          placeholder={(modelsLoading || processedModelsLoading) ? "Carregando modelos..." : "Selecione o modelo"}
-                          disabled={!brandId || modelsLoading || processedModelsLoading}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <Label htmlFor="year">
-                          Ano <span className="text-red-500">*</span>
-                          {(yearsLoading || uniqueYearsLoading) && <span className="text-xs text-blue-600 ml-2">Carregando...</span>}
-                        </Label>
-                        <VehicleSelector
-                          options={years}
-                          value={year}
-                          onChange={setYear}
-                          placeholder={(yearsLoading || uniqueYearsLoading) ? "Carregando anos..." : "Selecione o ano"}
-                          disabled={!modelId || yearsLoading || uniqueYearsLoading}
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="version">
-                          Versão <span className="text-red-500">*</span>
-                          {versionsLoading && <span className="text-xs text-blue-600 ml-2">Carregando...</span>}
-                        </Label>
-                        <VehicleSelector
-                          options={versions}
-                          value={selectedVersion}
-                          onChange={setSelectedVersion}
-                          placeholder={versionsLoading ? "Carregando versões..." : "Selecione a versão"}
-                          disabled={!year || versionsLoading}
-                        />
-                      </div>
-                    </div>
-                  </>
-                )}
+                {/* Filtros Dinâmicos FIPE - sempre ativados */}
+                <FipeVehicleSelector
+                  onSelectionChange={handleDynamicSelection}
+                  initialValues={{}}
+                />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
