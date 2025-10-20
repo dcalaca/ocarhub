@@ -1123,7 +1123,6 @@ export default function AnunciarPage() {
             <CardContent className="space-y-6">
               {/* Filtros Dinâmicos FIPE - sempre ativados */}
               <FipeVehicleSelector
-                key={`fipe-selector-${brandId}-${modelId}-${year}-${selectedVersion}`}
                 onSelectionChange={handleDynamicSelection}
                 initialValues={{
                   marca: brandId,
