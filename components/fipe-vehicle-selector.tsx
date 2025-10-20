@@ -79,11 +79,15 @@ export function FipeVehicleSelector({ onSelectionChange, initialValues = {} }: F
           const data = await response.json();
           console.log('🚗 Veículos carregados:', data);
           setVeiculos(data);
-          setVeiculoSelecionado('');
-          setAnos([]);
-          setAnoSelecionado('');
-          setModelos([]);
-          setModeloSelecionado('');
+          
+          // Só limpar campos se não há veículo selecionado
+          if (!veiculoSelecionado) {
+            setVeiculoSelecionado('');
+            setAnos([]);
+            setAnoSelecionado('');
+            setModelos([]);
+            setModeloSelecionado('');
+          }
           
           // Notificar mudança apenas da marca
           notifyChange({
