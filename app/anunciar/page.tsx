@@ -1075,12 +1075,15 @@ export default function AnunciarPage() {
                       <SelectValue placeholder="Selecione a cor" />
                     </SelectTrigger>
                     <SelectContent 
-                      side="bottom" 
-                      align="start" 
-                      position="popper"
+                      position="fixed"
+                      side="bottom"
+                      align="start"
                       sideOffset={4}
-                      className="max-h-[200px] overflow-y-auto z-50"
-                      avoidCollisions={true}
+                      className="max-h-[200px] overflow-y-auto z-[9999] w-[var(--radix-select-trigger-width)]"
+                      style={{
+                        maxHeight: '200px',
+                        overflowY: 'auto'
+                      }}
                     >
                       {cores.map((cor) => (
                         <SelectItem key={cor} value={cor}>
@@ -1100,12 +1103,15 @@ export default function AnunciarPage() {
                       <SelectValue placeholder="Selecione o combustível" />
                     </SelectTrigger>
                     <SelectContent 
-                      side="bottom" 
-                      align="start" 
-                      position="popper"
+                      position="fixed"
+                      side="bottom"
+                      align="start"
                       sideOffset={4}
-                      className="max-h-[200px] overflow-y-auto z-50"
-                      avoidCollisions={true}
+                      className="max-h-[200px] overflow-y-auto z-[9999] w-[var(--radix-select-trigger-width)]"
+                      style={{
+                        maxHeight: '200px',
+                        overflowY: 'auto'
+                      }}
                     >
                       {combustiveis.map((combustivel) => (
                         <SelectItem key={combustivel} value={combustivel}>
@@ -1125,12 +1131,15 @@ export default function AnunciarPage() {
                       <SelectValue placeholder="Selecione o câmbio" />
                     </SelectTrigger>
                     <SelectContent 
-                      side="bottom" 
-                      align="start" 
-                      position="popper"
+                      position="fixed"
+                      side="bottom"
+                      align="start"
                       sideOffset={4}
-                      className="max-h-[200px] overflow-y-auto z-50"
-                      avoidCollisions={true}
+                      className="max-h-[200px] overflow-y-auto z-[9999] w-[var(--radix-select-trigger-width)]"
+                      style={{
+                        maxHeight: '200px',
+                        overflowY: 'auto'
+                      }}
                     >
                       {cambios.map((cambio) => (
                         <SelectItem key={cambio} value={cambio}>
