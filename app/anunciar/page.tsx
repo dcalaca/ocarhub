@@ -65,6 +65,7 @@ export default function AnunciarPage() {
     planoNome: string
   } | null>(null)
   const [isSavingTemp, setIsSavingTemp] = useState(false)
+  const [dataLoaded, setDataLoaded] = useState(false)
 
   // Dados do veículo
   const [brandId, setBrandId] = useState("")
@@ -186,6 +187,9 @@ export default function AnunciarPage() {
         
         console.log('✅ Dados temporários carregados com sucesso')
         
+        // Marcar que os dados foram carregados
+        setDataLoaded(true)
+        
         toast({
           title: "Dados recuperados",
           description: "Seus dados foram recuperados automaticamente.",
@@ -193,6 +197,12 @@ export default function AnunciarPage() {
       }
     } catch (error) {
       console.error('❌ Erro ao carregar dados temporários:', error)
+    } finally {
+      // Se não há dados salvos, marcar como carregado para permitir interações normais
+      if (!savedData) {
+        console.log('📝 Nenhum dado salvo encontrado, permitindo interações normais')
+        setDataLoaded(true)
+      }
     }
   }
 
@@ -214,6 +224,13 @@ export default function AnunciarPage() {
     modelo?: string
   }) => {
     console.log('🔄 handleDynamicSelection chamado com:', selection)
+    console.log('📊 dataLoaded:', dataLoaded)
+    
+    // Se os dados foram carregados do localStorage, não sobrescrever com valores vazios
+    if (dataLoaded && selection.marca === brandId && !selection.modelo && !selection.ano && !selection.veiculo) {
+      console.log('🚫 Ignorando seleção vazia após carregamento de dados')
+      return
+    }
     
     if (selection.marca) {
       console.log('🏷️ Atualizando marca:', selection.marca)
@@ -264,6 +281,13 @@ export default function AnunciarPage() {
       console.log('ℹ️ Modo de criação detectado')
       // Carregar dados temporários apenas se não estiver editando
       loadTempData()
+      // Se não há dados salvos, marcar como carregado para permitir interações normais
+      setTimeout(() => {
+        if (!dataLoaded) {
+          console.log('📝 Nenhum dado salvo encontrado, permitindo interações normais')
+          setDataLoaded(true)
+        }
+      }, 1000)
     }
   }, [searchParams])
 
