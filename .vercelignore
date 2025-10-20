@@ -1,3 +1,6 @@
+# Configurações específicas para Vercel
+# Exclui arquivos desnecessários do deploy
+
 # Arquivos de desenvolvimento
 .env.local
 .env.development
@@ -47,3 +50,14 @@ scripts/
 *.csv
 *.bat
 *.sh
+
+# Arquivos grandes que podem causar timeout
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Arquivos de backup
+*.bak
+*.backup
+*.old
