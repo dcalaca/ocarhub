@@ -24,7 +24,6 @@ import {
   Car,
   Star,
   Zap,
-  Wallet,
   AlertTriangle,
   CheckCircle,
   Camera,
@@ -52,7 +51,7 @@ import { PlansService, type Plan } from "@/lib/plans-service"
 import { ImageUploadService } from "@/lib/image-upload-service"
 
 export default function AnunciarPage() {
-  const { user, debitSaldo, refreshSaldo } = useAuth()
+  const { user } = useAuth()
   const { toast } = useToast()
   const { loading: loadingMercadoPago, processPayment } = useMercadoPago()
   const searchParams = useSearchParams()
@@ -358,14 +357,6 @@ export default function AnunciarPage() {
 
     loadPlans()
   }, [toast, planoSelecionado])
-
-  // Atualizar saldo ao carregar a página
-  useEffect(() => {
-    if (user) {
-      console.log('🔄 Atualizando saldo na página de anúncios...')
-      refreshSaldo()
-    }
-  }, [user]) // Removido refreshSaldo das dependências para evitar loop infinito
 
   // Função para verificar limite de anúncios gratuitos por CPF
   const verificarLimiteAnunciosGratuitos = async (cpf: string): Promise<{ podeAnunciar: boolean; anunciosRestantes: number }> => {
@@ -1001,42 +992,6 @@ export default function AnunciarPage() {
           </div>
         </div>
 
-        {user && (
-          <Alert className="mb-6">
-            <Wallet className="h-4 w-4" />
-            <AlertDescription>
-              <div className="flex items-center gap-2">
-                <strong>Saldo disponível:</strong>{" "}
-                <span className="text-green-600 font-semibold">
-                  {(user.saldo || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-                </span>
-                <button
-                  onClick={async () => {
-                    console.log('🔄 Atualizando saldo...')
-                    const novoSaldo = await refreshSaldo()
-                    if (novoSaldo !== undefined) {
-                      toast({
-                        title: "Saldo atualizado",
-                        description: `Novo saldo: ${novoSaldo.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`,
-                      })
-                    }
-                  }}
-                  className="text-blue-600 hover:text-blue-800 text-sm underline"
-                  title="Atualizar saldo do banco"
-                >
-                  🔄 Atualizar
-                </button>
-              </div>
-              {(user.saldo || 0) < 35 && (
-                <span className="ml-2">
-                  <Link href="/conta" className="text-blue-600 hover:underline">
-                    Adicionar saldo
-                  </Link>
-                </span>
-              )}
-            </AlertDescription>
-          </Alert>
-        )}
 
         {plansLoading ? (
           <div className="flex items-center justify-center py-8">
