@@ -146,8 +146,9 @@ export default function AnunciarPage() {
 
   // Função para carregar dados temporários
   const loadTempData = () => {
+    let savedData = null
     try {
-      const savedData = localStorage.getItem(STORAGE_KEY)
+      savedData = localStorage.getItem(STORAGE_KEY)
       console.log('📂 Tentando carregar dados temporários:', savedData ? 'Dados encontrados' : 'Nenhum dado salvo')
       
       if (savedData) {
