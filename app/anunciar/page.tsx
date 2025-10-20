@@ -15,7 +15,6 @@ import { Separator } from "@/components/ui/separator"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { PhotoUpload } from "@/components/photo-upload"
-import { CacheDebug } from "@/components/cache-debug"
 import { Check, ChevronDown, X } from "lucide-react"
 import { cores, combustiveis, cambios } from "@/lib/data/filters"
 import { useAuth } from "@/contexts/auth-context"
@@ -1426,8 +1425,6 @@ export default function AnunciarPage() {
           </div>
         </div>
       </div>
-
-      <CacheDebug />
 
       {/* Modal de Sucesso */}
       {showSuccessModal && (
