@@ -735,8 +735,8 @@ export default function AnunciarPage() {
         setSavingStep('Salvando dados do veículo...')
         
         const vehicleData = {
-          marca: brands.find(b => b.value === brandId)?.label || '',
-          modelo: models.find(m => m.value === modelId)?.label || '',
+          marca: fipeBrands.find(b => b.value === brandId)?.label || '',
+          modelo: fipeModels.find(m => m.value === modelId)?.label || '',
           versao: selectedVersion || 'Não informado',
           ano: parseInt(year),
           cor: color,
