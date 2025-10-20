@@ -50,6 +50,7 @@ scripts/
 *.csv
 *.bat
 *.sh
+*.js
 
 # Arquivos grandes que podem causar timeout
 *.zip
@@ -61,3 +62,46 @@ scripts/
 *.bak
 *.backup
 *.old
+
+# Arquivos específicos que podem causar problemas
+TabelaFipe/
+database/
+API/
+*.example
+env.example
+env.local.example
+*.config.cjs
+postcss.config.cjs
+tailwind.config.ts
+tsconfig.json
+next-env.d.ts
+components.json
+package-lock.json
+
+# Arquivos de configuração específicos
+iniciar.bat
+setup-env-real.bat
+setup-env.bat
+clear-localstorage.html
+test-*.js
+test-*.sql
+check-*.js
+check-*.sql
+debug-*.js
+manage-*.js
+update-*.js
+import-*.js
+create-*.sql
+add-*.sql
+fix-*.sql
+cleanup-*.sql
+disable-*.sql
+enable-*.sql
+insert-*.sql
+update-*.sql
+delete-*.sql
+recreate-*.sql
+optimize-*.sql
+verify-*.sql
+setup-*.sql
+complete-*.sql
