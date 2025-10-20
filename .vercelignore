@@ -50,7 +50,6 @@ scripts/
 *.csv
 *.bat
 *.sh
-*.js
 
 # Arquivos grandes que podem causar timeout
 *.zip
@@ -70,10 +69,6 @@ API/
 *.example
 env.example
 env.local.example
-*.config.cjs
-postcss.config.cjs
-tailwind.config.ts
-tsconfig.json
 next-env.d.ts
 components.json
 package-lock.json
