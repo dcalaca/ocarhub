@@ -125,9 +125,12 @@ export function FipeVehicleSelector({ onSelectionChange, initialValues = {} }: F
             setAnos([]);
           }
           
-          setAnoSelecionado('');
-          setModelos([]);
-          setModeloSelecionado('');
+          // Só limpar campos se não há ano selecionado
+          if (!anoSelecionado) {
+            setAnoSelecionado('');
+            setModelos([]);
+            setModeloSelecionado('');
+          }
           
           // Notificar mudança da marca e veículo
           notifyChange({
@@ -157,7 +160,11 @@ export function FipeVehicleSelector({ onSelectionChange, initialValues = {} }: F
           const data = await response.json();
           console.log('📋 Modelos carregados:', data);
           setModelos(data);
-          setModeloSelecionado('');
+          
+          // Só limpar modelo se não há modelo selecionado
+          if (!modeloSelecionado) {
+            setModeloSelecionado('');
+          }
           
           // Notificar mudança
           notifyChange({
