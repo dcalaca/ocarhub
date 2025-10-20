@@ -1074,7 +1074,14 @@ export default function AnunciarPage() {
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione a cor" />
                     </SelectTrigger>
-                    <SelectContent side="bottom" align="start" className="max-h-[200px] overflow-y-auto">
+                    <SelectContent 
+                      side="bottom" 
+                      align="start" 
+                      position="popper"
+                      sideOffset={4}
+                      className="max-h-[200px] overflow-y-auto z-50"
+                      avoidCollisions={true}
+                    >
                       {cores.map((cor) => (
                         <SelectItem key={cor} value={cor}>
                           {cor}
@@ -1092,7 +1099,14 @@ export default function AnunciarPage() {
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione o combustível" />
                     </SelectTrigger>
-                    <SelectContent side="bottom" align="start" className="max-h-[200px] overflow-y-auto">
+                    <SelectContent 
+                      side="bottom" 
+                      align="start" 
+                      position="popper"
+                      sideOffset={4}
+                      className="max-h-[200px] overflow-y-auto z-50"
+                      avoidCollisions={true}
+                    >
                       {combustiveis.map((combustivel) => (
                         <SelectItem key={combustivel} value={combustivel}>
                           {combustivel}
@@ -1110,7 +1124,14 @@ export default function AnunciarPage() {
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione o câmbio" />
                     </SelectTrigger>
-                    <SelectContent side="bottom" align="start" className="max-h-[200px] overflow-y-auto">
+                    <SelectContent 
+                      side="bottom" 
+                      align="start" 
+                      position="popper"
+                      sideOffset={4}
+                      className="max-h-[200px] overflow-y-auto z-50"
+                      avoidCollisions={true}
+                    >
                       {cambios.map((cambio) => (
                         <SelectItem key={cambio} value={cambio}>
                           {cambio}
