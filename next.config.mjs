@@ -17,8 +17,6 @@ const nextConfig = {
     ],
     unoptimized: true,
   },
-  // Configuração para upload de arquivos grandes
-  serverExternalPackages: ['csv-parser'],
 }
 
 export default nextConfig

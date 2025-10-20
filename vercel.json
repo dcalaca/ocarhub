@@ -1,8 +1,0 @@
-{
-  "framework": "nextjs",
-  "functions": {
-    "app/api/admin/upload-fipe/route.ts": {
-      "maxDuration": 300
-    }
-  }
-}
