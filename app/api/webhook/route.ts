@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createHmac } from 'crypto'
 import { supabase } from '@/lib/supabase'
 
+// Configuração de região para evitar IAD1 (incidente Vercel)
+export const runtime = 'nodejs'
+export const preferredRegion = ['gru1', 'sfo1']
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.text()

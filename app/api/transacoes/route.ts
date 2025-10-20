@@ -9,6 +9,10 @@ const supabase = createClient(
 // Força a rota a ser dinâmica
 export const dynamic = 'force-dynamic'
 
+// Configuração de região para evitar IAD1 (incidente Vercel)
+export const runtime = 'nodejs'
+export const preferredRegion = ['gru1', 'sfo1']
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
