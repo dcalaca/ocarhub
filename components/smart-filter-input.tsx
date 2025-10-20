@@ -46,7 +46,7 @@ export function SmartFilterInput({
     if (value && !isOpen && searchTerm !== value) {
       setSearchTerm(value)
     }
-  }, [value, isOpen, searchTerm])
+  }, [value, isOpen])
 
   // Fechar dropdown quando clica fora
   useEffect(() => {
