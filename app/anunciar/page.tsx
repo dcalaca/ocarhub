@@ -32,6 +32,7 @@ import {
   Settings,
   FileText,
   MapPin,
+  Save,
 } from "lucide-react"
 import Link from "next/link"
 import {
@@ -73,6 +74,7 @@ export default function AnunciarPage() {
     anunciosRestantes: number
     planoNome: string
   } | null>(null)
+  const [isSavingTemp, setIsSavingTemp] = useState(false)
 
   // Dados do veículo
   const [brandId, setBrandId] = useState("")
@@ -108,6 +110,109 @@ export default function AnunciarPage() {
   const [selectedCaracteristicas, setSelectedCaracteristicas] = useState<string[]>([])
   const [selectedBlindagem, setSelectedBlindagem] = useState("")
   const [selectedLeilao, setSelectedLeilao] = useState("")
+
+  // Chave para localStorage
+  const STORAGE_KEY = 'anuncio-temp-data'
+
+  // Função para salvar dados temporariamente
+  const saveTempData = () => {
+    setIsSavingTemp(true)
+    
+    const tempData = {
+      brandId,
+      modelId,
+      year,
+      selectedVersion,
+      price,
+      mileage,
+      color,
+      fuelType,
+      transmission,
+      licensePlate,
+      owners,
+      description,
+      location,
+      selectedOpcionais,
+      selectedCarroceria,
+      selectedTipoVendedor,
+      selectedCaracteristicas,
+      selectedBlindagem,
+      selectedLeilao,
+      planoSelecionado,
+      useDynamicFilters,
+      timestamp: Date.now()
+    }
+    
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(tempData))
+      console.log('💾 Dados salvos temporariamente')
+    } catch (error) {
+      console.error('❌ Erro ao salvar dados temporários:', error)
+    } finally {
+      // Remover indicador após um breve delay
+      setTimeout(() => setIsSavingTemp(false), 500)
+    }
+  }
+
+  // Função para carregar dados temporários
+  const loadTempData = () => {
+    try {
+      const savedData = localStorage.getItem(STORAGE_KEY)
+      if (savedData) {
+        const tempData = JSON.parse(savedData)
+        
+        // Verificar se os dados não são muito antigos (24 horas)
+        const isExpired = Date.now() - tempData.timestamp > 24 * 60 * 60 * 1000
+        if (isExpired) {
+          localStorage.removeItem(STORAGE_KEY)
+          console.log('🗑️ Dados temporários expirados, removidos')
+          return
+        }
+        
+        // Carregar dados salvos
+        setBrandId(tempData.brandId || "")
+        setModelId(tempData.modelId || "")
+        setYear(tempData.year || "")
+        setSelectedVersion(tempData.selectedVersion || "")
+        setPrice(tempData.price || "")
+        setMileage(tempData.mileage || "")
+        setColor(tempData.color || "")
+        setFuelType(tempData.fuelType || "")
+        setTransmission(tempData.transmission || "")
+        setLicensePlate(tempData.licensePlate || "")
+        setOwners(tempData.owners || "1")
+        setDescription(tempData.description || "")
+        setLocation(tempData.location || "")
+        setSelectedOpcionais(tempData.selectedOpcionais || [])
+        setSelectedCarroceria(tempData.selectedCarroceria || "")
+        setSelectedTipoVendedor(tempData.selectedTipoVendedor || "")
+        setSelectedCaracteristicas(tempData.selectedCaracteristicas || [])
+        setSelectedBlindagem(tempData.selectedBlindagem || "")
+        setSelectedLeilao(tempData.selectedLeilao || "")
+        setPlanoSelecionado(tempData.planoSelecionado || "")
+        setUseDynamicFilters(tempData.useDynamicFilters !== undefined ? tempData.useDynamicFilters : true)
+        
+        console.log('📂 Dados temporários carregados')
+        
+        toast({
+          title: "Dados recuperados",
+          description: "Seus dados foram recuperados automaticamente.",
+        })
+      }
+    } catch (error) {
+      console.error('❌ Erro ao carregar dados temporários:', error)
+    }
+  }
+
+  // Função para limpar dados temporários
+  const clearTempData = () => {
+    try {
+      localStorage.removeItem(STORAGE_KEY)
+      console.log('🗑️ Dados temporários limpos')
+    } catch (error) {
+      console.error('❌ Erro ao limpar dados temporários:', error)
+    }
+  }
 
   // Função para lidar com seleção dos filtros dinâmicos
   const handleDynamicSelection = (selection: {
@@ -149,8 +254,28 @@ export default function AnunciarPage() {
       loadVehicleData(editId)
     } else {
       console.log('ℹ️ Modo de criação detectado')
+      // Carregar dados temporários apenas se não estiver editando
+      loadTempData()
     }
   }, [searchParams])
+
+  // Salvar dados automaticamente quando mudarem
+  useEffect(() => {
+    // Não salvar se estiver em modo de edição ou se não há dados suficientes
+    if (isEditMode || !brandId) return
+    
+    // Debounce para evitar muitas operações de salvamento
+    const timeoutId = setTimeout(() => {
+      saveTempData()
+    }, 1000)
+    
+    return () => clearTimeout(timeoutId)
+  }, [
+    brandId, modelId, year, selectedVersion, price, mileage, color, 
+    fuelType, transmission, licensePlate, owners, description, location,
+    selectedOpcionais, selectedCarroceria, selectedTipoVendedor, 
+    selectedCaracteristicas, selectedBlindagem, selectedLeilao, planoSelecionado
+  ])
 
   // Função para carregar dados do veículo para edição
   const loadVehicleData = async (vehicleId: string) => {
@@ -772,6 +897,9 @@ export default function AnunciarPage() {
         setSavingStep('Finalizando...')
         setShowSuccessModal(true)
         
+        // Limpar dados temporários após sucesso
+        clearTempData()
+        
         toast({
           title: "Anúncio publicado com sucesso!",
           description: `Seu anúncio ${plano.nome} está ativo por ${mensagemDuracao}`,
@@ -812,6 +940,52 @@ export default function AnunciarPage() {
               <p className="text-muted-foreground">
                 {isEditMode ? "Atualize os dados do seu veículo" : "Escolha o plano ideal e preencha os dados do seu veículo"}
               </p>
+              {isSavingTemp && !isEditMode && (
+                <div className="flex items-center gap-2 mt-2 text-sm text-blue-600">
+                  <Save className="w-3 h-3 animate-pulse" />
+                  <span>Salvando automaticamente...</span>
+                </div>
+              )}
+              {!isEditMode && (brandId || price || description) && (
+                <div className="flex items-center gap-2 mt-2">
+                  <button
+                    onClick={() => {
+                      if (confirm('Tem certeza que deseja limpar todos os dados? Esta ação não pode ser desfeita.')) {
+                        clearTempData()
+                        // Resetar todos os campos
+                        setBrandId("")
+                        setModelId("")
+                        setYear("")
+                        setSelectedVersion("")
+                        setPrice("")
+                        setMileage("")
+                        setColor("")
+                        setFuelType("")
+                        setTransmission("")
+                        setLicensePlate("")
+                        setOwners("1")
+                        setDescription("")
+                        setLocation("")
+                        setSelectedOpcionais([])
+                        setSelectedCarroceria("")
+                        setSelectedTipoVendedor("")
+                        setSelectedCaracteristicas([])
+                        setSelectedBlindagem("")
+                        setSelectedLeilao("")
+                        setPhotos([])
+                        
+                        toast({
+                          title: "Dados limpos",
+                          description: "Todos os dados foram removidos. Você pode começar novamente.",
+                        })
+                      }
+                    }}
+                    className="text-xs text-red-600 hover:text-red-800 underline"
+                  >
+                    🗑️ Limpar dados e começar do zero
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
