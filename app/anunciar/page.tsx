@@ -37,7 +37,6 @@ import { useFipeBrands, useFipeModels, useFipeYears } from "@/hooks/use-fipe-dat
 import { useFipeProcessedModels, useFipeProcessedVersions, useFipeUniqueYears, useFipeVersionsByYear } from "@/hooks/use-fipe-intelligence"
 import { FipeVehicleSelector } from "@/components/fipe-vehicle-selector"
 import { OpcionaisSelector } from "@/components/opcionais-selector"
-import { cores, combustiveis } from "@/lib/data/filters"
 import { VehicleService } from "@/lib/vehicle-service"
 import { PlansService, type Plan } from "@/lib/plans-service"
 import { ImageUploadService } from "@/lib/image-upload-service"
@@ -999,11 +998,12 @@ export default function AnunciarPage() {
                     <Label htmlFor="color">
                       Cor <span className="text-red-500">*</span>
                     </Label>
-                    <VehicleSelector
-                      options={cores.map((cor) => ({ value: cor, label: cor }))}
+                    <Input
+                      id="color"
+                      type="text"
+                      placeholder="Ex: Branco, Preto, Prata..."
                       value={color}
-                      onChange={setColor}
-                      placeholder="Selecione a cor"
+                      onChange={(e) => setColor(e.target.value)}
                     />
                   </div>
                 </div>
@@ -1013,23 +1013,23 @@ export default function AnunciarPage() {
                     <Label htmlFor="fuelType">
                       Combustível <span className="text-red-500">*</span>
                     </Label>
-                    <VehicleSelector
-                      options={fuelTypes}
+                    <Input
+                      id="fuelType"
+                      type="text"
+                      placeholder="Ex: Gasolina, Flex, Diesel..."
                       value={fuelType}
-                      onChange={setFuelType}
-                      placeholder="Selecione o combustível"
-                      disabled={!modelId}
+                      onChange={(e) => setFuelType(e.target.value)}
                     />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="transmission">Câmbio</Label>
-                    <VehicleSelector
-                      options={transmissions}
+                    <Input
+                      id="transmission"
+                      type="text"
+                      placeholder="Ex: Manual, Automático, CVT..."
                       value={transmission}
-                      onChange={setTransmission}
-                      placeholder="Selecione o câmbio"
-                      disabled={!modelId}
+                      onChange={(e) => setTransmission(e.target.value)}
                     />
                   </div>
                 </div>
