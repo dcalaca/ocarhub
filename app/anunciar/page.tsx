@@ -213,10 +213,26 @@ export default function AnunciarPage() {
     ano?: number
     modelo?: string
   }) => {
-    if (selection.marca) setBrandId(selection.marca)
-    if (selection.veiculo) setSelectedVersion(selection.veiculo)
-    if (selection.ano) setYear(selection.ano.toString())
-    if (selection.modelo) setModelId(selection.modelo)
+    console.log('🔄 handleDynamicSelection chamado com:', selection)
+    
+    if (selection.marca) {
+      console.log('🏷️ Atualizando marca:', selection.marca)
+      setBrandId(selection.marca)
+    }
+    if (selection.veiculo) {
+      console.log('🚗 Atualizando versão:', selection.veiculo)
+      setSelectedVersion(selection.veiculo)
+    }
+    if (selection.ano) {
+      console.log('📅 Atualizando ano:', selection.ano)
+      setYear(selection.ano.toString())
+    }
+    if (selection.modelo) {
+      console.log('🔧 Atualizando modelo:', selection.modelo)
+      setModelId(selection.modelo)
+    }
+    
+    console.log('✅ Estados atualizados via handleDynamicSelection')
   }
 
   // Estados para armazenar códigos da FIPE
@@ -277,6 +293,14 @@ export default function AnunciarPage() {
     selectedOpcionais, selectedCarroceria, selectedTipoVendedor, 
     selectedCaracteristicas, selectedBlindagem, selectedLeilao, planoSelecionado
   ])
+
+  // Log dos estados principais para debug
+  useEffect(() => {
+    console.log('📊 Estados principais atualizados:', {
+      brandId, modelId, year, selectedVersion, price, mileage, color,
+      fuelType, transmission, licensePlate, owners, description, location
+    })
+  }, [brandId, modelId, year, selectedVersion, price, mileage, color, fuelType, transmission, licensePlate, owners, description, location])
 
   // Função para carregar dados do veículo para edição
   const loadVehicleData = async (vehicleId: string) => {
@@ -935,8 +959,14 @@ export default function AnunciarPage() {
               <CardContent className="space-y-6">
                 {/* Filtros Dinâmicos FIPE - sempre ativados */}
                 <FipeVehicleSelector
+                  key={`fipe-selector-${brandId}-${modelId}-${year}-${selectedVersion}`}
                   onSelectionChange={handleDynamicSelection}
-                  initialValues={{}}
+                  initialValues={{
+                    marca: brandId,
+                    modelo: modelId,
+                    ano: year ? parseInt(year) : undefined,
+                    versao: selectedVersion
+                  }}
                 />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
