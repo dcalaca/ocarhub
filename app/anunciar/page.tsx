@@ -232,9 +232,9 @@ export default function AnunciarPage() {
     console.log('🔄 handleDynamicSelection chamado com:', selection)
     console.log('📊 dataLoaded:', dataLoaded)
     
-    // Se os dados foram carregados do localStorage, não sobrescrever com valores vazios
-    if (dataLoaded && selection.marca === brandId && !selection.modelo && !selection.ano && !selection.veiculo) {
-      console.log('🚫 Ignorando seleção vazia após carregamento de dados')
+    // Se os dados foram carregados do localStorage, só ignorar se TODOS os campos estão vazios
+    if (dataLoaded && !selection.marca && !selection.modelo && !selection.ano && !selection.veiculo) {
+      console.log('🚫 Ignorando seleção completamente vazia após carregamento de dados')
       return
     }
     
