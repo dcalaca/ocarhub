@@ -13,8 +13,10 @@ import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { PhotoUpload } from "@/components/photo-upload"
 import { CacheDebug } from "@/components/cache-debug"
+import { cores, combustiveis, cambios } from "@/lib/data/filters"
 import { useAuth } from "@/contexts/auth-context"
 import { useToast } from "@/hooks/use-toast"
 import { useMercadoPago } from "@/hooks/use-mercadopago"
@@ -153,11 +155,16 @@ export default function AnunciarPage() {
         const tempData = JSON.parse(savedData)
         console.log('📋 Dados temporários encontrados:', tempData)
         
-        // Verificar se os dados não são muito antigos (24 horas)
-        const isExpired = Date.now() - tempData.timestamp > 24 * 60 * 60 * 1000
-        if (isExpired) {
+        // Verificar se é um refresh da página (performance.navigation.type === 1)
+        const isPageRefresh = typeof window !== 'undefined' && 
+          window.performance && 
+          window.performance.navigation && 
+          window.performance.navigation.type === 1
+        
+        if (isPageRefresh) {
+          console.log('🔄 Refresh da página detectado, não carregando dados salvos')
           localStorage.removeItem(STORAGE_KEY)
-          console.log('🗑️ Dados temporários expirados, removidos')
+          console.log('🗑️ Dados temporários removidos após refresh')
           return
         }
         
@@ -1063,39 +1070,54 @@ export default function AnunciarPage() {
                   <Label htmlFor="color">
                     Cor <span className="text-red-500">*</span>
                   </Label>
-                  <Input
-                    id="color"
-                    type="text"
-                    placeholder="Ex: Branco, Preto, Prata..."
-                    value={color}
-                    onChange={(e) => setColor(e.target.value)}
-                  />
+                  <Select value={color} onValueChange={setColor}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a cor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {cores.map((cor) => (
+                        <SelectItem key={cor} value={cor}>
+                          {cor}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="fuelType">
                     Combustível <span className="text-red-500">*</span>
                   </Label>
-                  <Input
-                    id="fuelType"
-                    type="text"
-                    placeholder="Ex: Gasolina, Flex, Diesel..."
-                    value={fuelType}
-                    onChange={(e) => setFuelType(e.target.value)}
-                  />
+                  <Select value={fuelType} onValueChange={setFuelType}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o combustível" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {combustiveis.map((combustivel) => (
+                        <SelectItem key={combustivel} value={combustivel}>
+                          {combustivel}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="transmission">Câmbio</Label>
-                  <Input
-                    id="transmission"
-                    type="text"
-                    placeholder="Ex: Manual, Automático, CVT..."
-                    value={transmission}
-                    onChange={(e) => setTransmission(e.target.value)}
-                  />
+                  <Select value={transmission} onValueChange={setTransmission}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o câmbio" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {cambios.map((cambio) => (
+                        <SelectItem key={cambio} value={cambio}>
+                          {cambio}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">
