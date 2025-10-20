@@ -125,9 +125,16 @@ export default function AnunciarPage() {
       timestamp: Date.now()
     }
     
+    console.log('💾 Salvando dados temporários:', {
+      brandId, modelId, year, selectedVersion, price, mileage, color,
+      fuelType, transmission, licensePlate, owners, description, location,
+      selectedOpcionais, selectedCarroceria, selectedTipoVendedor,
+      selectedCaracteristicas, selectedBlindagem, selectedLeilao, planoSelecionado
+    })
+    
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(tempData))
-      console.log('💾 Dados salvos temporariamente')
+      console.log('✅ Dados salvos temporariamente com sucesso')
     } catch (error) {
       console.error('❌ Erro ao salvar dados temporários:', error)
     } finally {
@@ -140,8 +147,11 @@ export default function AnunciarPage() {
   const loadTempData = () => {
     try {
       const savedData = localStorage.getItem(STORAGE_KEY)
+      console.log('📂 Tentando carregar dados temporários:', savedData ? 'Dados encontrados' : 'Nenhum dado salvo')
+      
       if (savedData) {
         const tempData = JSON.parse(savedData)
+        console.log('📋 Dados temporários encontrados:', tempData)
         
         // Verificar se os dados não são muito antigos (24 horas)
         const isExpired = Date.now() - tempData.timestamp > 24 * 60 * 60 * 1000
@@ -152,6 +162,7 @@ export default function AnunciarPage() {
         }
         
         // Carregar dados salvos
+        console.log('🔄 Carregando dados salvos...')
         setBrandId(tempData.brandId || "")
         setModelId(tempData.modelId || "")
         setYear(tempData.year || "")
@@ -173,7 +184,7 @@ export default function AnunciarPage() {
         setSelectedLeilao(tempData.selectedLeilao || "")
         setPlanoSelecionado(tempData.planoSelecionado || "")
         
-        console.log('📂 Dados temporários carregados')
+        console.log('✅ Dados temporários carregados com sucesso')
         
         toast({
           title: "Dados recuperados",
@@ -242,15 +253,24 @@ export default function AnunciarPage() {
 
   // Salvar dados automaticamente quando mudarem
   useEffect(() => {
-    // Não salvar se estiver em modo de edição ou se não há dados suficientes
-    if (isEditMode || !brandId) return
+    // Não salvar se estiver em modo de edição
+    if (isEditMode) {
+      console.log('🚫 Modo de edição ativo, não salvando dados temporários')
+      return
+    }
+    
+    console.log('🔄 Dados mudaram, agendando salvamento automático...')
     
     // Debounce para evitar muitas operações de salvamento
     const timeoutId = setTimeout(() => {
+      console.log('⏰ Executando salvamento automático...')
       saveTempData()
     }, 1000)
     
-    return () => clearTimeout(timeoutId)
+    return () => {
+      console.log('🔄 Cancelando salvamento anterior...')
+      clearTimeout(timeoutId)
+    }
   }, [
     brandId, modelId, year, selectedVersion, price, mileage, color, 
     fuelType, transmission, licensePlate, owners, description, location,
