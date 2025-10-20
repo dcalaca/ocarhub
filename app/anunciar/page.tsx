@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useSearchParams } from "next/navigation"
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
@@ -16,10 +16,165 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { PhotoUpload } from "@/components/photo-upload"
 import { CacheDebug } from "@/components/cache-debug"
+import { Check, ChevronDown, X } from "lucide-react"
 import { cores, combustiveis, cambios } from "@/lib/data/filters"
 import { useAuth } from "@/contexts/auth-context"
 import { useToast } from "@/hooks/use-toast"
 import { useMercadoPago } from "@/hooks/use-mercadopago"
+
+// Componente customizado para dropdown simples baseado no SmartFilterInput
+function SimpleDropdown({ 
+  options, 
+  value, 
+  onChange, 
+  placeholder, 
+  disabled = false 
+}: {
+  options: string[]
+  value: string
+  onChange: (value: string) => void
+  placeholder: string
+  disabled?: boolean
+}) {
+  const [isOpen, setIsOpen] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [filteredOptions, setFilteredOptions] = useState(options)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // Filtrar opções baseado no termo de busca
+  useEffect(() => {
+    if (searchTerm.trim() === '') {
+      setFilteredOptions(options)
+    } else {
+      const filtered = options.filter(option =>
+        option.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+      setFilteredOptions(filtered)
+    }
+  }, [searchTerm, options])
+
+  // Atualizar termo de busca quando valor muda externamente
+  useEffect(() => {
+    if (value && !isOpen) {
+      setSearchTerm(value)
+    }
+  }, [value, isOpen])
+
+  // Fechar dropdown quando clica fora
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node) &&
+        !inputRef.current?.contains(event.target as Node)
+      ) {
+        setIsOpen(false)
+        setSearchTerm(value) // Restaurar valor original
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [value])
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value
+    setSearchTerm(newValue)
+    
+    if (!isOpen) {
+      setIsOpen(true)
+    }
+  }
+
+  const handleOptionSelect = (option: string) => {
+    setSearchTerm(option)
+    onChange(option)
+    setIsOpen(false)
+  }
+
+  const handleClear = () => {
+    setSearchTerm('')
+    onChange('')
+    setIsOpen(false)
+    inputRef.current?.focus()
+  }
+
+  const handleInputFocus = () => {
+    setIsOpen(true)
+    if (searchTerm === value) {
+      setSearchTerm('') // Limpar para mostrar todas as opções
+    }
+  }
+
+  return (
+    <div className="relative">
+      <div className="relative">
+        <Input
+          ref={inputRef}
+          value={searchTerm}
+          onChange={handleInputChange}
+          onFocus={handleInputFocus}
+          placeholder={placeholder}
+          disabled={disabled}
+          className="pr-20"
+        />
+        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+          {searchTerm && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleClear}
+              className="h-6 w-6 p-0 hover:bg-gray-100"
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          )}
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsOpen(!isOpen)}
+            className="h-6 w-6 p-0 hover:bg-gray-100"
+          >
+            <ChevronDown className={`h-3 w-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+          </Button>
+        </div>
+      </div>
+
+      {isOpen && (
+        <Card 
+          ref={dropdownRef}
+          className="absolute z-50 w-full mt-1 max-h-60 overflow-y-auto shadow-lg border"
+        >
+          <CardContent className="p-0">
+            {filteredOptions.length > 0 ? (
+              filteredOptions.map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => handleOptionSelect(option)}
+                  className="w-full px-3 py-2 text-left hover:bg-gray-100 flex items-center justify-between"
+                >
+                  <span className="truncate">{option}</span>
+                  {value === option && (
+                    <Check className="h-4 w-4 text-blue-600" />
+                  )}
+                </button>
+              ))
+            ) : (
+              <div className="px-3 py-2 text-gray-500 text-sm">
+                Nenhuma opção encontrada
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  )
+}
+
 import {
   Car,
   Star,
@@ -1070,84 +1225,36 @@ export default function AnunciarPage() {
                   <Label htmlFor="color">
                     Cor <span className="text-red-500">*</span>
                   </Label>
-                  <Select value={color} onValueChange={setColor}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione a cor" />
-                    </SelectTrigger>
-                    <SelectContent 
-                      position="fixed"
-                      side="bottom"
-                      align="start"
-                      sideOffset={4}
-                      className="max-h-[200px] overflow-y-auto z-[9999] w-[var(--radix-select-trigger-width)]"
-                      style={{
-                        maxHeight: '200px',
-                        overflowY: 'auto'
-                      }}
-                    >
-                      {cores.map((cor) => (
-                        <SelectItem key={cor} value={cor}>
-                          {cor}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <SimpleDropdown
+                    options={cores}
+                    value={color}
+                    onChange={setColor}
+                    placeholder="Selecione a cor"
+                  />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="fuelType">
                     Combustível <span className="text-red-500">*</span>
                   </Label>
-                  <Select value={fuelType} onValueChange={setFuelType}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o combustível" />
-                    </SelectTrigger>
-                    <SelectContent 
-                      position="fixed"
-                      side="bottom"
-                      align="start"
-                      sideOffset={4}
-                      className="max-h-[200px] overflow-y-auto z-[9999] w-[var(--radix-select-trigger-width)]"
-                      style={{
-                        maxHeight: '200px',
-                        overflowY: 'auto'
-                      }}
-                    >
-                      {combustiveis.map((combustivel) => (
-                        <SelectItem key={combustivel} value={combustivel}>
-                          {combustivel}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <SimpleDropdown
+                    options={combustiveis}
+                    value={fuelType}
+                    onChange={setFuelType}
+                    placeholder="Selecione o combustível"
+                  />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="transmission">Câmbio</Label>
-                  <Select value={transmission} onValueChange={setTransmission}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o câmbio" />
-                    </SelectTrigger>
-                    <SelectContent 
-                      position="fixed"
-                      side="bottom"
-                      align="start"
-                      sideOffset={4}
-                      className="max-h-[200px] overflow-y-auto z-[9999] w-[var(--radix-select-trigger-width)]"
-                      style={{
-                        maxHeight: '200px',
-                        overflowY: 'auto'
-                      }}
-                    >
-                      {cambios.map((cambio) => (
-                        <SelectItem key={cambio} value={cambio}>
-                          {cambio}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <SimpleDropdown
+                    options={cambios}
+                    value={transmission}
+                    onChange={setTransmission}
+                    placeholder="Selecione o câmbio"
+                  />
                 </div>
 
                 <div className="space-y-2">
