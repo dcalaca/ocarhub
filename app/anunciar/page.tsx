@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
@@ -51,7 +50,6 @@ export default function AnunciarPage() {
   const [isEditMode, setIsEditMode] = useState(false)
   const [editingVehicleId, setEditingVehicleId] = useState<string | null>(null)
   const [loadingVehicleData, setLoadingVehicleData] = useState(false)
-  const [currentTab, setCurrentTab] = useState("info")
   const [planoSelecionado, setPlanoSelecionado] = useState<string>("")
   const [loading, setLoading] = useState(false)
   const [progress, setProgress] = useState(0)
@@ -802,17 +800,17 @@ export default function AnunciarPage() {
     <div className="min-h-screen bg-background">
       <Header />
 
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-blue-100 rounded-lg">
+      <div className="container mx-auto px-4 py-4 sm:py-8 max-w-7xl">
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
+            <div className="p-2 bg-blue-100 rounded-lg w-fit">
               <Car className="w-6 h-6 text-blue-600" />
             </div>
-            <div>
-              <h1 className="text-3xl font-bold">
+            <div className="flex-1">
+              <h1 className="text-2xl sm:text-3xl font-bold">
                 {isEditMode ? "Editar Anúncio" : "Anunciar Veículo"}
               </h1>
-              <p className="text-muted-foreground">
+              <p className="text-sm sm:text-base text-muted-foreground">
                 {isEditMode ? "Atualize os dados do seu veículo" : "Escolha o plano ideal e preencha os dados do seu veículo"}
               </p>
               {isSavingTemp && !isEditMode && (
@@ -864,9 +862,9 @@ export default function AnunciarPage() {
             </div>
           </div>
 
-          <div className="w-full bg-gray-200 rounded-full h-2.5 mt-4">
+          <div className="w-full bg-gray-200 rounded-full h-2 sm:h-2.5 mt-4">
             <div
-              className="bg-blue-600 h-2.5 rounded-full transition-all duration-500"
+              className="bg-blue-600 h-2 sm:h-2.5 rounded-full transition-all duration-500"
               style={{ width: `${progress}%` }}
             ></div>
           </div>
@@ -885,7 +883,7 @@ export default function AnunciarPage() {
             </div>
           </div>
         ) : (
-          <div id="planos-section" className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div id="planos-section" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
             {plans.map((plano) => (
               <Card
                 key={plano.id}
@@ -954,327 +952,328 @@ export default function AnunciarPage() {
           </div>
         )}
 
-        <Tabs value={currentTab} onValueChange={setCurrentTab} className="mb-8">
-          <TabsList className="grid grid-cols-3 mb-6">
-            <TabsTrigger value="info" className="flex items-center gap-2">
-              <Car className="w-4 h-4" />
-              <span className="hidden sm:inline">Informações Básicas</span>
-              <span className="sm:hidden">Básicas</span>
-            </TabsTrigger>
-            <TabsTrigger value="details" className="flex items-center gap-2">
-              <Settings className="w-4 h-4" />
-              <span className="hidden sm:inline">Detalhes Técnicos</span>
-              <span className="sm:hidden">Detalhes</span>
-            </TabsTrigger>
-            <TabsTrigger value="photos" className="flex items-center gap-2">
-              <Camera className="w-4 h-4" />
-              <span className="hidden sm:inline">Fotos e Descrição</span>
-              <span className="sm:hidden">Fotos</span>
-            </TabsTrigger>
-          </TabsList>
+        {/* Formulário em página única */}
+        <div className="space-y-8">
+          {/* Seção 1: Informações Básicas */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg sm:text-xl flex items-center gap-2">
+                <Car className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+                Informações Básicas do Veículo
+              </CardTitle>
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                Selecione a marca, modelo, ano e versão do seu veículo
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Filtros Dinâmicos FIPE - sempre ativados */}
+              <FipeVehicleSelector
+                key={`fipe-selector-${brandId}-${modelId}-${year}-${selectedVersion}`}
+                onSelectionChange={handleDynamicSelection}
+                initialValues={{
+                  marca: brandId,
+                  modelo: modelId,
+                  ano: year ? parseInt(year) : undefined,
+                  versao: selectedVersion
+                }}
+              />
 
-          <TabsContent value="info" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Car className="w-5 h-5" />
-                  Informações Básicas
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Filtros Dinâmicos FIPE - sempre ativados */}
-                <FipeVehicleSelector
-                  key={`fipe-selector-${brandId}-${modelId}-${year}-${selectedVersion}`}
-                  onSelectionChange={handleDynamicSelection}
-                  initialValues={{
-                    marca: brandId,
-                    modelo: modelId,
-                    ano: year ? parseInt(year) : undefined,
-                    versao: selectedVersion
-                  }}
-                />
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="price">
-                      Preço <span className="text-red-500">*</span>
-                    </Label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">R$</span>
-                      <Input
-                        id="price"
-                        type="text"
-                        placeholder="50.000"
-                        value={price}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/\D/g, "")
-                          setPrice(value)
-                        }}
-                        className="pl-10"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="location">Localização</Label>
-                    <div className="relative">
-                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                      <Input
-                        id="location"
-                        type="text"
-                        placeholder="São Paulo, SP"
-                        value={location}
-                        onChange={(e) => setLocation(e.target.value)}
-                        className="pl-10"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-              </CardContent>
-            </Card>
-
-            <div className="flex justify-end">
-              <Button onClick={() => setCurrentTab("details")}>Próximo: Detalhes Técnicos</Button>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="details" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Settings className="w-5 h-5" />
-                  Detalhes Técnicos
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="mileage">
-                      Quilometragem <span className="text-red-500">*</span>
-                    </Label>
-                    <div className="relative">
-                      <Gauge className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                      <Input
-                        id="mileage"
-                        type="text"
-                        placeholder="45.000"
-                        value={mileage}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/\D/g, "")
-                          setMileage(value)
-                        }}
-                        className="pl-10"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="color">
-                      Cor <span className="text-red-500">*</span>
-                    </Label>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="price">
+                    Preço <span className="text-red-500">*</span>
+                  </Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">R$</span>
                     <Input
-                      id="color"
+                      id="price"
                       type="text"
-                      placeholder="Ex: Branco, Preto, Prata..."
-                      value={color}
-                      onChange={(e) => setColor(e.target.value)}
+                      placeholder="50.000"
+                      value={price}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, "")
+                        setPrice(value)
+                      }}
+                      className="pl-10"
                     />
                   </div>
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="fuelType">
-                      Combustível <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      id="fuelType"
-                      type="text"
-                      placeholder="Ex: Gasolina, Flex, Diesel..."
-                      value={fuelType}
-                      onChange={(e) => setFuelType(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="transmission">Câmbio</Label>
-                    <Input
-                      id="transmission"
-                      type="text"
-                      placeholder="Ex: Manual, Automático, CVT..."
-                      value={transmission}
-                      onChange={(e) => setTransmission(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="licensePlate">Placa (parcial)</Label>
-                    <div className="relative">
-                      <FileText className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                      <Input
-                        id="licensePlate"
-                        type="text"
-                        placeholder="ABC-**12"
-                        value={licensePlate}
-                        onChange={(e) => setLicensePlate(e.target.value)}
-                        className="pl-10"
-                        maxLength={7}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="owners">Número de proprietários</Label>
-                    <RadioGroup value={owners} onValueChange={setOwners} className="flex gap-4">
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="1" id="owner-1" />
-                        <Label htmlFor="owner-1">1</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="2" id="owner-2" />
-                        <Label htmlFor="owner-2">2</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="3" id="owner-3" />
-                        <Label htmlFor="owner-3">3</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="4+" id="owner-4" />
-                        <Label htmlFor="owner-4">4+</Label>
-                      </div>
-                    </RadioGroup>
-                  </div>
-                </div>
-
-                <Separator />
 
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="history-check">Verificar histórico veicular</Label>
-                    <Switch id="history-check" />
+                  <Label htmlFor="location">Localização</Label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                    <Input
+                      id="location"
+                      type="text"
+                      placeholder="São Paulo, SP"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      className="pl-10"
+                    />
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    Adicione um selo de confiança ao seu anúncio verificando o histórico completo do veículo.
-                    {(() => {
-                      const planoSelecionadoData = plans.find(p => p.id === planoSelecionado)
-                      return planoSelecionadoData?.preco >= 100 ? (
-                        <span className="text-green-600 font-medium"> Incluído no plano Premium!</span>
-                      ) : (
-                        <span> Custo adicional: R$ 25,00</span>
-                      )
-                    })()}
-                  </p>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </CardContent>
+          </Card>
 
-            {/* Seletor de Opcionais */}
-            <OpcionaisSelector
-              onOpcionaisChange={setSelectedOpcionais}
-              onCarroceriaChange={setSelectedCarroceria}
-              onTipoVendedorChange={setSelectedTipoVendedor}
-              onCaracteristicasChange={setSelectedCaracteristicas}
-              onBlindagemChange={setSelectedBlindagem}
-              onLeilaoChange={setSelectedLeilao}
-              initialValues={{
-                opcionais: selectedOpcionais,
-                carroceria: selectedCarroceria,
-                tipoVendedor: selectedTipoVendedor,
-                caracteristicas: selectedCaracteristicas,
-                blindagem: selectedBlindagem,
-                leilao: selectedLeilao
-              }}
-            />
-
-            <div className="flex justify-between">
-              <Button variant="outline" onClick={() => setCurrentTab("info")}>
-                Voltar
-              </Button>
-              <Button onClick={() => setCurrentTab("photos")}>Próximo: Fotos e Descrição</Button>
+          {/* Separador Visual */}
+          <div className="flex items-center gap-2 sm:gap-4">
+            <div className="flex-1 h-px bg-gray-200"></div>
+            <div className="px-2 sm:px-4 py-1 sm:py-2 bg-gray-100 rounded-full">
+              <span className="text-xs sm:text-sm font-medium text-gray-600">Detalhes Técnicos</span>
             </div>
-          </TabsContent>
+            <div className="flex-1 h-px bg-gray-200"></div>
+          </div>
 
-          <TabsContent value="photos" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Camera className="w-5 h-5" />
-                  Fotos e Descrição
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <PhotoUpload maxPhotos={(() => {
-                  const planoSelecionadoData = plans.find(p => p.id === planoSelecionado)
-                  return planoSelecionadoData?.preco === 0 ? 5 : planoSelecionadoData?.preco < 100 ? 10 : 20
-                })()} onChange={setPhotos} value={photos} />
+          {/* Seção 2: Detalhes Técnicos */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg sm:text-xl flex items-center gap-2">
+                <Settings className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
+                Detalhes Técnicos
+              </CardTitle>
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                Informações sobre quilometragem, cor, combustível e outras características
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="mileage">
+                    Quilometragem <span className="text-red-500">*</span>
+                  </Label>
+                  <div className="relative">
+                    <Gauge className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                    <Input
+                      id="mileage"
+                      type="text"
+                      placeholder="45.000"
+                      value={mileage}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, "")
+                        setMileage(value)
+                      }}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="description">Descrição</Label>
-                  <Textarea
-                    id="description"
-                    placeholder="Descreva seu veículo, destacando características importantes, estado de conservação e diferenciais..."
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    rows={6}
+                  <Label htmlFor="color">
+                    Cor <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="color"
+                    type="text"
+                    placeholder="Ex: Branco, Preto, Prata..."
+                    value={color}
+                    onChange={(e) => setColor(e.target.value)}
                   />
                 </div>
-              </CardContent>
-            </Card>
 
-            <div className="flex justify-between">
-              <Button variant="outline" onClick={() => setCurrentTab("details")}>
-                Voltar
-              </Button>
-              <Button
-                onClick={handlePublicarAnuncio}
-                disabled={
-                  loading ||
-                  loadingMercadoPago ||
-                  !formCompleted
-                }
-                className="px-8 min-w-[200px]"
-              >
-                {loading || loadingMercadoPago ? (
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span className="font-medium">
-                        {loadingMercadoPago ? "Processando pagamento..." : "Publicando..."}
-                      </span>
-                    </div>
-                    {savingStep && (
-                      <div className="text-xs text-white/90 text-center bg-white/10 px-2 py-1 rounded">
-                        {savingStep}
-                      </div>
-                    )}
+                <div className="space-y-2">
+                  <Label htmlFor="fuelType">
+                    Combustível <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="fuelType"
+                    type="text"
+                    placeholder="Ex: Gasolina, Flex, Diesel..."
+                    value={fuelType}
+                    onChange={(e) => setFuelType(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="transmission">Câmbio</Label>
+                  <Input
+                    id="transmission"
+                    type="text"
+                    placeholder="Ex: Manual, Automático, CVT..."
+                    value={transmission}
+                    onChange={(e) => setTransmission(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="licensePlate">Placa (parcial)</Label>
+                  <div className="relative">
+                    <FileText className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                    <Input
+                      id="licensePlate"
+                      type="text"
+                      placeholder="ABC-**12"
+                      value={licensePlate}
+                      onChange={(e) => setLicensePlate(e.target.value)}
+                      className="pl-10"
+                      maxLength={7}
+                    />
                   </div>
-                ) : (
-                  <>
-                    <Car className="w-4 h-4 mr-2" />
-                    {(() => {
-                      const planoSelecionadoData = plans.find(p => p.id === planoSelecionado)
-                      return (
-                        <>
-                          {planoSelecionadoData?.preco === 0 ? "Publicar Anúncio" : "Finalizar Anúncio"} {planoSelecionadoData?.nome}
-                          {planoSelecionadoData && planoSelecionadoData.preco > 0 && (
-                            <span className="ml-2">
-                              (
-                              {planoSelecionadoData.preco.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-                              )
-                            </span>
-                          )}
-                        </>
-                      )
-                    })()}
-                  </>
-                )}
-              </Button>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="owners">Número de proprietários</Label>
+                  <RadioGroup value={owners} onValueChange={setOwners} className="flex flex-wrap gap-2">
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="1" id="owner-1" />
+                      <Label htmlFor="owner-1" className="text-sm">1</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="2" id="owner-2" />
+                      <Label htmlFor="owner-2" className="text-sm">2</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="3" id="owner-3" />
+                      <Label htmlFor="owner-3" className="text-sm">3</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="4+" id="owner-4" />
+                      <Label htmlFor="owner-4" className="text-sm">4+</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="history-check">Verificar histórico veicular</Label>
+                  <Switch id="history-check" />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Adicione um selo de confiança ao seu anúncio verificando o histórico completo do veículo.
+                  {(() => {
+                    const planoSelecionadoData = plans.find(p => p.id === planoSelecionado)
+                    return planoSelecionadoData?.preco >= 100 ? (
+                      <span className="text-green-600 font-medium"> Incluído no plano Premium!</span>
+                    ) : (
+                      <span> Custo adicional: R$ 25,00</span>
+                    )
+                  })()}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Separador Visual */}
+          <div className="flex items-center gap-2 sm:gap-4">
+            <div className="flex-1 h-px bg-gray-200"></div>
+            <div className="px-2 sm:px-4 py-1 sm:py-2 bg-gray-100 rounded-full">
+              <span className="text-xs sm:text-sm font-medium text-gray-600">Opcionais e Características</span>
             </div>
-          </TabsContent>
-        </Tabs>
+            <div className="flex-1 h-px bg-gray-200"></div>
+          </div>
+
+          {/* Seção 3: Opcionais */}
+          <OpcionaisSelector
+            onOpcionaisChange={setSelectedOpcionais}
+            onCarroceriaChange={setSelectedCarroceria}
+            onTipoVendedorChange={setSelectedTipoVendedor}
+            onCaracteristicasChange={setSelectedCaracteristicas}
+            onBlindagemChange={setSelectedBlindagem}
+            onLeilaoChange={setSelectedLeilao}
+            initialValues={{
+              opcionais: selectedOpcionais,
+              carroceria: selectedCarroceria,
+              tipoVendedor: selectedTipoVendedor,
+              caracteristicas: selectedCaracteristicas,
+              blindagem: selectedBlindagem,
+              leilao: selectedLeilao
+            }}
+          />
+
+          {/* Separador Visual */}
+          <div className="flex items-center gap-2 sm:gap-4">
+            <div className="flex-1 h-px bg-gray-200"></div>
+            <div className="px-2 sm:px-4 py-1 sm:py-2 bg-gray-100 rounded-full">
+              <span className="text-xs sm:text-sm font-medium text-gray-600">Fotos e Descrição</span>
+            </div>
+            <div className="flex-1 h-px bg-gray-200"></div>
+          </div>
+
+          {/* Seção 4: Fotos e Descrição */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg sm:text-xl flex items-center gap-2">
+                <Camera className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
+                Fotos e Descrição
+              </CardTitle>
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                Adicione fotos do seu veículo e uma descrição detalhada
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <PhotoUpload maxPhotos={(() => {
+                const planoSelecionadoData = plans.find(p => p.id === planoSelecionado)
+                return planoSelecionadoData?.preco === 0 ? 5 : planoSelecionadoData?.preco < 100 ? 10 : 20
+              })()} onChange={setPhotos} value={photos} />
+
+              <div className="space-y-2">
+                <Label htmlFor="description">Descrição</Label>
+                <Textarea
+                  id="description"
+                  placeholder="Descreva seu veículo, destacando características importantes, estado de conservação e diferenciais..."
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={6}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Botão de Publicação */}
+          <div className="flex justify-center pt-4 sm:pt-6">
+            <Button
+              onClick={handlePublicarAnuncio}
+              disabled={
+                loading ||
+                loadingMercadoPago ||
+                !formCompleted
+              }
+              className="w-full sm:w-auto px-8 sm:px-12 py-3 sm:py-4 min-w-[280px] sm:min-w-[300px] text-base sm:text-lg"
+              size="lg"
+            >
+              {loading || loadingMercadoPago ? (
+                <div className="flex flex-col items-center gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span className="font-medium">
+                      {loadingMercadoPago ? "Processando pagamento..." : "Publicando..."}
+                    </span>
+                  </div>
+                  {savingStep && (
+                    <div className="text-xs text-white/90 text-center bg-white/10 px-2 py-1 rounded">
+                      {savingStep}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <Car className="w-5 h-5 mr-2" />
+                  {(() => {
+                    const planoSelecionadoData = plans.find(p => p.id === planoSelecionado)
+                    return (
+                      <>
+                        {planoSelecionadoData?.preco === 0 ? "Publicar Anúncio" : "Finalizar Anúncio"} {planoSelecionadoData?.nome}
+                        {planoSelecionadoData && planoSelecionadoData.preco > 0 && (
+                          <span className="ml-2">
+                            (
+                            {planoSelecionadoData.preco.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                            )
+                          </span>
+                        )}
+                      </>
+                    )
+                  })()}
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
       </div>
 
       <CacheDebug />
