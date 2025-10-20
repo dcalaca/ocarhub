@@ -85,12 +85,9 @@ export function FipeVehicleSelector({ onSelectionChange, initialValues = {} }: F
           setModelos([]);
           setModeloSelecionado('');
           
-          // Notificar mudança
+          // Notificar mudança apenas da marca
           notifyChange({
-            marca: marcaSelecionada,
-            veiculo: undefined,
-            ano: undefined,
-            modelo: undefined
+            marca: marcaSelecionada
           });
         } catch (error) {
           console.error('Erro ao carregar veículos:', error);
@@ -128,12 +125,10 @@ export function FipeVehicleSelector({ onSelectionChange, initialValues = {} }: F
           setModelos([]);
           setModeloSelecionado('');
           
-          // Notificar mudança
+          // Notificar mudança da marca e veículo
           notifyChange({
             marca: marcaSelecionada,
-            veiculo: veiculoSelecionado,
-            ano: undefined,
-            modelo: undefined
+            veiculo: veiculoSelecionado
           });
         } catch (error) {
           console.error('Erro ao carregar anos:', error);
@@ -188,7 +183,7 @@ export function FipeVehicleSelector({ onSelectionChange, initialValues = {} }: F
         modelo: modeloSelecionado
       });
     }
-  }, [modeloSelecionado, marcaSelecionada, veiculoSelecionado, anoSelecionado, notifyChange]);
+  }, [modeloSelecionado, marcaSelecionada, veiculoSelecionado, anoSelecionado]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
