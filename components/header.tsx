@@ -166,14 +166,6 @@ export function Header() {
                           <Shield className="w-5 h-5" />
                           Painel Admin
                         </Link>
-                        <Link
-                          href="/admin/saldo-teste"
-                          className="flex items-center gap-3 py-2 text-gray-300 hover:text-white"
-                          onClick={() => setMobileMenuOpen(false)}
-                        >
-                          <Calculator className="w-5 h-5" />
-                          Saldo de Teste
-                        </Link>
                       </>
                     )}
                     <button
@@ -243,12 +235,6 @@ export function Header() {
                         <Link href="/admin" className="flex items-center">
                           <Shield className="mr-2 h-4 w-4" />
                           <span>Painel Admin</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link href="/admin/saldo-teste" className="flex items-center">
-                          <Calculator className="mr-2 h-4 w-4" />
-                          <span>Saldo de Teste</span>
                         </Link>
                       </DropdownMenuItem>
                     </>
