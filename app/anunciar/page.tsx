@@ -387,9 +387,10 @@ export default function AnunciarPage() {
     console.log('🔄 handleDynamicSelection chamado com:', selection)
     console.log('📊 dataLoaded:', dataLoaded)
     
-    // Se os dados foram carregados do localStorage, só ignorar se TODOS os campos estão vazios
-    if (dataLoaded && !selection.marca && !selection.modelo && !selection.ano && !selection.veiculo) {
-      console.log('🚫 Ignorando seleção completamente vazia após carregamento de dados')
+    // Só ignorar se TODOS os campos estão vazios E não há nenhuma seleção válida
+    const hasAnySelection = selection.marca || selection.modelo || selection.ano || selection.veiculo
+    if (!hasAnySelection) {
+      console.log('🚫 Ignorando seleção completamente vazia')
       return
     }
     
