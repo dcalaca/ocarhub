@@ -1074,7 +1074,7 @@ export default function AnunciarPage() {
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione a cor" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent side="bottom" align="start" className="max-h-[200px] overflow-y-auto">
                       {cores.map((cor) => (
                         <SelectItem key={cor} value={cor}>
                           {cor}
@@ -1092,7 +1092,7 @@ export default function AnunciarPage() {
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione o combustível" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent side="bottom" align="start" className="max-h-[200px] overflow-y-auto">
                       {combustiveis.map((combustivel) => (
                         <SelectItem key={combustivel} value={combustivel}>
                           {combustivel}
@@ -1110,7 +1110,7 @@ export default function AnunciarPage() {
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione o câmbio" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent side="bottom" align="start" className="max-h-[200px] overflow-y-auto">
                       {cambios.map((cambio) => (
                         <SelectItem key={cambio} value={cambio}>
                           {cambio}
