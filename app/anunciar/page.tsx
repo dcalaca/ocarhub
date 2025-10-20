@@ -480,14 +480,6 @@ export default function AnunciarPage() {
     selectedCaracteristicas, selectedBlindagem, selectedLeilao, planoSelecionado
   ])
 
-  // Log dos estados principais para debug
-  useEffect(() => {
-    console.log('📊 Estados principais atualizados:', {
-      brandId, modelId, year, selectedVersion, price, mileage, color,
-      fuelType, transmission, licensePlate, owners, description, location
-    })
-  }, [brandId, modelId, year, selectedVersion, price, mileage, color, fuelType, transmission, licensePlate, owners, description, location])
-
   // Função para carregar dados do veículo para edição
   const loadVehicleData = async (vehicleId: string) => {
     try {

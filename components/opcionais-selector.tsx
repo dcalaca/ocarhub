@@ -37,22 +37,6 @@ export function OpcionaisSelector({
 }: OpcionaisSelectorProps) {
   const { filtersData, loading, error } = useFiltersData()
   
-  // Debug logs
-  console.log('🔍 OpcionaisSelector Debug:', {
-    loading,
-    error,
-    filtersData: {
-      combustiveis: filtersData.combustiveis?.length || 0,
-      cores: filtersData.cores?.length || 0,
-      carrocerias: filtersData.carrocerias?.length || 0,
-      opcionais: filtersData.opcionais?.length || 0,
-      tiposVendedor: filtersData.tiposVendedor?.length || 0,
-      caracteristicas: filtersData.caracteristicas?.length || 0,
-      finaisPlaca: filtersData.finaisPlaca?.length || 0,
-      blindagem: filtersData.blindagem?.length || 0,
-      leilao: filtersData.leilao?.length || 0
-    }
-  });
   const [selectedOpcionais, setSelectedOpcionais] = useState<string[]>(initialValues.opcionais || []);
   const [selectedCarroceria, setSelectedCarroceria] = useState<string>(initialValues.carroceria || '');
   const [selectedTipoVendedor, setSelectedTipoVendedor] = useState<string>(initialValues.tipoVendedor || '');
@@ -170,15 +154,6 @@ export function OpcionaisSelector({
     blindagem: (Array.isArray(filtersData.blindagem) && filtersData.blindagem.length > 0) ? filtersData.blindagem : fallbackData.blindagem,
     leilao: (Array.isArray(filtersData.leilao) && filtersData.leilao.length > 0) ? filtersData.leilao : fallbackData.leilao
   };
-
-  console.log('🔍 DataToUse Debug:', {
-    carrocerias: dataToUse.carrocerias.length,
-    tiposVendedor: dataToUse.tiposVendedor.length,
-    caracteristicas: dataToUse.caracteristicas.length,
-    blindagem: dataToUse.blindagem.length,
-    leilao: dataToUse.leilao.length,
-    opcionais: dataToUse.opcionais.length
-  });
 
   // Agrupar opcionais por categoria - usando dados de fallback se necessário
   const opcionaisArray = dataToUse.opcionais;
