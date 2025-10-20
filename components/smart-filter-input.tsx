@@ -43,10 +43,10 @@ export function SmartFilterInput({
 
   // Atualizar termo de busca quando valor muda externamente
   useEffect(() => {
-    if (value && !isOpen) {
+    if (value && !isOpen && searchTerm !== value) {
       setSearchTerm(value)
     }
-  }, [value, isOpen])
+  }, [value, isOpen, searchTerm])
 
   // Fechar dropdown quando clica fora
   useEffect(() => {
@@ -69,7 +69,8 @@ export function SmartFilterInput({
     const newValue = e.target.value
     setSearchTerm(newValue)
     
-    if (!isOpen) {
+    // Só abrir se não estiver aberto e houver texto
+    if (!isOpen && newValue.trim()) {
       setIsOpen(true)
     }
   }
