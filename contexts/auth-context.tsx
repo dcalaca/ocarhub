@@ -208,6 +208,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               setUserInteractions({ favoritos: [], curtidas: [] })
             }
           }
+          
+          // Sincronizar com o banco de dados se o usuário estiver logado
+          if (session?.user) {
+            await syncUserInteractions(session.user.id)
+          }
         } catch (parseError) {
           console.error('❌ Erro ao parsear interações do localStorage:', parseError)
           safeLocalStorage.removeItem("ocar-interactions")
@@ -461,12 +466,60 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  // Função para sincronizar interações com o banco
+  const syncUserInteractions = async (userId: string) => {
+    try {
+      console.log('🔄 Sincronizando interações do usuário com o banco...')
+      
+      // Buscar favoritos do banco
+      const { data: favorites, error: favError } = await supabase
+        .from('ocar_favorites')
+        .select('vehicle_id')
+        .eq('user_id', userId)
+
+      if (favError) throw favError
+
+      // Buscar curtidas do banco
+      const { data: likes, error: likesError } = await supabase
+        .from('ocar_likes')
+        .select('vehicle_id')
+        .eq('user_id', userId)
+
+      if (likesError) throw likesError
+
+      // Atualizar estado local com dados do banco
+      const syncedInteractions = {
+        favoritos: favorites?.map(f => f.vehicle_id) || [],
+        curtidas: likes?.map(l => l.vehicle_id) || []
+      }
+
+      setUserInteractions(syncedInteractions)
+      safeLocalStorage.setItem("ocar-interactions", JSON.stringify(syncedInteractions))
+      
+      console.log('✅ Interações sincronizadas:', syncedInteractions)
+    } catch (error) {
+      console.error('❌ Erro ao sincronizar interações:', error)
+    }
+  }
+
   // Funções de favoritos e curtidas integradas com Supabase
   const toggleFavorito = async (vehicleId: string) => {
     if (!user) return
 
     try {
-      const isFav = userInteractions.favoritos.includes(vehicleId)
+      // Primeiro, verificar o estado real no banco
+      const { data: existingFavorite, error: checkError } = await supabase
+        .from('ocar_favorites')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('vehicle_id', vehicleId)
+        .single()
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        throw checkError
+      }
+
+      const isFav = !!existingFavorite
       
       if (isFav) {
         // Remover favorito
@@ -507,7 +560,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!user) return
 
     try {
-      const isLiked = userInteractions.curtidas.includes(vehicleId)
+      // Primeiro, verificar o estado real no banco
+      const { data: existingLike, error: checkError } = await supabase
+        .from('ocar_likes')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('vehicle_id', vehicleId)
+        .single()
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        throw checkError
+      }
+
+      const isLiked = !!existingLike
       
       if (isLiked) {
         // Remover curtida
