@@ -65,7 +65,7 @@ scripts/
 # Arquivos específicos que podem causar problemas
 TabelaFipe/
 database/
-API/
+/API/
 *.example
 env.example
 env.local.example
