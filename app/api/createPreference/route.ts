@@ -13,9 +13,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Validar valor mínimo
-    if (valor < 10) {
+    if (valor < 1) {
       return NextResponse.json(
-        { error: 'Valor mínimo é R$ 10,00' },
+        { error: 'Valor mínimo é R$ 1,00' },
         { status: 400 }
       )
     }
