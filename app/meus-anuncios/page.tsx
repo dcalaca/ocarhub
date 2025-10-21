@@ -218,9 +218,12 @@ export default function MeusAnunciosPage() {
                       <Badge variant={
                         anuncio.status === "ativo" ? "default" : 
                         anuncio.status === "vendido" ? "destructive" : 
+                        anuncio.status === "pendente_pagamento" ? "secondary" :
                         "secondary"
                       }>
-                        {anuncio.status === "vendido" ? "vendido" : anuncio.status}
+                        {anuncio.status === "vendido" ? "vendido" : 
+                         anuncio.status === "pendente_pagamento" ? "aguardando pagamento" :
+                         anuncio.status}
                       </Badge>
                       </div>
                     </div>
