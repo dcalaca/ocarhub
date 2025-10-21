@@ -477,7 +477,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .select('vehicle_id')
         .eq('user_id', userId)
 
-      if (favError) throw favError
+      if (favError) {
+        console.error('❌ Erro ao buscar favoritos:', favError)
+        throw favError
+      }
 
       // Buscar curtidas do banco
       const { data: likes, error: likesError } = await supabase
@@ -485,7 +488,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .select('vehicle_id')
         .eq('user_id', userId)
 
-      if (likesError) throw likesError
+      if (likesError) {
+        console.error('❌ Erro ao buscar curtidas:', likesError)
+        throw likesError
+      }
 
       // Atualizar estado local com dados do banco
       const syncedInteractions = {
@@ -513,7 +519,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .select('id')
         .eq('user_id', user.id)
         .eq('vehicle_id', vehicleId)
-        .single()
+        .maybeSingle()
 
       if (checkError && checkError.code !== 'PGRST116') {
         throw checkError
@@ -566,7 +572,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .select('id')
         .eq('user_id', user.id)
         .eq('vehicle_id', vehicleId)
-        .single()
+        .maybeSingle()
 
       if (checkError && checkError.code !== 'PGRST116') {
         throw checkError
