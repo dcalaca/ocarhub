@@ -304,8 +304,12 @@ export default function VehicleDetailPage() {
     try {
       const url = window.location.href
       await navigator.clipboard.writeText(url)
+      
+      // Incrementar contador de compartilhamentos
+      setVehicle(prev => prev ? { ...prev, shares: (prev.shares || 0) + 1 } : null)
+      
       toast({
-        title: "Link copiado!",
+        title: "Link copiado com sucesso!",
         description: "O link do veículo foi copiado para a área de transferência.",
       })
     } catch (error) {
@@ -522,6 +526,11 @@ export default function VehicleDetailPage() {
               >
                 <Share2 className="w-4 h-4" />
                 Compartilhar
+                {vehicle.shares > 0 && (
+                  <span className="ml-1 text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded-full">
+                    {vehicle.shares}
+                  </span>
+                )}
               </Button>
             </div>
 

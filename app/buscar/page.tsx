@@ -299,6 +299,9 @@ function SearchPageContent() {
       case "km-asc":
         filtered.sort((a, b) => a.quilometragem - b.quilometragem)
         break
+      case "curtidas-desc":
+        filtered.sort((a, b) => (b.likes || 0) - (a.likes || 0))
+        break
       default: // relevancia
         filtered.sort((a, b) => {
           // Prioriza veículos verificados e em destaque
@@ -464,12 +467,17 @@ function SearchPageContent() {
                   <SelectTrigger className="w-full sm:w-48 bg-white/10 border-white/20 text-white">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent 
+                    sideOffset={5}
+                    avoidCollisions={true}
+                    onCloseAutoFocus={(e) => e.preventDefault()}
+                  >
                     <SelectItem value="relevancia">Relevância</SelectItem>
                     <SelectItem value="data-desc">Mais recentes</SelectItem>
                     <SelectItem value="preco-asc">Menor preço</SelectItem>
                     <SelectItem value="preco-desc">Maior preço</SelectItem>
                     <SelectItem value="km-asc">Menor quilometragem</SelectItem>
+                    <SelectItem value="curtidas-desc">Mais curtidos</SelectItem>
                   </SelectContent>
                 </Select>
 
@@ -480,7 +488,11 @@ function SearchPageContent() {
                   <SelectTrigger className="w-full sm:w-32 bg-white/10 border-white/20 text-white">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent 
+                    sideOffset={5}
+                    avoidCollisions={true}
+                    onCloseAutoFocus={(e) => e.preventDefault()}
+                  >
                     <SelectItem value="12">12 por página</SelectItem>
                     <SelectItem value="24">24 por página</SelectItem>
                     <SelectItem value="48">48 por página</SelectItem>

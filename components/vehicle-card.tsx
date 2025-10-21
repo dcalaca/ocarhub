@@ -279,7 +279,14 @@ const VehicleCard = React.memo(function VehicleCard({ vehicle, className, showRe
                     {showRemoveFromFavorites ? (
                       <Trash2 className="w-4 h-4" />
                     ) : (
-                      <Heart className={cn("w-4 h-4", isCurrentlyFavorited && "fill-red-500 text-red-500")} />
+                      <div className="flex items-center gap-1">
+                        <Heart className={cn("w-4 h-4", isCurrentlyFavorited && "fill-red-500 text-red-500")} />
+                        {vehicle.favoritos && vehicle.favoritos.length > 0 && (
+                          <span className="text-xs text-muted-foreground">
+                            {vehicle.favoritos.length}
+                          </span>
+                        )}
+                      </div>
                     )}
                   </Button>
                 </div>
@@ -415,7 +422,14 @@ const VehicleCard = React.memo(function VehicleCard({ vehicle, className, showRe
               {showRemoveFromFavorites ? (
                 <Trash2 className="w-4 h-4 md:w-5 md:h-5" />
               ) : (
-                <Heart className={cn("w-4 h-4 md:w-5 md:h-5", isCurrentlyFavorited && "fill-red-500 text-red-500")} />
+                <div className="flex items-center gap-1">
+                  <Heart className={cn("w-4 h-4 md:w-5 md:h-5", isCurrentlyFavorited && "fill-red-500 text-red-500")} />
+                  {vehicle.favoritos && vehicle.favoritos.length > 0 && (
+                    <span className="text-xs text-muted-foreground">
+                      {vehicle.favoritos.length}
+                    </span>
+                  )}
+                </div>
               )}
             </Button>
           </div>
