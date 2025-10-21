@@ -230,14 +230,20 @@ export default function MeusAnunciosPage() {
                   </Link>
                   
                   {/* Botão de gerenciamento */}
-                  <div className="absolute top-2 right-2">
-                    <DropdownMenu>
+                  <div className="absolute top-2 right-2 z-10">
+                    <DropdownMenu modal={false}>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="sm" className="h-8 w-8 p-0 bg-black/50 hover:bg-black/70 text-white">
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuContent 
+                        align="end" 
+                        className="w-48" 
+                        sideOffset={5}
+                        avoidCollisions={true}
+                        onCloseAutoFocus={(e) => e.preventDefault()}
+                      >
                         {anuncio.status === "ativo" && (
                           <>
                             <DropdownMenuItem onClick={() => updateAnuncioStatus(anuncio.id, "pausado")}>
