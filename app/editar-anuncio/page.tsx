@@ -30,6 +30,9 @@ import {
   Palette,
   Fuel,
   Settings,
+  X,
+  Plus,
+  Upload,
 } from "lucide-react"
 import Link from "next/link"
 
@@ -56,6 +59,54 @@ export default function EditarAnuncioPage() {
   const [state, setState] = useState("")
   const [observations, setObservations] = useState("")
   const [photos, setPhotos] = useState<string[]>([])
+  const [uploadingPhotos, setUploadingPhotos] = useState(false)
+
+  // Funções para gerenciar fotos
+  const handleRemovePhoto = (index: number) => {
+    setPhotos(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const handleAddPhotos = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files
+    if (!files || files.length === 0) return
+
+    setUploadingPhotos(true)
+    
+    try {
+      const newPhotos: string[] = []
+      
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i]
+        if (file.size > 5 * 1024 * 1024) { // 5MB limit
+          toast({
+            title: "Arquivo muito grande",
+            description: `A foto ${file.name} é muito grande. Máximo 5MB.`,
+            variant: "destructive",
+          })
+          continue
+        }
+
+        const photoUrl = await ImageUploadService.uploadImage(file, vehicleData?.id || 'temp')
+        newPhotos.push(photoUrl)
+      }
+
+      setPhotos(prev => [...prev, ...newPhotos])
+      
+      toast({
+        title: "Fotos adicionadas",
+        description: `${newPhotos.length} foto(s) adicionada(s) com sucesso`,
+      })
+    } catch (error) {
+      console.error('Erro ao fazer upload das fotos:', error)
+      toast({
+        title: "Erro no upload",
+        description: "Não foi possível fazer upload das fotos",
+        variant: "destructive",
+      })
+    } finally {
+      setUploadingPhotos(false)
+    }
+  }
 
   // Funções de formatação
   const formatCurrency = (value: string) => {
@@ -383,7 +434,7 @@ export default function EditarAnuncioPage() {
                   id="color"
                   value={color}
                   onChange={(e) => setColor(e.target.value)}
-                  className="w-full p-2 border rounded-md"
+                  className="w-full p-2 border rounded-md bg-background text-foreground border-input"
                 >
                   <option value="">Selecione a cor</option>
                   {cores.map((cor) => (
@@ -404,7 +455,7 @@ export default function EditarAnuncioPage() {
                   id="fuel"
                   value={fuelType}
                   onChange={(e) => setFuelType(e.target.value)}
-                  className="w-full p-2 border rounded-md"
+                  className="w-full p-2 border rounded-md bg-background text-foreground border-input"
                 >
                   <option value="">Selecione o combustível</option>
                   {combustiveis.map((combustivel) => (
@@ -422,7 +473,7 @@ export default function EditarAnuncioPage() {
                   id="transmission"
                   value={transmission}
                   onChange={(e) => setTransmission(e.target.value)}
-                  className="w-full p-2 border rounded-md"
+                  className="w-full p-2 border rounded-md bg-background text-foreground border-input"
                 >
                   <option value="">Selecione o câmbio</option>
                   <option value="Manual">Manual</option>
@@ -522,21 +573,56 @@ export default function EditarAnuncioPage() {
                   <h3 className="text-sm font-medium">Fotos do veículo</h3>
                   <p className="text-xs text-muted-foreground">Fotos atuais do anúncio</p>
                 </div>
-                <div className="text-xs text-muted-foreground">
-                  {photos.length} fotos
+                <div className="flex items-center gap-2">
+                  <div className="text-xs text-muted-foreground">
+                    {photos.length} fotos
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleAddPhotos}
+                    className="hidden"
+                    id="photo-upload"
+                    disabled={uploadingPhotos}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => document.getElementById('photo-upload')?.click()}
+                    disabled={uploadingPhotos}
+                    className="flex items-center gap-1"
+                  >
+                    {uploadingPhotos ? (
+                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current"></div>
+                    ) : (
+                      <Plus className="h-3 w-3" />
+                    )}
+                    Adicionar
+                  </Button>
                 </div>
               </div>
               
               {photos.length > 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                   {photos.map((photo, index) => (
-                    <div key={index} className="relative aspect-square overflow-hidden rounded-md">
+                    <div key={index} className="relative aspect-square overflow-hidden rounded-md group">
                       <Image
                         src={photo}
                         alt={`Foto ${index + 1}`}
                         fill
                         className="object-cover"
                       />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleRemovePhoto(index)}
+                        className="absolute top-2 right-2 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
                     </div>
                   ))}
                 </div>
@@ -544,6 +630,15 @@ export default function EditarAnuncioPage() {
                 <div className="text-center py-8 text-muted-foreground">
                   <Camera className="h-8 w-8 mx-auto mb-2 opacity-50" />
                   <p>Nenhuma foto disponível</p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => document.getElementById('photo-upload')?.click()}
+                    className="mt-4"
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    Adicionar Primeira Foto
+                  </Button>
                 </div>
               )}
             </div>
