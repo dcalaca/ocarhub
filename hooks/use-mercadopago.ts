@@ -72,8 +72,29 @@ export function useMercadoPago() {
     }
 
     if (result.initPoint) {
-      // Redirecionar para o checkout do Mercado Pago
-      window.location.href = result.initPoint
+      // Abrir checkout do Mercado Pago em nova aba
+      const paymentWindow = window.open(result.initPoint, '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes')
+      
+      if (!paymentWindow) {
+        toast({
+          title: "Popup bloqueado",
+          description: "Por favor, permita popups para este site e tente novamente",
+          variant: "destructive",
+        })
+        return false
+      }
+
+      // Monitorar se a janela foi fechada
+      const checkClosed = setInterval(() => {
+        if (paymentWindow.closed) {
+          clearInterval(checkClosed)
+          // Verificar status do pagamento quando a janela for fechada
+          setTimeout(() => {
+            checkPaymentStatus()
+          }, 2000) // Aguardar 2 segundos para o webhook processar
+        }
+      }, 1000)
+
       return true
     }
 
@@ -89,15 +110,22 @@ export function useMercadoPago() {
     if (!user) return
 
     try {
+      console.log('🔍 Verificando status do pagamento...')
+      
       // Recarregar saldo para verificar se houve atualização
       await refreshSaldo()
       
       toast({
-        title: "Saldo atualizado",
-        description: "Verificando movimentações recentes...",
+        title: "Pagamento verificado",
+        description: "Verificando se o pagamento foi processado...",
       })
     } catch (error) {
       console.error('❌ Erro ao verificar status do pagamento:', error)
+      toast({
+        title: "Erro na verificação",
+        description: "Não foi possível verificar o status do pagamento",
+        variant: "destructive",
+      })
     }
   }
 
