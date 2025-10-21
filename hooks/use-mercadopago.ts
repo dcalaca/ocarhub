@@ -20,8 +20,8 @@ export function useMercadoPago() {
       return { success: false, error: 'Usuário não logado' }
     }
 
-    if (valor < 10) {
-      return { success: false, error: 'Valor mínimo é R$ 10,00' }
+    if (valor < 1) {
+      return { success: false, error: 'Valor mínimo é R$ 1,00' }
     }
 
     setLoading(true)
