@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { items, payer, external_reference } = body;
 
-    // Configuração otimizada para sandbox
+    // Configuração mínima recomendada (baseada nos testes)
     const preferenceData = {
       items: items.map((item: any) => ({
         id: item.id,
@@ -28,24 +28,7 @@ export async function POST(request: NextRequest) {
         name: payer.name,
         email: payer.email
       },
-      // URLs de retorno simples
-      back_urls: {
-        success: 'https://ocarhub.vercel.app/payment/success',
-        failure: 'https://ocarhub.vercel.app/payment/failure',
-        pending: 'https://ocarhub.vercel.app/payment/pending'
-      },
-      auto_return: 'approved',
-      external_reference: external_reference || `sandbox-test-${Date.now()}`,
-      // Configurações específicas para sandbox
-      payment_methods: {
-        excluded_payment_methods: [],
-        excluded_payment_types: [],
-        installments: 1
-      },
-      // Configurações adicionais para sandbox
-      expires: false,
-      expiration_date_from: null,
-      expiration_date_to: null
+      external_reference: external_reference || `sandbox-minimal-${Date.now()}`
     };
 
     console.log('🔄 Criando preferência otimizada para sandbox...');
