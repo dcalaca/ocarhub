@@ -41,6 +41,9 @@ export async function POST(request: NextRequest) {
           currency_id: 'BRL'
         }
       ],
+      payer: {
+        email: 'teste@exemplo.com' // Email válido para testes
+      },
       back_urls: {
         success: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://ocarhub.com'}/conta?status=success`,
         failure: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://ocarhub.com'}/conta?status=failure`,
