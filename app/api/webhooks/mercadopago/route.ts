@@ -10,42 +10,62 @@ const supabase = createClient(
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.text();
+    const url = new URL(request.url);
     const signature = request.headers.get('x-signature');
     const type = request.headers.get('x-request-id');
-
+    
+    // Verificar se é um teste do Mercado Pago (parâmetros de query)
+    const topic = url.searchParams.get('topic');
+    const id = url.searchParams.get('id');
+    
     console.log('🔔 Webhook recebido:', { 
       type, 
       signature: signature?.substring(0, 20) + '...',
       hasSecret: !!process.env.MP_WEBHOOK_SECRET,
-      bodyLength: body.length
+      topic,
+      id,
+      url: request.url
     });
 
-    // Validar assinatura do webhook (apenas se configurado)
-    if (process.env.MP_WEBHOOK_SECRET && signature) {
-      try {
-        const isValid = validateWebhookSignature(body, signature);
-        if (!isValid) {
-          console.error('❌ Assinatura do webhook inválida');
-          return NextResponse.json({ error: 'Assinatura inválida' }, { status: 401 });
-        }
-        console.log('✅ Assinatura do webhook válida');
-      } catch (signatureError) {
-        console.error('❌ Erro ao validar assinatura:', signatureError);
-        // Continuar mesmo com erro de validação para não bloquear webhooks
-        console.log('⚠️ Continuando sem validação de assinatura');
-      }
-    } else {
-      console.log('ℹ️ Validação de assinatura não configurada ou não fornecida');
-    }
-
-    // Parse do body
     let data;
-    try {
-      data = JSON.parse(body);
-    } catch (error) {
-      console.error('❌ Erro ao fazer parse do body:', error);
-      return NextResponse.json({ error: 'Body inválido' }, { status: 400 });
+
+    // Se é um teste com parâmetros de query
+    if (topic && id) {
+      console.log('🧪 Teste do Mercado Pago detectado');
+      data = {
+        type: topic,
+        data: { id: id },
+        action: 'test'
+      };
+    } else {
+      // Processar como webhook normal com body JSON
+      const body = await request.text();
+      
+      // Validar assinatura do webhook (apenas se configurado)
+      if (process.env.MP_WEBHOOK_SECRET && signature) {
+        try {
+          const isValid = validateWebhookSignature(body, signature);
+          if (!isValid) {
+            console.error('❌ Assinatura do webhook inválida');
+            return NextResponse.json({ error: 'Assinatura inválida' }, { status: 401 });
+          }
+          console.log('✅ Assinatura do webhook válida');
+        } catch (signatureError) {
+          console.error('❌ Erro ao validar assinatura:', signatureError);
+          // Continuar mesmo com erro de validação para não bloquear webhooks
+          console.log('⚠️ Continuando sem validação de assinatura');
+        }
+      } else {
+        console.log('ℹ️ Validação de assinatura não configurada ou não fornecida');
+      }
+
+      // Parse do body
+      try {
+        data = JSON.parse(body);
+      } catch (error) {
+        console.error('❌ Erro ao fazer parse do body:', error);
+        return NextResponse.json({ error: 'Body inválido' }, { status: 400 });
+      }
     }
 
     console.log('📊 Dados do webhook:', {
@@ -72,7 +92,11 @@ export async function POST(request: NextRequest) {
         console.log('ℹ️ Tipo de notificação não processado:', data.type);
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ 
+      success: true,
+      message: 'Webhook processado com sucesso',
+      timestamp: new Date().toISOString()
+    });
 
   } catch (error) {
     console.error('❌ Erro no webhook:', error);
@@ -93,6 +117,32 @@ async function handlePaymentNotification(data: any) {
     }
 
     console.log('💳 Processando pagamento:', paymentId);
+
+    // Se é um teste, não buscar dados reais do Mercado Pago
+    if (data.action === 'test') {
+      console.log('🧪 Teste de pagamento - simulando processamento');
+      
+      // Simular dados de teste
+      const testPaymentData = {
+        id: paymentId,
+        status: 'approved',
+        external_reference: 'test-reference',
+        transaction_amount: 100.00,
+        payment_method_id: 'test',
+        payment_type_id: 'credit_card',
+        date_approved: new Date().toISOString(),
+        date_created: new Date().toISOString(),
+        payer: {
+          email: 'test@example.com',
+          first_name: 'Test',
+          last_name: 'User'
+        },
+        metadata: { test: true }
+      };
+
+      console.log('✅ Teste de pagamento processado com sucesso');
+      return;
+    }
 
     // Buscar dados do pagamento no Mercado Pago
     const paymentData = await payment.get({ id: paymentId });
