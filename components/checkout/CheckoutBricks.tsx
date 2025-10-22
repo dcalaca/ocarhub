@@ -143,70 +143,82 @@ export default function CheckoutBricks({
         throw new Error('NEXT_PUBLIC_MP_PUBLIC_KEY não configurado');
       }
       
-      const mp = await initMercadoPago(publicKey, {
+      // Inicializar Mercado Pago (sem await, pois não retorna promise)
+      initMercadoPago(publicKey, {
         locale: 'pt-BR'
       });
       
-      console.log('✅ Mercado Pago inicializado:', mp);
+      console.log('✅ Mercado Pago inicializado');
       
-      // Criar o bricksBuilder
-      const bricksBuilder = mp.bricks();
-      console.log('✅ BricksBuilder criado:', bricksBuilder);
-      
-      // Configurações do Payment Brick
-      const settings = {
-        initialization: {
-          amount: items.reduce((total, item) => total + (item.price * item.quantity), 0),
-          preferenceId: preferenceId,
-        },
-        callbacks: {
-          onReady: () => {
-            console.log('✅ Payment Brick pronto para uso');
-            toast.success('Formulário de pagamento carregado');
-          },
-          onSubmit: async ({ selectedPaymentMethod, formData }) => {
-            console.log('📝 Dados do formulário:', formData);
-            console.log('💳 Método selecionado:', selectedPaymentMethod);
-            
-            // Aqui você pode processar os dados antes do pagamento
-            return new Promise((resolve) => {
-              resolve();
-            });
-          },
-          onError: (error) => {
-            console.error('❌ Erro no Payment Brick:', error);
-            toast.error('Erro no pagamento');
-            onError?.(error.message);
-          },
-        },
-        customization: {
-          paymentMethods: {
-            ticket: 'all',
-            bankTransfer: 'all',
-            creditCard: 'all',
-            debitCard: 'all',
-            mercadoPago: 'all',
-            digitalWallet: 'all',
-            digitalCurrency: 'all',
-            cash: 'all',
-            paypal: 'all',
-          },
-        },
-      };
-
-      // Criar o Payment Brick
-      const paymentBrickController = await bricksBuilder.create(
-        'payment',
-        brickContainer,
-        settings
-      );
-
-      console.log('🎯 Payment Brick criado:', paymentBrickController);
+      // Criar o bricksBuilder usando o objeto global MercadoPago
+      if (typeof window !== 'undefined' && (window as any).MercadoPago) {
+        const mp = new (window as any).MercadoPago(publicKey);
+        const bricksBuilder = mp.bricks();
+        console.log('✅ BricksBuilder criado:', bricksBuilder);
+        
+        // Continuar com a criação do Brick
+        await createPaymentBrick(bricksBuilder, preferenceId);
+      } else {
+        throw new Error('MercadoPago não encontrado no window');
+      }
 
     } catch (error) {
       console.error('❌ Erro ao inicializar Payment Brick:', error);
       toast.error('Erro ao carregar formulário de pagamento');
     }
+  };
+
+  // Função separada para criar o Payment Brick
+  const createPaymentBrick = async (bricksBuilder: any, preferenceId: string) => {
+    // Configurações do Payment Brick
+    const settings = {
+      initialization: {
+        amount: items.reduce((total, item) => total + (item.price * item.quantity), 0),
+        preferenceId: preferenceId,
+      },
+      callbacks: {
+        onReady: () => {
+          console.log('✅ Payment Brick pronto para uso');
+          toast.success('Formulário de pagamento carregado');
+        },
+        onSubmit: async ({ selectedPaymentMethod, formData }: any) => {
+          console.log('📝 Dados do formulário:', formData);
+          console.log('💳 Método selecionado:', selectedPaymentMethod);
+          
+          // Aqui você pode processar os dados antes do pagamento
+          return new Promise((resolve) => {
+            resolve();
+          });
+        },
+        onError: (error: any) => {
+          console.error('❌ Erro no Payment Brick:', error);
+          toast.error('Erro no pagamento');
+          onError?.(error.message);
+        },
+      },
+      customization: {
+        paymentMethods: {
+          ticket: 'all',
+          bankTransfer: 'all',
+          creditCard: 'all',
+          debitCard: 'all',
+          mercadoPago: 'all',
+          digitalWallet: 'all',
+          digitalCurrency: 'all',
+          cash: 'all',
+          paypal: 'all',
+        },
+      },
+    };
+
+    // Criar o Payment Brick
+    const paymentBrickController = await bricksBuilder.create(
+      'payment',
+      brickContainer,
+      settings
+    );
+
+    console.log('🎯 Payment Brick criado:', paymentBrickController);
   };
 
   // Não renderizar nada durante SSR
