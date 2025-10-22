@@ -21,7 +21,7 @@ export interface Vehicle {
   fotos?: string[]
   plano: 'gratuito' | 'destaque' | 'premium'
   verificado?: boolean
-  status: 'ativo' | 'pausado' | 'expirado'
+  status: 'ativo' | 'pausado' | 'expirado' | 'pendente_pagamento'
   cidade: string
   estado?: string
   views?: number
@@ -56,6 +56,7 @@ export interface CreateVehicleData {
   plano: 'gratuito' | 'destaque' | 'premium'
   cidade: string
   estado?: string
+  status?: 'ativo' | 'pausado' | 'expirado' | 'pendente_pagamento'
 }
 
 export class VehicleService {
@@ -111,7 +112,6 @@ export class VehicleService {
         .insert({
           ...vehicleData,
           dono_id: userId,
-          status: 'ativo',
           verificado: false,
           views: 0,
           likes: 0,

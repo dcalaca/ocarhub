@@ -886,7 +886,7 @@ export default function AnunciarPage() {
             plano: plano.nome.toLowerCase() as 'gratuito' | 'destaque' | 'premium',
             cidade: location.split(',')[0]?.trim() || 'São Paulo',
             estado: location.split(',')[1]?.trim() || 'SP',
-            status: 'ativo', // Status ativo para planos gratuitos
+            status: 'ativo', // Status ativo apenas para planos gratuitos
           }
 
           veiculoCriado = await VehicleService.createVehicle(vehicleData, user.id)
