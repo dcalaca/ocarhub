@@ -72,7 +72,13 @@ export default function CheckoutBricks({
         body: JSON.stringify({
           items,
           payer,
-          external_reference: external_reference || `bricks-${Date.now()}`
+          external_reference: external_reference || `bricks-${Date.now()}`,
+          metadata: {
+            vehicle_id: 'test-vehicle-id',
+            plano_id: 'test-plano-id',
+            user_id: 'test-user-id',
+            source: 'checkout-bricks'
+          }
         }),
       });
 

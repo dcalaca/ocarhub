@@ -244,27 +244,111 @@ async function processPaymentStatus(paymentData: any) {
 
 // Pagamento aprovado
 async function handleApprovedPayment(paymentData: any) {
-  const { id, external_reference, transaction_amount } = paymentData;
+  const { id, external_reference, transaction_amount, metadata } = paymentData;
   
   console.log('✅ Pagamento aprovado:', id);
+  console.log('📊 Dados do pagamento:', {
+    id,
+    external_reference,
+    transaction_amount,
+    metadata
+  });
 
   try {
-    // Ativar plano do usuário
-    if (external_reference) {
-      const { error: updateError } = await supabase
-        .from('usuarios')
-        .update({
-          plano_ativo: true,
-          data_ativacao: new Date().toISOString(),
-          saldo: transaction_amount
-        })
-        .eq('external_reference', external_reference);
+    // Extrair informações do metadata
+    const vehicleId = metadata?.vehicle_id;
+    const planoId = metadata?.plano_id;
+    const userId = metadata?.user_id;
 
-      if (updateError) {
-        console.error('❌ Erro ao ativar plano:', updateError);
-      } else {
-        console.log('✅ Plano ativado para usuário:', external_reference);
-      }
+    if (!vehicleId || !planoId || !userId) {
+      console.error('❌ Metadata incompleto:', { vehicleId, planoId, userId });
+      return;
+    }
+
+    // Buscar dados do plano
+    const { data: plano, error: planoError } = await supabase
+      .from('ocar_planos')
+      .select('*')
+      .eq('id', planoId)
+      .single();
+
+    if (planoError || !plano) {
+      console.error('❌ Erro ao buscar plano:', planoError);
+      return;
+    }
+
+    console.log('📋 Plano encontrado:', {
+      nome: plano.nome,
+      tipo: plano.tipo,
+      preco: plano.preco,
+      duracao_dias: plano.duracao_dias,
+      destaque: plano.destaque
+    });
+
+    // Calcular data de expiração
+    const dataExpiracao = plano.duracao_dias 
+      ? new Date(Date.now() + (plano.duracao_dias * 24 * 60 * 60 * 1000)).toISOString()
+      : null; // NULL = vitalício
+
+    // Ativar anúncio com o plano
+    const { error: vehicleError } = await supabase
+      .from('ocar_vehicles')
+      .update({
+        plano: plano.nome.toLowerCase(),
+        status: 'ativo',
+        data_expiracao: dataExpiracao,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', vehicleId)
+      .eq('dono_id', userId);
+
+    if (vehicleError) {
+      console.error('❌ Erro ao ativar anúncio:', vehicleError);
+      return;
+    }
+
+    console.log('✅ Anúncio ativado:', {
+      vehicleId,
+      plano: plano.nome,
+      dataExpiracao,
+      destaque: plano.destaque
+    });
+
+    // Atualizar saldo do usuário
+    const { error: userError } = await supabase
+      .from('ocar_usuarios')
+      .update({
+        saldo: transaction_amount,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId);
+
+    if (userError) {
+      console.error('❌ Erro ao atualizar saldo do usuário:', userError);
+    } else {
+      console.log('✅ Saldo do usuário atualizado:', transaction_amount);
+    }
+
+    // Registrar transação de pagamento
+    const { error: paymentError } = await supabase
+      .from('payments')
+      .insert({
+        payment_id: id,
+        user_id: userId,
+        vehicle_id: vehicleId,
+        plano_id: planoId,
+        amount: transaction_amount,
+        status: 'approved',
+        payment_method: paymentData.payment_method_id,
+        external_reference: external_reference,
+        date_approved: new Date().toISOString(),
+        metadata: metadata
+      });
+
+    if (paymentError) {
+      console.error('❌ Erro ao registrar pagamento:', paymentError);
+    } else {
+      console.log('✅ Pagamento registrado no banco');
     }
 
     // Enviar email de confirmação (implementar conforme necessário)

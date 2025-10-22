@@ -5,7 +5,7 @@ export async function POST(request: NextRequest) {
     console.log('🚀 Criando preferência com Access Token direto...');
     
     const body = await request.json();
-    const { items, payer, external_reference } = body;
+    const { items, payer, external_reference, metadata } = body;
     
     // Usar Access Token diretamente (sem OAuth)
     const accessToken = process.env.MP_ACCESS_TOKEN;
@@ -21,6 +21,7 @@ export async function POST(request: NextRequest) {
       items_count: items?.length,
       payer_email: payer?.email,
       external_reference,
+      metadata,
       access_token_prefix: accessToken.substring(0, 20) + '...'
     });
     
@@ -39,6 +40,7 @@ export async function POST(request: NextRequest) {
         email: payer.email
       },
       external_reference: external_reference,
+      metadata: metadata || {},
       back_urls: {
         success: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://ocarhub.com'}/payment/success`,
         failure: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://ocarhub.com'}/payment/failure`,
