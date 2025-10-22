@@ -1,11 +1,7 @@
 'use client';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-
 import { useState, useEffect } from 'react';
 
-// Forçar renderização apenas no cliente
 export default function CheckoutBricksPage() {
   const [isClient, setIsClient] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
