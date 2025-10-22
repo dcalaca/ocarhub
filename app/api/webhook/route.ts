@@ -14,7 +14,9 @@ export async function POST(request: NextRequest) {
     console.log('🔔 Webhook recebido:', {
       signature: signature?.substring(0, 20) + '...',
       bodyLength: body.length,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      fullSignature: signature,
+      webhookSecret: MP_WEBHOOK_SECRET?.substring(0, 10) + '...'
     })
 
     // Validar assinatura HMAC
@@ -40,13 +42,15 @@ export async function POST(request: NextRequest) {
       .update(body)
       .digest('hex')
 
-    // Verificar se a assinatura é válida
-    const isValidSignature = signature.includes(expectedSignature)
+    // Verificar se a assinatura é válida (formato: ts=timestamp,v1=signature)
+    const isValidSignature = signature.includes(`v1=${expectedSignature}`)
     
     if (!isValidSignature) {
       console.error('❌ Assinatura inválida:', {
         received: signature.substring(0, 20) + '...',
-        expected: expectedSignature.substring(0, 20) + '...'
+        expected: expectedSignature.substring(0, 20) + '...',
+        fullReceived: signature,
+        fullExpected: expectedSignature
       })
       return NextResponse.json(
         { error: 'Assinatura inválida' },
