@@ -20,8 +20,13 @@ const CheckoutBricks = dynamic(
 );
 
 export default function CheckoutBricksPage() {
+  const [isClient, setIsClient] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [paymentId, setPaymentId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // Dados de exemplo
   const exampleItems = [
@@ -49,6 +54,22 @@ export default function CheckoutBricksPage() {
   const handlePaymentError = (error: string) => {
     console.error('❌ Erro no pagamento:', error);
   };
+
+  // Não renderizar nada durante SSR
+  if (!isClient) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Carregando página...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (paymentSuccess) {
     return (

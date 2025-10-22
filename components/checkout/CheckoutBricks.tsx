@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { initMercadoPago } from '@mercadopago/sdk-react';
 import { toast } from 'sonner';
 
 interface CheckoutBricksProps {
@@ -43,6 +42,9 @@ export default function CheckoutBricks({
           return;
         }
 
+        // Importar dinamicamente para evitar problemas de SSR
+        const { initMercadoPago } = await import('@mercadopago/sdk-react');
+        
         await initMercadoPago(publicKey, {
           locale: 'pt-BR'
         });
@@ -102,6 +104,12 @@ export default function CheckoutBricks({
 
   // Inicializar Bricks
   const initializeBricks = async (preferenceId: string) => {
+    // Só inicializar no cliente
+    if (typeof window === 'undefined') {
+      console.log('⚠️ Tentativa de inicializar Bricks no servidor, ignorando...');
+      return;
+    }
+
     try {
       const { Payment } = await import('@mercadopago/sdk-react');
       
