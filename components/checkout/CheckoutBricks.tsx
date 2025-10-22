@@ -122,30 +122,46 @@ export default function CheckoutBricks({
     }
 
     try {
-      console.log('🔍 Iniciando importação do SDK...');
+      console.log('🔍 Iniciando inicialização do Payment Brick...');
       
       // Importar o SDK completo do Mercado Pago
       const MercadoPagoSDK = await import('@mercadopago/sdk-react');
       console.log('📦 SDK importado:', Object.keys(MercadoPagoSDK));
       
-      // Verificar se Payment está disponível
-      if (!MercadoPagoSDK.Payment) {
-        console.error('❌ Payment não encontrado no SDK:', MercadoPagoSDK);
-        throw new Error('Payment não encontrado no SDK');
+      // Verificar se initMercadoPago está disponível
+      if (!MercadoPagoSDK.initMercadoPago) {
+        console.error('❌ initMercadoPago não encontrado no SDK:', MercadoPagoSDK);
+        throw new Error('initMercadoPago não encontrado no SDK');
       }
       
-      const Payment = MercadoPagoSDK.Payment;
-      console.log('✅ Payment encontrado:', typeof Payment);
+      const { initMercadoPago } = MercadoPagoSDK;
+      console.log('✅ initMercadoPago encontrado:', typeof initMercadoPago);
       
-      const payment = new Payment({
-        container: brickContainer,
+      // Inicializar Mercado Pago
+      const publicKey = process.env.NEXT_PUBLIC_MP_PUBLIC_KEY;
+      if (!publicKey) {
+        throw new Error('NEXT_PUBLIC_MP_PUBLIC_KEY não configurado');
+      }
+      
+      const mp = await initMercadoPago(publicKey, {
+        locale: 'pt-BR'
+      });
+      
+      console.log('✅ Mercado Pago inicializado:', mp);
+      
+      // Criar o bricksBuilder
+      const bricksBuilder = mp.bricks();
+      console.log('✅ BricksBuilder criado:', bricksBuilder);
+      
+      // Configurações do Payment Brick
+      const settings = {
         initialization: {
           amount: items.reduce((total, item) => total + (item.price * item.quantity), 0),
           preferenceId: preferenceId,
         },
         callbacks: {
           onReady: () => {
-            console.log('✅ Bricks pronto para uso');
+            console.log('✅ Payment Brick pronto para uso');
             toast.success('Formulário de pagamento carregado');
           },
           onSubmit: async ({ selectedPaymentMethod, formData }) => {
@@ -158,65 +174,12 @@ export default function CheckoutBricks({
             });
           },
           onError: (error) => {
-            console.error('❌ Erro no Bricks:', error);
+            console.error('❌ Erro no Payment Brick:', error);
             toast.error('Erro no pagamento');
             onError?.(error.message);
           },
         },
         customization: {
-          visual: {
-            style: {
-              theme: 'default', // 'default' | 'dark' | 'bootstrap' | 'flat'
-              customVariables: {
-                colorPrimary: '#007bff',
-                colorSecondary: '#6c757d',
-                borderRadiusLarge: '8px',
-                borderRadiusMedium: '6px',
-                borderRadiusSmall: '4px',
-              },
-            },
-            text: {
-              color: '#000000',
-              fontFamily: 'Inter, sans-serif',
-              fontSize: '16px',
-              fontWeight: '400',
-            },
-            hideFormTitle: false,
-            hidePaymentMethodHeader: false,
-            hidePaymentMethodTitle: false,
-            hideCardNumber: false,
-            hideExpirationDate: false,
-            hideSecurityCode: false,
-            hideCardholderName: false,
-            hideCardholderEmail: false,
-            hideInstallments: false,
-            hideIssuer: false,
-            hidePix: false,
-            hideTicket: false,
-            hideBankTransfer: false,
-            hideDigitalWallet: false,
-            hideDigitalCurrency: false,
-            hideCash: false,
-            hideDebitCard: false,
-            hideCreditCard: false,
-            hidePrepaidCard: false,
-            hidePaypal: false,
-            hideMercadoPago: false,
-            hideMercadoPagoWallet: false,
-            hideMercadoPagoCredits: false,
-            hideMercadoPagoDebit: false,
-            hideMercadoPagoCredit: false,
-            hideMercadoPagoPix: false,
-            hideMercadoPagoTicket: false,
-            hideMercadoPagoBankTransfer: false,
-            hideMercadoPagoDigitalWallet: false,
-            hideMercadoPagoDigitalCurrency: false,
-            hideMercadoPagoCash: false,
-            hideMercadoPagoDebitCard: false,
-            hideMercadoPagoCreditCard: false,
-            hideMercadoPagoPrepaidCard: false,
-            hideMercadoPagoPaypal: false,
-          },
           paymentMethods: {
             ticket: 'all',
             bankTransfer: 'all',
@@ -229,12 +192,19 @@ export default function CheckoutBricks({
             paypal: 'all',
           },
         },
-      });
+      };
 
-      console.log('🎯 Bricks Payment inicializado');
+      // Criar o Payment Brick
+      const paymentBrickController = await bricksBuilder.create(
+        'payment',
+        brickContainer,
+        settings
+      );
+
+      console.log('🎯 Payment Brick criado:', paymentBrickController);
 
     } catch (error) {
-      console.error('❌ Erro ao inicializar Bricks:', error);
+      console.error('❌ Erro ao inicializar Payment Brick:', error);
       toast.error('Erro ao carregar formulário de pagamento');
     }
   };
