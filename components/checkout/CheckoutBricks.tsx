@@ -31,6 +31,12 @@ export default function CheckoutBricks({
   const [isLoading, setIsLoading] = useState(false);
   const [preferenceId, setPreferenceId] = useState<string | null>(null);
   const [brickContainer, setBrickContainer] = useState<string>('');
+  const [isClient, setIsClient] = useState(false);
+
+  // Verificar se está no cliente
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // Inicializar Mercado Pago
   useEffect(() => {
@@ -214,6 +220,20 @@ export default function CheckoutBricks({
       toast.error('Erro ao carregar formulário de pagamento');
     }
   };
+
+  // Não renderizar nada durante SSR
+  if (!isClient) {
+    return (
+      <div className="bg-white rounded-lg shadow-lg p-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Carregando componente de pagamento...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-2xl mx-auto">
