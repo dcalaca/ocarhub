@@ -26,6 +26,10 @@ export default function CheckoutBricksPage() {
       console.log('5. Valor: APP_USR-4ea18afd-1d72-489e-9b6d-dc62810e7b14');
       console.log('6. Marque para todos os ambientes');
       console.log('7. Faça um novo deploy');
+      console.log('');
+      console.log('💡 NOTA: Esta é a mesma chave que você já tem em MP_PUBLIC_KEY');
+      console.log('   A diferença é que NEXT_PUBLIC_ é para o frontend (cliente)');
+      console.log('   e MP_PUBLIC_KEY é para o backend (servidor)');
     }
     
     // Carregar componente apenas no cliente
