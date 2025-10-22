@@ -74,10 +74,10 @@ export function MercadoPagoCheckout({
     setIsLoading(true);
     
     try {
-      // Usar API específica para sandbox
-      const apiEndpoint = '/api/payment/create-preference-sandbox';
+      // Usar API otimizada com soluções aplicadas
+      const apiEndpoint = '/api/payment/create-preference-optimized';
       
-      console.log('🧪 Usando API específica para sandbox:', apiEndpoint);
+      console.log('🔧 Usando API otimizada com soluções:', apiEndpoint);
       
       const response = await fetch(apiEndpoint, {
         method: 'POST',
