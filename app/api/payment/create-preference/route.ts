@@ -40,7 +40,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Preparar dados da preferência
+    // Preparar dados da preferência (versão simplificada)
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://ocarhub.vercel.app';
+    
     const preferenceData = {
       items: items.map((item: any) => ({
         id: item.id,
@@ -48,62 +50,19 @@ export async function POST(request: NextRequest) {
         description: item.description || '',
         quantity: item.quantity || 1,
         unit_price: parseFloat(item.price),
-        currency_id: MERCADOPAGO_CONFIG.CURRENCY
+        currency_id: 'BRL'
       })),
       payer: {
         name: payer.name,
-        surname: payer.surname || '',
-        email: payer.email,
-        phone: payer.phone ? {
-          area_code: payer.phone.area_code,
-          number: payer.phone.number
-        } : undefined,
-        identification: payer.identification ? {
-          type: payer.identification.type,
-          number: payer.identification.number
-        } : undefined,
-        address: payer.address ? {
-          street_name: payer.address.street_name,
-          street_number: payer.address.street_number,
-          zip_code: payer.address.zip_code
-        } : undefined
+        email: payer.email
       },
       back_urls: {
-        success: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/payment/success`,
-        failure: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/payment/failure`,
-        pending: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/payment/pending`
+        success: `${baseUrl}/payment/success`,
+        failure: `${baseUrl}/payment/failure`,
+        pending: `${baseUrl}/payment/pending`
       },
       auto_return: 'approved',
-      notification_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/webhooks/mercadopago`,
-      external_reference: external_reference || `ocar-platform-${Date.now()}`,
-      payment_methods: {
-        excluded_payment_methods: [],
-        excluded_payment_types: [],
-        installments: 12
-      },
-      additional_info: {
-        items: items.map((item: any) => ({
-          id: item.id,
-          title: item.title,
-          description: item.description || '',
-          category_id: 'others',
-          quantity: item.quantity || 1,
-          unit_price: parseFloat(item.price)
-        })),
-        payer: {
-          first_name: payer.name.split(' ')[0],
-          last_name: payer.name.split(' ').slice(1).join(' ') || '',
-          phone: payer.phone ? {
-            area_code: payer.phone.area_code,
-            number: payer.phone.number
-          } : undefined,
-          address: payer.address ? {
-            zip_code: payer.address.zip_code,
-            street_name: payer.address.street_name,
-            street_number: payer.address.street_number
-          } : undefined
-        }
-      }
+      external_reference: external_reference || `ocar-platform-${Date.now()}`
     };
 
     // Criar preferência
