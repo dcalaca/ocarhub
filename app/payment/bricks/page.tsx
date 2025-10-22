@@ -11,6 +11,23 @@ export default function CheckoutBricksPage() {
   useEffect(() => {
     setIsClient(true);
     
+    // Verificar variáveis de ambiente
+    const publicKey = process.env.NEXT_PUBLIC_MP_PUBLIC_KEY;
+    console.log('🔧 Verificação de variáveis de ambiente:');
+    console.log('NEXT_PUBLIC_MP_PUBLIC_KEY:', publicKey ? `${publicKey.substring(0, 20)}...` : 'NÃO CONFIGURADA');
+    
+    if (!publicKey) {
+      console.error('❌ NEXT_PUBLIC_MP_PUBLIC_KEY não configurada!');
+      console.log('📋 Para configurar no Vercel:');
+      console.log('1. Acesse: https://vercel.com/dashboard');
+      console.log('2. Selecione o projeto: ocarhub');
+      console.log('3. Vá em Settings → Environment Variables');
+      console.log('4. Adicione: NEXT_PUBLIC_MP_PUBLIC_KEY');
+      console.log('5. Valor: APP_USR-4ea18afd-1d72-489e-9b6d-dc62810e7b14');
+      console.log('6. Marque para todos os ambientes');
+      console.log('7. Faça um novo deploy');
+    }
+    
     // Carregar componente apenas no cliente
     const loadComponent = async () => {
       try {
