@@ -65,11 +65,13 @@ export async function POST(request: NextRequest) {
     oauthData.append('client_secret', client_secret);
     oauthData.append('client_id', client_id);
     oauthData.append('grant_type', grant_type);
+    oauthData.append('test_token', 'true'); // Importante para credenciais de teste
 
     console.log('📋 Dados OAuth preparados:', {
       client_secret_length: client_secret.length,
       client_id: client_id,
       grant_type,
+      test_token: 'true',
       form_data_length: oauthData.toString().length
     });
 
@@ -135,7 +137,8 @@ export async function POST(request: NextRequest) {
           '2. Confirme se são credenciais de teste',
           '3. Verifique se a aplicação está ativa',
           '4. Use o Access Token completo como client_secret',
-          '5. Use o número da aplicação como client_id'
+          '5. Use o número da aplicação como client_id',
+          '6. test_token=true foi adicionado para credenciais de teste'
         ]
       }, { status: 500 });
     }
