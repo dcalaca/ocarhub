@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { initMercadoPago, usePaymentBrick } from '@mercadopago/sdk-react';
+import { initMercadoPago, Payment } from '@mercadopago/sdk-react';
 
 interface CheckoutBricksProps {
   items: Array<{
@@ -32,9 +32,7 @@ export default function CheckoutBricks({
   const [isLoading, setIsLoading] = useState(false);
   const [preferenceId, setPreferenceId] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
-
-  // Hook do Payment Brick
-  const { create, destroy, error } = usePaymentBrick();
+  const [isSDKReady, setIsSDKReady] = useState(false);
 
   // Verificar se está no cliente
   useEffect(() => {
@@ -56,6 +54,7 @@ export default function CheckoutBricks({
       locale: 'pt-BR'
     });
     console.log('✅ Mercado Pago SDK inicializado');
+    setIsSDKReady(true);
   }, [isClient]);
 
   // Criar preferência
@@ -96,59 +95,46 @@ export default function CheckoutBricks({
     }
   };
 
-  // Criar Payment Brick quando preferenceId estiver disponível
-  useEffect(() => {
-    if (!preferenceId || !isClient) return;
-
-    console.log('🔍 Criando Payment Brick com preferência:', preferenceId);
-
-    const settings = {
-      initialization: {
-        preferenceId,
-        redirectMode: 'modal' // mantém na página
+  // Configurações do Payment Brick
+  const paymentSettings = {
+    initialization: {
+      preferenceId: preferenceId || '',
+      redirectMode: 'modal' as const
+    },
+    customization: {
+      paymentMethods: {
+        ticket: 'all',
+        bankTransfer: 'all',
+        creditCard: 'all',
+        debitCard: 'all',
+        mercadoPago: 'all',
+        digitalWallet: 'all',
+        digitalCurrency: 'all',
+        cash: 'all',
+        paypal: 'all',
       },
-      customization: {
-        paymentMethods: {
-          ticket: 'all',
-          bankTransfer: 'all',
-          creditCard: 'all',
-          debitCard: 'all',
-          mercadoPago: 'all',
-          digitalWallet: 'all',
-          digitalCurrency: 'all',
-          cash: 'all',
-          paypal: 'all',
-        },
+    },
+    callbacks: {
+      onReady: () => {
+        console.log('✅ Payment Brick pronto para uso');
+        toast.success('Formulário de pagamento carregado');
       },
-      callbacks: {
-        onReady: () => {
-          console.log('✅ Payment Brick pronto para uso');
-          toast.success('Formulário de pagamento carregado');
-        },
-        onSubmit: async ({ selectedPaymentMethod, formData }: any) => {
-          console.log('📝 Dados do formulário:', formData);
-          console.log('💳 Método selecionado:', selectedPaymentMethod);
-          
-          // Aqui você pode processar os dados antes do pagamento
-          return new Promise((resolve) => {
-            resolve();
-          });
-        },
-        onError: (error: any) => {
-          console.error('❌ Erro no Payment Brick:', error);
-          toast.error('Erro no pagamento');
-          onError?.(error.message);
-        },
+      onSubmit: async ({ selectedPaymentMethod, formData }: any) => {
+        console.log('📝 Dados do formulário:', formData);
+        console.log('💳 Método selecionado:', selectedPaymentMethod);
+        
+        // Aqui você pode processar os dados antes do pagamento
+        return new Promise((resolve) => {
+          resolve();
+        });
       },
-    };
-
-    create('payment', 'payment-brick-container', settings);
-
-    // Cleanup quando o componente for desmontado
-    return () => {
-      destroy('payment');
-    };
-  }, [create, destroy, preferenceId, isClient]);
+      onError: (error: any) => {
+        console.error('❌ Erro no Payment Brick:', error);
+        toast.error('Erro no pagamento');
+        onError?.(error.message);
+      },
+    },
+  };
 
   // Não renderizar nada durante SSR
   if (!isClient) {
@@ -160,16 +146,6 @@ export default function CheckoutBricks({
             <p className="text-gray-600">Carregando componente de pagamento...</p>
           </div>
         </div>
-      </div>
-    );
-  }
-
-  // Mostrar erro se houver
-  if (error) {
-    return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-red-800 mb-2">Erro ao carregar pagamento</h3>
-        <p className="text-red-600">{error.message || 'Erro desconhecido'}</p>
       </div>
     );
   }
@@ -222,16 +198,19 @@ export default function CheckoutBricks({
         </div>
       )}
 
-      {/* Container do Payment Brick */}
-      {preferenceId && (
+      {/* Payment Brick Component */}
+      {preferenceId && isSDKReady && (
         <div className="bg-white rounded-lg shadow-md p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Formulário de Pagamento
           </h3>
 
-          <div
-            id="payment-brick-container"
-            style={{ minHeight: 400 }}
+          <Payment
+            initialization={paymentSettings.initialization}
+            customization={paymentSettings.customization}
+            onSubmit={paymentSettings.callbacks.onSubmit}
+            onReady={paymentSettings.callbacks.onReady}
+            onError={paymentSettings.callbacks.onError}
           />
         </div>
       )}
