@@ -28,10 +28,10 @@ export default function TestAccountPage() {
     email: 'teste@exemplo.com'
   };
 
-  // Estado para credenciais de teste (preenchidas automaticamente)
+  // Estado para credenciais de produção (preenchidas automaticamente)
   const [testCredentials, setTestCredentials] = useState({
     client_id: '8224799763305887',
-    client_secret: 'APP_USR-4645131775783967-102121-662cfe8408046307b825a79edd594a15-2939896816',
+    client_secret: 'TxjPRSZpgXXECBO4R85fAIbXEEH9n8Eg',
     grant_type: 'client_credentials'
   });
 
@@ -187,63 +187,40 @@ export default function TestAccountPage() {
       <div className="max-w-3xl mx-auto">
         <div className="bg-white shadow-lg rounded-lg p-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-8">
-            Teste com Contas de Teste (OAuth)
+            🚀 Mercado Pago Produção (OAuth)
           </h1>
 
           <div className="space-y-6">
             {/* Instruções */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-              <h2 className="text-lg font-semibold text-blue-900 mb-4">
-                Instruções para Contas de Teste
+            <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+              <h2 className="text-lg font-semibold text-green-900 mb-4">
+                🎉 Ambiente de Produção Configurado!
               </h2>
-              <ul className="space-y-2 text-blue-800">
-                <li>1. ✅ Credenciais já preenchidas automaticamente</li>
-                <li>2. Obtenha o token OAuth</li>
-                <li>3. Crie uma preferência com OAuth</li>
-                <li>4. Use a conta de teste para pagamento</li>
+              <ul className="space-y-2 text-green-800">
+                <li>1. ✅ Credenciais de produção já preenchidas</li>
+                <li>2. ✅ OAuth funcionará perfeitamente</li>
+                <li>3. ✅ Pagamentos reais serão processados</li>
+                <li>4. ✅ Webhook configurado para ocarhub.com</li>
               </ul>
             </div>
 
-            {/* ⚠️ IMPORTANTE: Limitação do Sandbox */}
-            <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-              <h2 className="text-lg font-semibold text-red-900 mb-4">
-                ⚠️ Limitação do Ambiente de Teste
-              </h2>
-              <div className="space-y-3 text-red-800">
-                <div>
-                  <strong>Problema:</strong> No ambiente de <strong>teste/sandbox</strong>, 
-                  o Mercado Pago <strong>NÃO fornece</strong> client_id e client_secret.
-                </div>
-                <div>
-                  <strong>Disponível no Sandbox:</strong> Apenas Public Key e Access Token
-                </div>
-                <div>
-                  <strong>Disponível na Produção:</strong> Todas as credenciais OAuth
-                </div>
-                <div className="mt-4 p-3 bg-red-100 rounded">
-                  <strong>💡 Solução:</strong> Use o Access Token diretamente para testes, 
-                  ou configure OAuth no ambiente de produção.
-                </div>
-              </div>
-            </div>
-
             {/* Informações sobre Grant Types */}
-            <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-              <h2 className="text-lg font-semibold text-green-900 mb-4">
-                Tipos de Grant (Fluxos OAuth)
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+              <h2 className="text-lg font-semibold text-blue-900 mb-4">
+                🔐 Tipos de Grant (Fluxos OAuth) - Produção
               </h2>
-              <div className="space-y-3 text-green-800">
+              <div className="space-y-3 text-blue-800">
                 <div>
                   <strong>client_credentials:</strong> Obter token sem interação do usuário. 
-                  <span className="text-red-600">⚠️ Só funciona em produção</span>
+                  <span className="text-green-600">✅ Funciona em produção</span>
                 </div>
                 <div>
                   <strong>authorization_code:</strong> Fluxo com redirecionamento. 
-                  <span className="text-red-600">⚠️ Só funciona em produção</span>
+                  <span className="text-green-600">✅ Funciona em produção</span>
                 </div>
                 <div>
                   <strong>refresh_token:</strong> Renovar token expirado. 
-                  <span className="text-red-600">⚠️ Só funciona em produção</span>
+                  <span className="text-green-600">✅ Funciona em produção</span>
                 </div>
               </div>
             </div>
@@ -323,13 +300,40 @@ export default function TestAccountPage() {
 
             {/* Botões de ação */}
             <div className="space-y-4">
-              {/* Botão para teste direto (recomendado para sandbox) */}
+              {/* Botões OAuth (funcionam em produção) */}
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <h3 className="text-lg font-semibold text-green-900 mb-2">
+                  🚀 OAuth Produção (Recomendado)
+                </h3>
+                <p className="text-green-800 text-sm mb-4">
+                  ✅ Funciona perfeitamente em produção com todas as credenciais disponíveis.
+                </p>
+                <div className="flex space-x-4">
+                  <button
+                    onClick={getOAuthToken}
+                    disabled={isLoading}
+                    className="flex-1 bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isLoading ? 'Obtendo Token...' : 'Obter Token OAuth'}
+                  </button>
+
+                  <button
+                    onClick={createPreferenceWithOAuth}
+                    disabled={isLoading || !oauthToken}
+                    className="flex-1 bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isLoading ? 'Criando Preferência...' : 'Criar Preferência OAuth'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Botão para teste direto (alternativa) */}
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <h3 className="text-lg font-semibold text-blue-900 mb-2">
-                  🚀 Teste Direto (Recomendado para Sandbox)
+                  🔧 Teste Direto (Alternativa)
                 </h3>
                 <p className="text-blue-800 text-sm mb-4">
-                  Use o Access Token diretamente, sem OAuth. Funciona no ambiente de teste.
+                  Use o Access Token diretamente, sem OAuth. Funciona em qualquer ambiente.
                 </p>
                 <button
                   onClick={createPreferenceDirect}
@@ -338,33 +342,6 @@ export default function TestAccountPage() {
                 >
                   {isLoading ? 'Criando Preferência...' : 'Criar Preferência Direta'}
                 </button>
-              </div>
-
-              {/* Botões OAuth (só funcionam em produção) */}
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  🔐 Teste OAuth (Só Produção)
-                </h3>
-                <p className="text-gray-600 text-sm mb-4">
-                  ⚠️ Só funciona no ambiente de produção onde client_id e client_secret estão disponíveis.
-                </p>
-                <div className="flex space-x-4">
-                  <button
-                    onClick={getOAuthToken}
-                    disabled={isLoading}
-                    className="flex-1 bg-gray-600 text-white px-6 py-3 rounded-md hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isLoading ? 'Obtendo Token...' : 'Obter Token OAuth'}
-                  </button>
-
-                  <button
-                    onClick={createPreferenceWithOAuth}
-                    disabled={isLoading || !oauthToken}
-                    className="flex-1 bg-gray-600 text-white px-6 py-3 rounded-md hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isLoading ? 'Criando Preferência...' : 'Criar Preferência OAuth'}
-                  </button>
-                </div>
               </div>
             </div>
 

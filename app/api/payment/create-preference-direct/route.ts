@@ -40,14 +40,14 @@ export async function POST(request: NextRequest) {
       },
       external_reference: external_reference,
       back_urls: {
-        success: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://ocarhub.vercel.app'}/payment/success`,
-        failure: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://ocarhub.vercel.app'}/payment/failure`,
-        pending: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://ocarhub.vercel.app'}/payment/pending`
+        success: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://ocarhub.com'}/payment/success`,
+        failure: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://ocarhub.com'}/payment/failure`,
+        pending: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://ocarhub.com'}/payment/pending`
       },
       auto_return: 'approved',
       // Remover notification_url para ambiente de teste
       ...(accessToken.startsWith('APP_USR-46') ? {} : {
-        notification_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://ocarhub.vercel.app'}/api/webhooks/mercadopago-simple`
+        notification_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://ocarhub.com'}/api/webhooks/mercadopago-simple`
       })
     };
     
