@@ -25,14 +25,20 @@ export default function TestAccountPage() {
     email: 'teste@exemplo.com'
   };
 
-  // Credenciais de teste (substitua pelas suas)
-  const testCredentials = {
-    client_id: 'SEU_CLIENT_ID_AQUI',
-    client_secret: 'SEU_CLIENT_SECRET_AQUI'
-  };
+  // Estado para credenciais de teste
+  const [testCredentials, setTestCredentials] = useState({
+    client_id: '',
+    client_secret: ''
+  });
 
   // Função para obter token OAuth
   const getOAuthToken = async () => {
+    // Validar campos obrigatórios
+    if (!testCredentials.client_id || !testCredentials.client_secret) {
+      toast.error('Preencha Client ID e Client Secret');
+      return;
+    }
+
     setIsLoading(true);
     
     try {
@@ -153,9 +159,12 @@ export default function TestAccountPage() {
                     type="text"
                     value={testCredentials.client_id}
                     onChange={(e) => {
-                      testCredentials.client_id = e.target.value;
+                      setTestCredentials(prev => ({
+                        ...prev,
+                        client_id: e.target.value
+                      }));
                     }}
-                    className="mt-1 block w-full border border-yellow-300 rounded-md px-3 py-2"
+                    className="mt-1 block w-full border border-yellow-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
                     placeholder="Seu Client ID de teste"
                   />
                 </div>
@@ -167,9 +176,12 @@ export default function TestAccountPage() {
                     type="password"
                     value={testCredentials.client_secret}
                     onChange={(e) => {
-                      testCredentials.client_secret = e.target.value;
+                      setTestCredentials(prev => ({
+                        ...prev,
+                        client_secret: e.target.value
+                      }));
                     }}
-                    className="mt-1 block w-full border border-yellow-300 rounded-md px-3 py-2"
+                    className="mt-1 block w-full border border-yellow-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
                     placeholder="Seu Client Secret de teste"
                   />
                 </div>
