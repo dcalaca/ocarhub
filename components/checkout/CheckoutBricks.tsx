@@ -108,11 +108,8 @@ export default function CheckoutBricks({
         bankTransfer: 'all',
         creditCard: 'all',
         debitCard: 'all',
-        mercadoPago: 'all',
-        digitalWallet: 'all',
-        digitalCurrency: 'all',
-        cash: 'all',
-        paypal: 'all',
+        mercadoPago: 'all'
+        // Removidos métodos não disponíveis no Brasil: digitalWallet, digitalCurrency, cash, paypal
       },
     },
     callbacks: {
