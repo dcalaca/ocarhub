@@ -74,10 +74,10 @@ export function MercadoPagoCheckout({
     setIsLoading(true);
     
     try {
-      // Usar API otimizada com soluções aplicadas
-      const apiEndpoint = '/api/payment/create-preference-optimized';
+      // Usar API corrigida para problema de URL
+      const apiEndpoint = '/api/payment/create-preference-fixed';
       
-      console.log('🔧 Usando API otimizada com soluções:', apiEndpoint);
+      console.log('🔧 Usando API corrigida para problema de URL:', apiEndpoint);
       
       const response = await fetch(apiEndpoint, {
         method: 'POST',
