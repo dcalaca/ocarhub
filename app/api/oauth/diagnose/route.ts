@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     // Teste 1: Verificar formato das credenciais
     const credentialCheck = {
       client_id_valid: /^\d+$/.test(client_id),
-      client_secret_valid: client_secret.startsWith('APP_USR-'),
+      client_secret_valid: client_secret.length >= 20, // Client Secret em produção tem formato diferente
       client_id_length: client_id.length,
       client_secret_length: client_secret.length
     };
@@ -52,9 +52,9 @@ export async function POST(request: NextRequest) {
     if (!credentialCheck.client_secret_valid) {
       return NextResponse.json({
         success: false,
-        error: 'Client Secret deve começar com APP_USR-',
+        error: 'Client Secret deve ter pelo menos 20 caracteres',
         details: `Recebido: ${client_secret.substring(0, 20)}...`,
-        expected: 'Access Token completo (ex: APP_USR-4645131775783967-...)'
+        expected: 'Client Secret da aplicação (formato varia entre sandbox e produção)'
       }, { status: 400 });
     }
 
@@ -134,11 +134,11 @@ export async function POST(request: NextRequest) {
         responseTime: responseTime + 'ms',
         troubleshooting: [
           '1. Verifique se as credenciais estão corretas',
-          '2. Confirme se são credenciais de teste',
+          '2. Confirme se são credenciais de produção',
           '3. Verifique se a aplicação está ativa',
-          '4. Use o Access Token completo como client_secret',
+          '4. Em produção: Client Secret tem formato diferente do Access Token',
           '5. Use o número da aplicação como client_id',
-          '6. test_token=true foi adicionado para credenciais de teste'
+          '6. test_token=true foi adicionado para compatibilidade'
         ]
       }, { status: 500 });
     }
