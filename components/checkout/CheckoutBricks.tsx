@@ -98,6 +98,7 @@ export default function CheckoutBricks({
   // Configurações do Payment Brick
   const paymentSettings = {
     initialization: {
+      amount: items.reduce((total, item) => total + (item.price * item.quantity), 0),
       preferenceId: preferenceId || '',
       redirectMode: 'modal' as const
     },
