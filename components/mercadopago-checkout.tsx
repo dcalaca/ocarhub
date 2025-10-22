@@ -74,10 +74,10 @@ export function MercadoPagoCheckout({
     setIsLoading(true);
     
     try {
-      // Usar API inteligente que detecta automaticamente o modo
-      const apiEndpoint = '/api/payment/create-preference-smart';
+      // Usar API específica para sandbox
+      const apiEndpoint = '/api/payment/create-preference-sandbox';
       
-      console.log('🧪 Usando API inteligente:', apiEndpoint);
+      console.log('🧪 Usando API específica para sandbox:', apiEndpoint);
       
       const response = await fetch(apiEndpoint, {
         method: 'POST',
