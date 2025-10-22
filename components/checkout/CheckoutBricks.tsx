@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { initMercadoPago } from '@mercadopago/sdk-react';
-import { usePaymentBrick } from '@mercadopago/sdk-react/bricks';
+import { initMercadoPago, usePaymentBrick } from '@mercadopago/sdk-react';
 
 interface CheckoutBricksProps {
   items: Array<{
