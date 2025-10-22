@@ -758,7 +758,7 @@ export default function AnunciarPage() {
           plano: plano.nome.toLowerCase() as 'gratuito' | 'destaque' | 'premium',
           cidade: location.split(',')[0]?.trim() || 'São Paulo',
           estado: location.split(',')[1]?.trim() || 'SP',
-          status: 'pendente_pagamento', // Status inicial para planos pagos
+          status: 'pausado', // Status temporário para planos pagos (até corrigir constraint)
         }
 
         try {

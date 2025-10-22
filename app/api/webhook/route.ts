@@ -224,12 +224,12 @@ export async function POST(request: NextRequest) {
         if (externalReference) {
           console.log('🔍 Verificando anúncio pendente para ativar...')
           
-          // Buscar veículo com status pendente_pagamento para este usuário
+          // Buscar veículo com status pausado para este usuário (temporário)
           const { data: pendingVehicle, error: vehicleError } = await supabase
             .from('ocar_vehicles')
             .select('id, marca, modelo, preco, plano')
             .eq('dono_id', userId)
-            .eq('status', 'pendente_pagamento')
+            .eq('status', 'pausado')
             .order('created_at', { ascending: false })
             .limit(1)
             .single()

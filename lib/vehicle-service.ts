@@ -21,7 +21,7 @@ export interface Vehicle {
   fotos?: string[]
   plano: 'gratuito' | 'destaque' | 'premium'
   verificado?: boolean
-  status: 'ativo' | 'pausado' | 'expirado' | 'pendente_pagamento'
+  status: 'ativo' | 'pausado' | 'expirado'
   cidade: string
   estado?: string
   views?: number
@@ -56,7 +56,7 @@ export interface CreateVehicleData {
   plano: 'gratuito' | 'destaque' | 'premium'
   cidade: string
   estado?: string
-  status?: 'ativo' | 'pausado' | 'expirado' | 'pendente_pagamento'
+  status?: 'ativo' | 'pausado' | 'expirado'
 }
 
 export class VehicleService {
