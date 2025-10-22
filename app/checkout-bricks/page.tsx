@@ -1,7 +1,23 @@
 'use client';
 
-import { useState } from 'react';
-import CheckoutBricks from '@/components/checkout/CheckoutBricks';
+import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
+
+// Carregar o componente dinamicamente para evitar problemas de SSR
+const CheckoutBricks = dynamic(
+  () => import('@/components/checkout/CheckoutBricks'),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Carregando formulário de pagamento...</p>
+        </div>
+      </div>
+    )
+  }
+);
 
 export default function CheckoutBricksPage() {
   const [paymentSuccess, setPaymentSuccess] = useState(false);

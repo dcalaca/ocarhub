@@ -37,7 +37,13 @@ export default function CheckoutBricks({
   useEffect(() => {
     const initMP = async () => {
       try {
-        await initMercadoPago(process.env.NEXT_PUBLIC_MP_PUBLIC_KEY!, {
+        const publicKey = process.env.NEXT_PUBLIC_MP_PUBLIC_KEY;
+        if (!publicKey) {
+          console.error('❌ NEXT_PUBLIC_MP_PUBLIC_KEY não configurado');
+          return;
+        }
+
+        await initMercadoPago(publicKey, {
           locale: 'pt-BR'
         });
         console.log('✅ Mercado Pago SDK inicializado');
@@ -47,7 +53,10 @@ export default function CheckoutBricks({
       }
     };
 
-    initMP();
+    // Só inicializar no cliente
+    if (typeof window !== 'undefined') {
+      initMP();
+    }
   }, []);
 
   // Criar preferência
