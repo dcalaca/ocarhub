@@ -5,6 +5,8 @@ import { toast } from 'sonner';
 
 export default function TestAccountPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const [helpVisible, setHelpVisible] = useState(false);
+  const [helpData, setHelpData] = useState<any>(null);
   const [oauthToken, setOauthToken] = useState<string | null>(null);
   const [preferenceId, setPreferenceId] = useState<string | null>(null);
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
@@ -30,6 +32,21 @@ export default function TestAccountPage() {
     client_id: '',
     client_secret: ''
   });
+
+  // Função para buscar ajuda com credenciais
+  const getHelp = async () => {
+    try {
+      const response = await fetch('/api/help-credentials');
+      const data = await response.json();
+      
+      if (data.success) {
+        setHelpData(data);
+        setHelpVisible(true);
+      }
+    } catch (error) {
+      toast.error('Erro ao buscar ajuda');
+    }
+  };
 
   // Função para obter token OAuth
   const getOAuthToken = async () => {
@@ -147,9 +164,17 @@ export default function TestAccountPage() {
 
             {/* Credenciais */}
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-yellow-900 mb-4">
-                Credenciais de Teste
-              </h3>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-yellow-900">
+                  Credenciais de Teste
+                </h3>
+                <button
+                  onClick={getHelp}
+                  className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
+                >
+                  ❓ Ajuda
+                </button>
+              </div>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-yellow-800">
@@ -241,6 +266,82 @@ export default function TestAccountPage() {
             )}
           </div>
         </div>
+
+        {/* Modal de Ajuda */}
+        {helpVisible && helpData && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-2xl max-h-[80vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-gray-900">
+                  Como Encontrar suas Credenciais
+                </h2>
+                <button
+                  onClick={() => setHelpVisible(false)}
+                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {helpData.instructions && Object.entries(helpData.instructions).map(([key, step]: [string, any]) => (
+                  <div key={key} className="border border-gray-200 rounded-lg p-4">
+                    <h3 className="font-semibold text-gray-900 mb-2">
+                      {step.title}
+                    </h3>
+                    <p className="text-gray-700 mb-2">
+                      {step.description}
+                    </p>
+                    {step.action && (
+                      <p className="text-blue-600 font-medium">
+                        {step.action}
+                      </p>
+                    )}
+                    {step.credentials && (
+                      <div className="mt-2 bg-gray-50 p-2 rounded">
+                        <p className="text-sm text-gray-600">
+                          <strong>Client ID:</strong> {step.credentials.client_id}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          <strong>Client Secret:</strong> {step.credentials.client_secret}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                {helpData.troubleshooting && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <h3 className="font-semibold text-yellow-900 mb-2">
+                      Solução de Problemas
+                    </h3>
+                    <ul className="space-y-1">
+                      {helpData.troubleshooting.map((item: string, index: number) => (
+                        <li key={index} className="text-yellow-800 text-sm">
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h3 className="font-semibold text-blue-900 mb-2">
+                    Link Direto
+                  </h3>
+                  <a
+                    href="https://www.mercadopago.com.br/developers"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 underline"
+                  >
+                    https://www.mercadopago.com.br/developers
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
