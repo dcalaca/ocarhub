@@ -74,7 +74,17 @@ export function MercadoPagoCheckout({
     setIsLoading(true);
     
     try {
-      const response = await fetch('/api/payment/create-preference', {
+      // Detectar se estamos em modo de teste baseado na URL ou configuração
+      const isTestMode = window.location.hostname.includes('vercel.app') || 
+                        window.location.hostname.includes('localhost');
+      
+      const apiEndpoint = isTestMode ? 
+        '/api/payment/create-preference-test' : 
+        '/api/payment/create-preference-official';
+      
+      console.log('🧪 Usando API:', apiEndpoint, 'Modo:', isTestMode ? 'TESTE' : 'PRODUÇÃO');
+      
+      const response = await fetch(apiEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

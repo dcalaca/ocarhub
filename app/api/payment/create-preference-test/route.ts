@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('🚀 Iniciando criação de preferência (versão oficial)...');
+    console.log('🧪 Criando preferência para MODO DE TESTE...');
     
     // Verificar se as variáveis de ambiente estão configuradas
     if (!process.env.MP_ACCESS_TOKEN) {
@@ -10,6 +10,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Configuração do Mercado Pago não encontrada' },
         { status: 500 }
+      );
+    }
+
+    // Verificar se é realmente modo de teste
+    const isTestMode = process.env.MP_ACCESS_TOKEN.includes('TEST') || 
+                      process.env.MP_ACCESS_TOKEN.includes('test') ||
+                      process.env.MP_ACCESS_TOKEN.includes('APP_USR-');
+    
+    if (!isTestMode) {
+      console.error('❌ Esta API é apenas para modo de teste');
+      return NextResponse.json(
+        { error: 'Esta API é apenas para modo de teste. Use credenciais de teste.' },
+        { status: 400 }
       );
     }
 
@@ -39,14 +52,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Detectar se estamos em modo de teste ou produção
-    const isTestMode = process.env.MP_ACCESS_TOKEN.includes('TEST') || 
-                      process.env.MP_ACCESS_TOKEN.includes('test') ||
-                      process.env.MP_ACCESS_TOKEN.includes('APP_USR-');
-    
-    console.log('🧪 Modo detectado:', isTestMode ? 'TESTE' : 'PRODUÇÃO');
-    
-    // Preparar dados da preferência seguindo a documentação oficial
+    // Preparar dados da preferência para MODO DE TESTE
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://ocarhub.vercel.app';
     
     const preferenceData = {
@@ -68,27 +74,26 @@ export async function POST(request: NextRequest) {
         pending: `${baseUrl}/payment/pending`
       },
       auto_return: 'approved',
-      external_reference: external_reference || `ocar-platform-${Date.now()}`,
-      // Só adicionar notification_url se não for modo de teste
-      ...(isTestMode ? {} : { notification_url: `${baseUrl}/api/webhooks/mercadopago` })
+      external_reference: external_reference || `test-ocar-platform-${Date.now()}`,
+      // Para modo de teste, não usar notification_url
+      // Os pagamentos de teste não enviam notificações
     };
 
-    console.log('🔄 Criando preferência no Mercado Pago...');
+    console.log('🔄 Criando preferência de TESTE no Mercado Pago...');
     console.log('📋 Dados da preferência:', JSON.stringify(preferenceData, null, 2));
 
-    // Criar preferência usando fetch direto (mais confiável)
+    // Criar preferência usando fetch direto
     const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${process.env.MP_ACCESS_TOKEN}`,
         'Content-Type': 'application/json',
-        'X-Idempotency-Key': `preference-${Date.now()}`
+        'X-Idempotency-Key': `test-preference-${Date.now()}`
       },
       body: JSON.stringify(preferenceData)
     });
 
     console.log('📡 Status da resposta:', response.status);
-    console.log('📡 Headers da resposta:', Object.fromEntries(response.headers.entries()));
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -97,7 +102,6 @@ export async function POST(request: NextRequest) {
       let errorMessage = 'Erro na API do Mercado Pago';
       let errorDetails = errorText;
       
-      // Tentar fazer parse do erro para obter mais detalhes
       try {
         const errorJson = JSON.parse(errorText);
         if (errorJson.message) {
@@ -107,7 +111,7 @@ export async function POST(request: NextRequest) {
           errorDetails = JSON.stringify(errorJson.cause);
         }
       } catch (parseError) {
-        // Se não conseguir fazer parse, usar o texto original
+        // Usar texto original se não conseguir fazer parse
       }
       
       return NextResponse.json({
@@ -115,26 +119,31 @@ export async function POST(request: NextRequest) {
         error: errorMessage,
         details: errorDetails,
         status: response.status,
+        mode: 'TESTE',
         timestamp: new Date().toISOString()
       }, { status: 500 });
     }
 
     const result = await response.json();
-    console.log('✅ Preferência criada com sucesso:', result.id);
+    console.log('✅ Preferência de TESTE criada com sucesso:', result.id);
     console.log('🔗 URL de checkout:', result.init_point);
 
     return NextResponse.json({
       success: true,
+      mode: 'TESTE',
       preference_id: result.id,
       init_point: result.init_point,
       sandbox_init_point: result.sandbox_init_point,
-      external_reference: preferenceData.external_reference
+      external_reference: preferenceData.external_reference,
+      test_cards: {
+        approved: '4009 1753 3280 6176 (CVV: 123, Vencimento: 11/25)',
+        rejected: '4000 0000 0000 0002 (CVV: 123, Vencimento: 11/25)'
+      }
     });
 
   } catch (error) {
-    console.error('❌ Erro ao criar preferência:', error);
+    console.error('❌ Erro ao criar preferência de teste:', error);
     
-    // Log detalhado do erro
     if (error instanceof Error) {
       console.error('❌ Mensagem de erro:', error.message);
       console.error('❌ Stack trace:', error.stack);
@@ -144,64 +153,8 @@ export async function POST(request: NextRequest) {
       { 
         error: 'Erro interno do servidor',
         details: error instanceof Error ? error.message : 'Erro desconhecido',
+        mode: 'TESTE',
         timestamp: new Date().toISOString()
-      },
-      { status: 500 }
-    );
-  }
-}
-
-// Método GET para buscar preferência existente
-export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const preferenceId = searchParams.get('id');
-
-    if (!preferenceId) {
-      return NextResponse.json(
-        { error: 'ID da preferência é obrigatório' },
-        { status: 400 }
-      );
-    }
-
-    console.log('🔍 Buscando preferência:', preferenceId);
-
-    const response = await fetch(`https://api.mercadopago.com/checkout/preferences/${preferenceId}`, {
-      headers: {
-        'Authorization': `Bearer ${process.env.MP_ACCESS_TOKEN}`,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('❌ Erro ao buscar preferência:', errorText);
-      
-      return NextResponse.json(
-        { 
-          error: 'Erro ao buscar preferência',
-          details: errorText,
-          status: response.status
-        },
-        { status: 500 }
-      );
-    }
-
-    const result = await response.json();
-    console.log('✅ Preferência encontrada:', result.id);
-
-    return NextResponse.json({
-      success: true,
-      preference: result
-    });
-
-  } catch (error) {
-    console.error('❌ Erro ao buscar preferência:', error);
-    
-    return NextResponse.json(
-      { 
-        error: 'Erro ao buscar preferência',
-        details: error instanceof Error ? error.message : 'Erro desconhecido'
       },
       { status: 500 }
     );
