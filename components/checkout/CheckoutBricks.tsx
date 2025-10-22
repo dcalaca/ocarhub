@@ -49,7 +49,12 @@ export default function CheckoutBricks({
         }
 
         // Importar dinamicamente para evitar problemas de SSR
-        const { initMercadoPago } = await import('@mercadopago/sdk-react');
+        const MercadoPagoSDK = await import('@mercadopago/sdk-react');
+        const { initMercadoPago } = MercadoPagoSDK;
+        
+        if (!initMercadoPago) {
+          throw new Error('initMercadoPago não encontrado no SDK');
+        }
         
         await initMercadoPago(publicKey, {
           locale: 'pt-BR'
@@ -117,7 +122,13 @@ export default function CheckoutBricks({
     }
 
     try {
-      const { Payment } = await import('@mercadopago/sdk-react');
+      // Importar o SDK completo do Mercado Pago
+      const MercadoPagoSDK = await import('@mercadopago/sdk-react');
+      const { Payment } = MercadoPagoSDK;
+      
+      if (!Payment) {
+        throw new Error('Payment não encontrado no SDK');
+      }
       
       const payment = new Payment({
         container: brickContainer,
