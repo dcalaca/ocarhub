@@ -20,6 +20,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Para valores baixos, forçar pagamento à vista
+    const isLowValue = valor < 50
+
     const MP_ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN
     if (!MP_ACCESS_TOKEN) {
       console.error('❌ MP_ACCESS_TOKEN não configurado')
@@ -52,6 +55,13 @@ export async function POST(request: NextRequest) {
       auto_return: 'approved',
       external_reference: `saldo_${userId}_${Date.now()}`,
       notification_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://ocarhub.com'}/api/webhook`,
+      payment_methods: {
+        installments: isLowValue ? 1 : 12, // Para valores baixos, apenas à vista
+        default_installments: 1, // Parcela única por padrão
+        excluded_payment_methods: [],
+        excluded_payment_types: [],
+        installments_default: 1
+      },
       metadata: {
         userId: userId,
         tipo: 'recarga_saldo',
