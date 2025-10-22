@@ -3,11 +3,29 @@ import { preference, MERCADOPAGO_CONFIG } from '@/lib/mercadopago';
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('🚀 Iniciando criação de preferência...');
+    
+    // Verificar se as variáveis de ambiente estão configuradas
+    if (!process.env.MP_ACCESS_TOKEN) {
+      console.error('❌ MP_ACCESS_TOKEN não configurado');
+      return NextResponse.json(
+        { error: 'Configuração do Mercado Pago não encontrada' },
+        { status: 500 }
+      );
+    }
+
     const body = await request.json();
+    console.log('📊 Dados recebidos:', { 
+      itemsCount: body.items?.length, 
+      payerEmail: body.payer?.email,
+      externalReference: body.external_reference 
+    });
+
     const { items, payer, external_reference } = body;
 
     // Validar dados obrigatórios
     if (!items || !Array.isArray(items) || items.length === 0) {
+      console.error('❌ Items são obrigatórios');
       return NextResponse.json(
         { error: 'Items são obrigatórios' },
         { status: 400 }
@@ -15,6 +33,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!payer || !payer.name || !payer.email) {
+      console.error('❌ Dados do pagador são obrigatórios');
       return NextResponse.json(
         { error: 'Dados do pagador são obrigatórios' },
         { status: 400 }
@@ -88,9 +107,13 @@ export async function POST(request: NextRequest) {
     };
 
     // Criar preferência
+    console.log('🔄 Criando preferência no Mercado Pago...');
+    console.log('📋 Dados da preferência:', JSON.stringify(preferenceData, null, 2));
+    
     const response = await preference.create({ body: preferenceData });
 
     console.log('✅ Preferência criada:', response.id);
+    console.log('🔗 URL de checkout:', response.init_point);
 
     return NextResponse.json({
       success: true,
@@ -103,10 +126,23 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('❌ Erro ao criar preferência:', error);
     
+    // Log detalhado do erro
+    if (error instanceof Error) {
+      console.error('❌ Mensagem de erro:', error.message);
+      console.error('❌ Stack trace:', error.stack);
+    }
+    
+    // Verificar se é erro do Mercado Pago
+    if (error && typeof error === 'object' && 'response' in error) {
+      const mpError = error as any;
+      console.error('❌ Erro do Mercado Pago:', mpError.response?.data);
+    }
+    
     return NextResponse.json(
       { 
         error: 'Erro interno do servidor',
-        details: error instanceof Error ? error.message : 'Erro desconhecido'
+        details: error instanceof Error ? error.message : 'Erro desconhecido',
+        timestamp: new Date().toISOString()
       },
       { status: 500 }
     );
