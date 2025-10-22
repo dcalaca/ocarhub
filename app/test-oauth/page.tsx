@@ -18,7 +18,8 @@ export default function TestAccountPage() {
       title: 'Plano Premium',
       description: 'Acesso completo à plataforma',
       price: 59.90,
-      quantity: 1
+      quantity: 1,
+      category_id: 'others' // Melhora índice de aprovação
     }
   ];
 

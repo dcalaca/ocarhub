@@ -15,6 +15,7 @@ interface PaymentItem {
   description?: string;
   price: number;
   quantity?: number;
+  category_id?: string; // Melhora índice de aprovação
 }
 
 interface PayerData {

@@ -78,7 +78,8 @@ export async function POST(request: NextRequest) {
         description: item.description || '',
         quantity: parseInt(item.quantity) || 1,
         unit_price: parseFloat(item.price),
-        currency_id: 'BRL'
+        currency_id: 'BRL',
+        category_id: item.category_id || 'others' // Melhora índice de aprovação
       })),
       payer: {
         name: payer.name,
