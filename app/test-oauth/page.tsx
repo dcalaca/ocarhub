@@ -28,10 +28,11 @@ export default function TestAccountPage() {
     email: 'teste@exemplo.com'
   };
 
-  // Estado para credenciais de teste
+  // Estado para credenciais de teste (preenchidas automaticamente)
   const [testCredentials, setTestCredentials] = useState({
-    client_id: '',
-    client_secret: ''
+    client_id: '8224799763305887',
+    client_secret: 'APP_USR-4645131775783967-102121-662cfe8408046307b825a79edd594a15-2939896816',
+    grant_type: 'client_credentials'
   });
 
   // Função para buscar ajuda com credenciais
@@ -70,7 +71,7 @@ export default function TestAccountPage() {
         body: JSON.stringify({
           client_id: testCredentials.client_id,
           client_secret: testCredentials.client_secret,
-          grant_type: 'client_credentials'
+          grant_type: testCredentials.grant_type
         }),
       });
 
@@ -156,11 +157,32 @@ export default function TestAccountPage() {
                 Instruções para Contas de Teste
               </h2>
               <ul className="space-y-2 text-blue-800">
-                <li>1. Configure suas credenciais de teste abaixo</li>
+                <li>1. ✅ Credenciais já preenchidas automaticamente</li>
                 <li>2. Obtenha o token OAuth</li>
                 <li>3. Crie uma preferência com OAuth</li>
                 <li>4. Use a conta de teste para pagamento</li>
               </ul>
+            </div>
+
+            {/* Informações sobre Grant Types */}
+            <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+              <h2 className="text-lg font-semibold text-green-900 mb-4">
+                Tipos de Grant (Fluxos OAuth)
+              </h2>
+              <div className="space-y-3 text-green-800">
+                <div>
+                  <strong>client_credentials:</strong> Obter token sem interação do usuário. 
+                  Ideal para testes e aplicações que acessam apenas seus próprios recursos.
+                </div>
+                <div>
+                  <strong>authorization_code:</strong> Fluxo com redirecionamento. 
+                  Usuário autoriza explicitamente o acesso aos seus dados.
+                </div>
+                <div>
+                  <strong>refresh_token:</strong> Renovar token expirado. 
+                  Usado quando um token anterior está inválido.
+                </div>
+              </div>
             </div>
 
             {/* Credenciais */}
@@ -210,6 +232,28 @@ export default function TestAccountPage() {
                     className="mt-1 block w-full border border-yellow-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-white text-gray-900 placeholder-gray-500"
                     placeholder="Seu Client Secret de teste"
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-yellow-800">
+                    Grant Type
+                  </label>
+                  <select
+                    value={testCredentials.grant_type}
+                    onChange={(e) => {
+                      setTestCredentials(prev => ({
+                        ...prev,
+                        grant_type: e.target.value
+                      }));
+                    }}
+                    className="mt-1 block w-full border border-yellow-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-white text-gray-900"
+                  >
+                    <option value="client_credentials">client_credentials (Recomendado para teste)</option>
+                    <option value="authorization_code">authorization_code (Fluxo com redirecionamento)</option>
+                    <option value="refresh_token">refresh_token (Renovar token)</option>
+                  </select>
+                  <p className="mt-1 text-xs text-yellow-700">
+                    client_credentials: Obter token sem interação do usuário (ideal para testes)
+                  </p>
                 </div>
               </div>
             </div>
