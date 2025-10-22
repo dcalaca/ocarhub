@@ -2,6 +2,10 @@
 
 import { useState, useEffect } from 'react';
 
+// Configurações para evitar prerendering
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default function CheckoutBricksPage() {
   const [isClient, setIsClient] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
