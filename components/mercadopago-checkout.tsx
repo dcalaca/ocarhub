@@ -74,15 +74,10 @@ export function MercadoPagoCheckout({
     setIsLoading(true);
     
     try {
-      // Detectar se estamos em modo de teste baseado na URL ou configuração
-      const isTestMode = window.location.hostname.includes('vercel.app') || 
-                        window.location.hostname.includes('localhost');
+      // Usar API inteligente que detecta automaticamente o modo
+      const apiEndpoint = '/api/payment/create-preference-smart';
       
-      const apiEndpoint = isTestMode ? 
-        '/api/payment/create-preference-test' : 
-        '/api/payment/create-preference-official';
-      
-      console.log('🧪 Usando API:', apiEndpoint, 'Modo:', isTestMode ? 'TESTE' : 'PRODUÇÃO');
+      console.log('🧪 Usando API inteligente:', apiEndpoint);
       
       const response = await fetch(apiEndpoint, {
         method: 'POST',
@@ -103,9 +98,10 @@ export function MercadoPagoCheckout({
       }
 
       setPreferenceId(data.preference_id);
-      setCheckoutUrl(data.init_point);
+      // Usar a URL correta retornada pela API (pode ser init_point ou sandbox_init_point)
+      setCheckoutUrl(data.checkout_url || data.init_point);
       
-      toast.success('Preferência criada com sucesso!');
+      toast.success(`Preferência criada com sucesso! (Modo: ${data.mode})`);
       onSuccess?.(data.preference_id);
 
     } catch (error) {
