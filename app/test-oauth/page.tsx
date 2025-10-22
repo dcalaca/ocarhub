@@ -60,7 +60,7 @@ export default function TestAccountPage() {
     setIsLoading(true);
     
     try {
-      console.log('🔐 Obtendo token OAuth...');
+      console.log('🔐 Obtendo token OAuth com diagnóstico completo...');
       
       const response = await fetch('/api/oauth/diagnose', {
         method: 'POST',
