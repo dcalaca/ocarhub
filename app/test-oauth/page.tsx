@@ -62,7 +62,7 @@ export default function TestAccountPage() {
     try {
       console.log('🔐 Obtendo token OAuth...');
       
-      const response = await fetch('/api/oauth/token', {
+      const response = await fetch('/api/oauth/token-fixed', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
