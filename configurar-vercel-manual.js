@@ -1,0 +1,38 @@
+// Script para configurar variáveis do Mercado Pago no Vercel
+console.log('🔧 CONFIGURAÇÃO MERCADO PAGO NO VERCEL:')
+console.log('=' .repeat(60))
+
+console.log('\n✅ VARIÁVEIS REMOVIDAS:')
+console.log('   • MP_PUBLIC_KEY')
+console.log('   • MP_WEBHOOK_SECRET') 
+console.log('   • MP_CLIENT_SECRET')
+console.log('   • MP_CLIENT_ID')
+
+console.log('\n🔧 CONFIGURAÇÃO MANUAL RECOMENDADA:')
+console.log('   Acesse: https://vercel.com/dashboard')
+console.log('   Projeto: ocarhub')
+console.log('   Settings → Environment Variables')
+
+console.log('\n📋 ADICIONE ESTAS VARIÁVEIS:')
+console.log('')
+console.log('   MP_ACCESS_TOKEN:')
+console.log('   APP_USR-4645131775783967-102121-662cfe8408046307b825a79edd594a15-2939896816')
+console.log('')
+console.log('   MP_PUBLIC_KEY:')
+console.log('   APP_USR-f265542a-476e-4e51-91d3-9a5385001fb1')
+console.log('')
+console.log('   MP_WEBHOOK_SECRET:')
+console.log('   test_webhook_secret')
+console.log('')
+console.log('   NEXT_PUBLIC_SITE_URL:')
+console.log('   https://ocarhub.com')
+
+console.log('\n🎯 CONFIGURAR PARA:')
+console.log('   • Development: ✅')
+console.log('   • Preview: ✅')
+console.log('   • Production: ✅')
+
+console.log('\n🚀 APÓS CONFIGURAR:')
+console.log('   • Deploy automático')
+console.log('   • Teste de pagamentos')
+console.log('   • Verificação de webhook')

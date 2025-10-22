@@ -95,6 +95,46 @@ export default function TestAccountPage() {
     }
   };
 
+  // Função para criar preferência direta (sem OAuth)
+  const createPreferenceDirect = async () => {
+    setIsLoading(true);
+    
+    try {
+      console.log('🚀 Criando preferência direta...');
+      
+      const response = await fetch('/api/payment/create-preference-direct', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          items: testItems,
+          payer: testPayer,
+          external_reference: `direct-test-${Date.now()}`
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao criar preferência');
+      }
+
+      setPreferenceId(data.preference_id);
+      setCheckoutUrl(data.checkout_url);
+      
+      toast.success('Preferência criada com sucesso!');
+      console.log('✅ Preferência:', data.preference_id);
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      toast.error(`Erro na preferência: ${errorMessage}`);
+      console.error('❌ Erro na preferência:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Função para criar preferência com OAuth
   const createPreferenceWithOAuth = async () => {
     if (!oauthToken) {
@@ -164,6 +204,29 @@ export default function TestAccountPage() {
               </ul>
             </div>
 
+            {/* ⚠️ IMPORTANTE: Limitação do Sandbox */}
+            <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+              <h2 className="text-lg font-semibold text-red-900 mb-4">
+                ⚠️ Limitação do Ambiente de Teste
+              </h2>
+              <div className="space-y-3 text-red-800">
+                <div>
+                  <strong>Problema:</strong> No ambiente de <strong>teste/sandbox</strong>, 
+                  o Mercado Pago <strong>NÃO fornece</strong> client_id e client_secret.
+                </div>
+                <div>
+                  <strong>Disponível no Sandbox:</strong> Apenas Public Key e Access Token
+                </div>
+                <div>
+                  <strong>Disponível na Produção:</strong> Todas as credenciais OAuth
+                </div>
+                <div className="mt-4 p-3 bg-red-100 rounded">
+                  <strong>💡 Solução:</strong> Use o Access Token diretamente para testes, 
+                  ou configure OAuth no ambiente de produção.
+                </div>
+              </div>
+            </div>
+
             {/* Informações sobre Grant Types */}
             <div className="bg-green-50 border border-green-200 rounded-lg p-6">
               <h2 className="text-lg font-semibold text-green-900 mb-4">
@@ -172,15 +235,15 @@ export default function TestAccountPage() {
               <div className="space-y-3 text-green-800">
                 <div>
                   <strong>client_credentials:</strong> Obter token sem interação do usuário. 
-                  Ideal para testes e aplicações que acessam apenas seus próprios recursos.
+                  <span className="text-red-600">⚠️ Só funciona em produção</span>
                 </div>
                 <div>
                   <strong>authorization_code:</strong> Fluxo com redirecionamento. 
-                  Usuário autoriza explicitamente o acesso aos seus dados.
+                  <span className="text-red-600">⚠️ Só funciona em produção</span>
                 </div>
                 <div>
                   <strong>refresh_token:</strong> Renovar token expirado. 
-                  Usado quando um token anterior está inválido.
+                  <span className="text-red-600">⚠️ Só funciona em produção</span>
                 </div>
               </div>
             </div>
@@ -259,22 +322,50 @@ export default function TestAccountPage() {
             </div>
 
             {/* Botões de ação */}
-            <div className="flex space-x-4">
-              <button
-                onClick={getOAuthToken}
-                disabled={isLoading}
-                className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading ? 'Obtendo Token...' : 'Obter Token OAuth'}
-              </button>
+            <div className="space-y-4">
+              {/* Botão para teste direto (recomendado para sandbox) */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h3 className="text-lg font-semibold text-blue-900 mb-2">
+                  🚀 Teste Direto (Recomendado para Sandbox)
+                </h3>
+                <p className="text-blue-800 text-sm mb-4">
+                  Use o Access Token diretamente, sem OAuth. Funciona no ambiente de teste.
+                </p>
+                <button
+                  onClick={createPreferenceDirect}
+                  disabled={isLoading}
+                  className="w-full bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isLoading ? 'Criando Preferência...' : 'Criar Preferência Direta'}
+                </button>
+              </div>
 
-              <button
-                onClick={createPreferenceWithOAuth}
-                disabled={isLoading || !oauthToken}
-                className="flex-1 bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading ? 'Criando Preferência...' : 'Criar Preferência OAuth'}
-              </button>
+              {/* Botões OAuth (só funcionam em produção) */}
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  🔐 Teste OAuth (Só Produção)
+                </h3>
+                <p className="text-gray-600 text-sm mb-4">
+                  ⚠️ Só funciona no ambiente de produção onde client_id e client_secret estão disponíveis.
+                </p>
+                <div className="flex space-x-4">
+                  <button
+                    onClick={getOAuthToken}
+                    disabled={isLoading}
+                    className="flex-1 bg-gray-600 text-white px-6 py-3 rounded-md hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isLoading ? 'Obtendo Token...' : 'Obter Token OAuth'}
+                  </button>
+
+                  <button
+                    onClick={createPreferenceWithOAuth}
+                    disabled={isLoading || !oauthToken}
+                    className="flex-1 bg-gray-600 text-white px-6 py-3 rounded-md hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isLoading ? 'Criando Preferência...' : 'Criar Preferência OAuth'}
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* Status */}
