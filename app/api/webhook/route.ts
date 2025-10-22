@@ -228,7 +228,7 @@ export async function POST(request: NextRequest) {
           const { data: pendingVehicle, error: vehicleError } = await supabase
             .from('ocar_vehicles')
             .select('id, marca, modelo, preco, plano')
-            .eq('usuario_id', userId)
+            .eq('dono_id', userId)
             .eq('status', 'pendente_pagamento')
             .order('created_at', { ascending: false })
             .limit(1)
