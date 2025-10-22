@@ -143,23 +143,30 @@ export default function CheckoutBricks({
         throw new Error('NEXT_PUBLIC_MP_PUBLIC_KEY não configurado');
       }
       
-      // Inicializar Mercado Pago
-      const mp = await initMercadoPago(publicKey, {
+      // Inicializar Mercado Pago (sem await, pois não retorna promise)
+      initMercadoPago(publicKey, {
         locale: 'pt-BR'
       });
       
-      console.log('✅ Mercado Pago inicializado:', mp);
+      console.log('✅ Mercado Pago inicializado');
       
-      // Verificar se mp tem o método bricks
-      if (mp && typeof mp.bricks === 'function') {
+      // Aguardar um pouco para garantir que o SDK foi carregado
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Verificar se o objeto global MercadoPago está disponível
+      if (typeof window !== 'undefined' && (window as any).MercadoPago) {
+        console.log('✅ window.MercadoPago encontrado');
+        
+        const mp = new (window as any).MercadoPago(publicKey);
         const bricksBuilder = mp.bricks();
         console.log('✅ BricksBuilder criado:', bricksBuilder);
         
         // Continuar com a criação do Brick
         await createPaymentBrick(bricksBuilder, preferenceId);
       } else {
-        console.error('❌ mp.bricks não encontrado:', mp);
-        throw new Error('mp.bricks não encontrado');
+        console.error('❌ window.MercadoPago não encontrado');
+        console.log('🔍 window object:', typeof window !== 'undefined' ? Object.keys(window).filter(k => k.includes('Mercado')) : 'window undefined');
+        throw new Error('window.MercadoPago não encontrado');
       }
 
     } catch (error) {
