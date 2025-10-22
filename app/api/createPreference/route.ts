@@ -20,9 +20,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Para valores baixos, forçar pagamento à vista
-    const isLowValue = valor < 50
-
     const MP_ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN
     if (!MP_ACCESS_TOKEN) {
       console.error('❌ MP_ACCESS_TOKEN não configurado')
@@ -44,9 +41,6 @@ export async function POST(request: NextRequest) {
           currency_id: 'BRL'
         }
       ],
-      payer: {
-        email: 'usuario@ocar.com' // Será substituído pelo email real do usuário
-      },
       back_urls: {
         success: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://ocarhub.com'}/conta?status=success`,
         failure: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://ocarhub.com'}/conta?status=failure`,
@@ -55,8 +49,12 @@ export async function POST(request: NextRequest) {
       auto_return: 'approved',
       external_reference: `saldo_${userId}_${Date.now()}`,
       notification_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://ocarhub.com'}/api/webhook`,
+      binary_mode: false, // Permitir pagamentos pendentes
+      expires: true,
+      expiration_date_from: new Date().toISOString(),
+      expiration_date_to: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 horas
       payment_methods: {
-        installments: isLowValue ? 1 : 12, // Para valores baixos, apenas à vista
+        installments: 12, // Máximo de 12 parcelas
         default_installments: 1, // Parcela única por padrão
         excluded_payment_methods: [],
         excluded_payment_types: [],
