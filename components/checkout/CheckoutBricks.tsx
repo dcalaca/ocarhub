@@ -121,10 +121,40 @@ export default function CheckoutBricks({
         console.log('📝 Dados do formulário:', formData);
         console.log('💳 Método selecionado:', selectedPaymentMethod);
         
-        // Aqui você pode processar os dados antes do pagamento
-        return new Promise((resolve) => {
-          resolve();
-        });
+        try {
+          // Processar pagamento no backend
+          const response = await fetch('/api/payment/process', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              token: formData.token,
+              issuer_id: formData.issuer_id,
+              payment_method_id: formData.payment_method_id,
+              transaction_amount: formData.transaction_amount,
+              installments: formData.installments,
+              payer: formData.payer,
+              preferenceId: preferenceId
+            }),
+          });
+
+          const result = await response.json();
+          
+          if (result.success) {
+            console.log('✅ Pagamento processado com sucesso:', result);
+            toast.success('Pagamento realizado com sucesso!');
+            onSuccess?.(result);
+          } else {
+            console.error('❌ Erro no processamento:', result.error);
+            toast.error(result.error || 'Erro no processamento do pagamento');
+            throw new Error(result.error);
+          }
+        } catch (error) {
+          console.error('❌ Erro no pagamento:', error);
+          toast.error('Erro no processamento do pagamento');
+          throw error;
+        }
       },
       onError: (error: any) => {
         console.error('❌ Erro no Payment Brick:', error);
