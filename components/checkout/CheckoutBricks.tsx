@@ -144,7 +144,7 @@ export default function CheckoutBricks({
           if (result.success) {
             console.log('✅ Pagamento processado com sucesso:', result);
             toast.success('Pagamento realizado com sucesso!');
-            onSuccess?.(result);
+            onSuccess?.(result.payment.id);
           } else {
             console.error('❌ Erro no processamento:', result.error);
             toast.error(result.error || 'Erro no processamento do pagamento');
