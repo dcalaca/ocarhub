@@ -96,10 +96,27 @@ export async function testMercadoPagoConnection(): Promise<boolean> {
   }
 }
 
+// Função para validar assinatura do webhook
+export function validateWebhookSignature(body: string, signature: string): boolean {
+  try {
+    const crypto = require('crypto');
+    const expectedSignature = crypto
+      .createHmac('sha256', MERCADOPAGO_CONFIG.WEBHOOK_SECRET)
+      .update(body)
+      .digest('hex');
+    
+    return signature === expectedSignature;
+  } catch (error) {
+    console.error('❌ Erro ao validar assinatura do webhook:', error);
+    return false;
+  }
+}
+
 export default {
   preference,
   payment,
   MERCADOPAGO_CONFIG,
   validateMercadoPagoConfig,
-  testMercadoPagoConnection
+  testMercadoPagoConnection,
+  validateWebhookSignature
 };
