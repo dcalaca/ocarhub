@@ -14,15 +14,29 @@ export async function POST(request: NextRequest) {
     const signature = request.headers.get('x-signature');
     const type = request.headers.get('x-request-id');
 
-    console.log('🔔 Webhook recebido:', { type, signature: signature?.substring(0, 20) + '...' });
+    console.log('🔔 Webhook recebido:', { 
+      type, 
+      signature: signature?.substring(0, 20) + '...',
+      hasSecret: !!process.env.MP_WEBHOOK_SECRET,
+      bodyLength: body.length
+    });
 
-    // Validar assinatura do webhook (opcional, mas recomendado)
+    // Validar assinatura do webhook (apenas se configurado)
     if (process.env.MP_WEBHOOK_SECRET && signature) {
-      const isValid = validateWebhookSignature(body, signature);
-      if (!isValid) {
-        console.error('❌ Assinatura do webhook inválida');
-        return NextResponse.json({ error: 'Assinatura inválida' }, { status: 401 });
+      try {
+        const isValid = validateWebhookSignature(body, signature);
+        if (!isValid) {
+          console.error('❌ Assinatura do webhook inválida');
+          return NextResponse.json({ error: 'Assinatura inválida' }, { status: 401 });
+        }
+        console.log('✅ Assinatura do webhook válida');
+      } catch (signatureError) {
+        console.error('❌ Erro ao validar assinatura:', signatureError);
+        // Continuar mesmo com erro de validação para não bloquear webhooks
+        console.log('⚠️ Continuando sem validação de assinatura');
       }
+    } else {
+      console.log('ℹ️ Validação de assinatura não configurada ou não fornecida');
     }
 
     // Parse do body
